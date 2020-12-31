@@ -8,10 +8,6 @@
     ],
     "license": "MIT",
     "repositories": {
-        "echarts": {
-            "type": "path",
-            "url": "../echarts"
-        },
         "pure-ui": {
             "type": "path",
             "url": "../pure-ui"
@@ -21,14 +17,14 @@
         "php": "^7.2.5",
         "ext-json": "*",
         "ext-pdo": "*",
-        "QCute/echarts": "dev-master",
-        "QCute/pure-ui": "dev-master",
         "encore/laravel-admin": "^1.7",
         "fideloper/proxy": "^4.2",
         "fruitcake/laravel-cors": "^1.0",
         "guzzlehttp/guzzle": "^6.3",
+        "laravel-admin-ext/scheduling": "^1.1",
         "laravel/framework": "^7.0",
-        "laravel/tinker": "^2.0"
+        "laravel/tinker": "^2.0",
+        "qcute/pure-ui": "dev-master"
     },
     "require-dev": {
         "facade/ignition": "^2.0",

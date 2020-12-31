@@ -23,8 +23,8 @@ class SwitchServerController extends Controller
     public static function showServerList()
     {
         $list = '';
-        $data = SwitchServerController::getServerList("local");
-        $currentServerNode = SwitchServerController::getCookieServer($data[0]->server_node);
+        $data = self::getServerList("local");
+        $currentServerNode = self::getCookieServer($data[0]->server_node);
         $currentServerName = $data[0]->server_name;
         foreach($data as $row) {
             if ($row->server_node === $currentServerNode) {
@@ -73,11 +73,17 @@ class SwitchServerController extends Controller
 
     public static function getCurrentServerOpenDays()
     {
-        $server = SwitchServerController::getCurrentServer();
-        $server = SwitchServerController::getServer($server);
+        $server = self::getCurrentServer();
+        $server = self::getServer($server);
         return intval((time() - $server->open_time) / 86400) + 1;
     }
 
+    public static function getCurrentServerOpenTime()
+    {
+        $server = self::getCurrentServer();
+        $server = self::getServer($server);
+        return $server->open_time;
+    }
 
     // server list
     public static function getServerList(String $type = null)
@@ -98,7 +104,7 @@ class SwitchServerController extends Controller
     // has server
     public static function hasServer($node)
     {
-        return !is_null(SwitchServerController::getServer($node));
+        return !is_null(self::getServer($node));
     }
 
     public static function nextServerId($type)
@@ -115,13 +121,13 @@ class SwitchServerController extends Controller
     {
         if ($server == "all") {
             // get all current node-type's node
-            $current_node = SwitchServerController::getServer(SwitchServerController::getCurrentServer());
-            $server_list = SwitchServerController::getServerList($current_node->server_type);
+            $current_node = self::getServer(self::getCurrentServer());
+            $server_list = self::getServerList($current_node->server_type);
         } else if ($server == "this")
             // get current node
-            $server_list = array(SwitchServerController::getServer(SwitchServerController::getCurrentServer()));
-        else if(SwitchServerController::hasServer($server))
-            $server_list = array(SwitchServerController::getServer($server));
+            $server_list = array(self::getServer(self::getCurrentServer()));
+        else if(self::hasServer($server))
+            $server_list = array(self::getServer($server));
         else
             return array(trans("unknown_server") => $server);
         // send and get result
@@ -154,15 +160,16 @@ class SwitchServerController extends Controller
                 "server_id" => $server->server_id,
                 "server_ip" => $server->server_ip,
                 "server_port" => $server->server_port,
+                "tab_name" => $server->tab_name,
             );
-        }, SwitchServerController::getServerList("local"));
+        }, self::getServerList("local"));
     }
 
     // reload static server list
     public static function publicServerList(String $path = "")
     {
         if ($path == "") $path = public_path("server-list.php");
-        $list = SwitchServerController::getPublicServerList();
+        $list = self::getPublicServerList();
         $data =  "<?php header('content-type:application:json;charset=utf8');"  . "header('Access-Control-Allow-Origin: *');" . "header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');" . " echo '" . json_encode($list) . "';";
         file_put_contents($path, $data);
     }

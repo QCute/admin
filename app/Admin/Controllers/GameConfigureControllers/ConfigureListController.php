@@ -32,7 +32,7 @@ class ConfigureListController extends Controller
                     return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
                 else
                     return "toastr.error(" . json_encode($result) . ")";
-            }break;
+            }
             case "erl":
             {
                 exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
@@ -42,7 +42,7 @@ class ConfigureListController extends Controller
                     return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
                 else
                     return "toastr.error(" . json_encode($result) . ")";
-            }break;
+            }
             case "lua":
             {
                 exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh lua " . basename(request()->input("file"), ".lua") . " 2>&1", $result);
@@ -52,7 +52,7 @@ class ConfigureListController extends Controller
                     return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
                 else
                     return "toastr.error(" . json_encode($result) . ")";
-            }break;
+            }
             case "js":
             {
                 exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh js " . basename(request()->input("file"), ".js") . " 2>&1", $result);
@@ -62,7 +62,7 @@ class ConfigureListController extends Controller
                     return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
                 else
                     return "toastr.error(" . json_encode($result) . ")";
-            }break;
+            }
             default:
             {
                 if (empty($action)) 

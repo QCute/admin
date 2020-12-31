@@ -6,13 +6,15 @@ use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Controllers\TimeTabController;
 
-class RechargeRatioController extends Controller
+class RechargeRatioController extends TimeTabController
 {
     public function index(Content $content)
     {
-        $total = DB::select("SELECT COUNT(*) AS `total` FROM " . SwitchServerController::getCurrentServer() . ".`role`");
-        $recharge = DB::select("SELECT COUNT(1) AS `recharge` FROM " . SwitchServerController::getCurrentServer() . ".`role` WHERE `first_recharge_time` > 0");
+        list($before, $now, , $nav) = $this->makeNav(array("all", "pick_time"), "all");
+        $total = DB::select("SELECT COUNT(*) AS `total` FROM " . SwitchServerController::getCurrentServer() . ".`role` WHERE `register_time` BETWEEN " . $before . " AND " . $now . "");
+        $recharge = DB::select("SELECT COUNT(1) AS `recharge` FROM " . SwitchServerController::getCurrentServer() . ".`role` WHERE `register_time` BETWEEN " . $before . " AND " . $now . " AND `first_recharge_time` > 0");
         if ($recharge[0]->recharge == 0)
         {
             $color = "color: ['rgba(128, 128, 128, 1)']";
@@ -20,25 +22,19 @@ class RechargeRatioController extends Controller
         }
         else
         {
-            $color = "color: []";
+            $color = "color: ['#37a2da','#32c5e9','#9fe6b8','#ffdb5c','#ff9f7f','#fb7293','#e7bcf3','#8378ea']";
             $data = array(array("name" => trans("admin.charge"), "value" => $recharge[0]->recharge, "label" => array("formatter" => "{b}: {c} ({d}%)")), array("name" => trans("admin.free"), "value" => $total[0]->total - $recharge[0]->recharge, "label" => array("formatter" => "{b}: {c} ({d}%)")), );
         }
-        // nav
-        // $list = implode("", array_map(function($time, $text) { if($time == request()->input("time", 1)) return "<li role='presentation' class='active' ><a>" . trans("admin." . $text) . "</a></li>"; else return "<li role='presentation' ><a href='recharge-distribution?time={$time}'>" . trans("admin." . $text) . "</a></li>"; }, array(1, 7, 30, SwitchServerController::getCurrentServerOpenDays()), array("day", "week", "month", "all")));
         // draw
         return $content->body("
-            <style>#app, #pjax-container { height: 100%; overflow: hidden; } </style>
-            <style>.content, .content > .row, .content > .row > .col-md-12 { height: 100%; background-color: white; } </style>
-            <style>.nav-tabs > li > a { border-radius: unset; } </style>
-            <ul class='nav nav-tabs'>
-                <li role='presentation' class='active' ><a>" . trans("admin.all") . "</a></li>
-            </ul>
-            <div id='chart' style='width: 100%; height: 100%; padding-bottom: 100px; position: relative;'></div>
+            {$nav}
+            <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>
             $(function () {
                 echarts.init(document.getElementById('chart'), 'shine').setOption({
+                    grid: { left: '0px', right: '0px', top: '100px', bottom: '200px', containLabel: true },
                     legend: {type: 'scroll', orient: 'vertical', right: 50, top: 50, bottom: 50},
-                    series: [{type: 'pie', {$color}, data: " . json_encode($data) . "}]
+                    series: [{type: 'pie', radius: '60%', center: ['50%', '45%'], {$color}, data: " . json_encode($data) . "}]
                 });
             });
             </script>

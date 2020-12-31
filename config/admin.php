@@ -129,7 +129,7 @@ return [
         ],
 
         // Add "remember me" to login form
-        'remember' => true,
+        'remember' => env("APP_ENV", "dev") !== "production",
 
         // Redirect to the specified URI when user is not authorized.
         'redirect_to' => 'auth/login',

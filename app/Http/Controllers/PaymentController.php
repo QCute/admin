@@ -22,7 +22,7 @@ class PaymentController extends Controller
         // json key must be contain string quote
         $info = json_decode(base64_decode($parameter["callbackInfo"]), true);
         try {
-            $recharge_no = DB::insert("INSERT INTO (`recharge_id`, `channel`, `server_id`, `role_id`, `role_name`, `account`, `money`, `time`) VALUES (" . implode("',", array($info["recharge_id"], $info["channel"], $info["server_id"], $info["role_id"], $info["role_name"], $info["account"], $parameter["price"] / 100, time())) . ")");
+            $recharge_no = DB::insert("INSERT IGNORE INTO (`order_id`, `recharge_id`, `channel`, `server_id`, `role_id`, `role_name`, `account`, `money`, `time`) VALUES (" . implode("',", array($info["order_id"], $info["recharge_id"], $info["channel"], $info["server_id"], $info["role_id"], $info["role_name"], $info["account"], $parameter["price"] / 100, time())) . ")");
         } catch (\Exception $exception) {
             return "fail";
         }

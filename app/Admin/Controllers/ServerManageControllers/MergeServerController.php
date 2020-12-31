@@ -14,6 +14,7 @@ class MergeServerController extends Controller
         if(empty(request()->input("_token", ""))) return $content;
         $src = request()->input("src", "");
         $dst = request()->input("dst", "");
+        $mode = request()->input("mode", "");
         if($src == $dst) return $content->withError(trans("admin.failed"), trans("admin.merge_same_server"));
         // check server valid
         if(empty($src) || !SwitchServerController::hasServer($src)) return $content->withError(trans("admin.failed"), trans("admin.no_src_server"));
@@ -21,7 +22,8 @@ class MergeServerController extends Controller
         // conflict resolve sql
         $sql = str_replace("\n", "", preg_replace("/\s*--.*\n?/", "", file_get_contents(env("SERVER_CODE_PATH") . "/script/sql/merge.sql")));
         // other replace
-        $sql = str_replace("{{server_id}}", SwitchServerController::getServer($dst)->server_id, $sql);
+        $sql = str_replace("{{src_server_id}}", SwitchServerController::getServer($src)->server_id, $sql);
+        $sql = str_replace("{{dst_server_id}}", SwitchServerController::getServer($dst)->server_id, $sql);
         // database name replace
         $sql = str_replace("{{dst}}", $dst, str_replace("{{src}}", $src, $sql));
         // import each sql sentence
@@ -31,19 +33,19 @@ class MergeServerController extends Controller
             // set laravel database strict mode as false
             if(!empty(trim($row))) DB::insert($row);
         }
-        // query all user and log table
-        // $data = DB::select("SELECT `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = '{$src}' AND `TABLE_NAME` LIKE '%_log' AND `TABLE_NAME` NOT LIKE '%_data'");
-        // merge src data to dst
-        /// foreach($data as $row) 
-        // {
-            // DB::insert("INSERT INTO {$dst}.`{$row->TABLE_NAME}` SELECT * FROM {$src}.`{$row->TABLE_NAME}`");
-        // }
-        // remove src node
-        DB::delete("DELETE FROM `server_list_data` WHERE `server_node` = '{$src}'");
+        // default
+        if ($mode == "") {
+            // delete entrance
+            DB::delete("DELETE FROM `server_list_data` WHERE `server_node` = '{$src}'");
+        } else {
+            // update entrance
+            DB::update("UPDATE `server_list_data` SET `server_id` = (SELECT `server_id` FROM `server_list_data` WHERE server_node = '{$dst}'), `server_port` = (SELECT `server_port` FROM `server_list_data` WHERE server_node = '{$dst}') where server_node = '{$src}'");
+        }
+        // drop database
         DB::statement("DROP DATABASE IF EXISTS {$src}");
         // remove configure file
         unlink(env("SERVER_CODE_PATH") . "/config/" . $src . ".config");
-        // update server list
+        // republic server list
         SwitchServerController::publicServerList();
         // success tips
         return $content->withSuccess(trans("admin.succeeded"), trans("admin.completed"));
@@ -59,12 +61,12 @@ class MergeServerController extends Controller
         return $content->body("
             <style>.merge-server-list + .select2-container--default .select2-selection--single {height: 34px !important;}</style>
             <div classs='row'><div class='col-mod-12'><div class='box box-info'>
-                <div class='box-header with-border'>合服</div>
+                <div class='box-header with-border'>" . trans("admin.merge_server") . "</div>
                 <form name='form' class='form-horizontal' action='merge-server' method='POST' pjax-container>
                     " . csrf_field() . "
                     <div class='box-body'>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 asterisk control-label'>从</label>
+                            <label for='name' class='col-sm-2 asterisk control-label'>" . trans("admin.merge_from") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
                                 <select class='form-control merge-server-list' name='src'>
@@ -73,12 +75,20 @@ class MergeServerController extends Controller
                             </div></div>
                         </div>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 asterisk control-label'>合并到</label>
+                            <label for='name' class='col-sm-2 asterisk control-label'>" . trans("admin.merge_to") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
                                 <select class='form-control merge-server-list' name='dst'>
                                     {$list}
                                 </select>
+                            </div></div>
+                        </div>
+                        <div class='form-group'>
+                            <label for='world' class='col-sm-2 asterisk control-label'>" . trans("admin.merge_mode") . "</label>
+                            <div class='col-sm-8'><div class='input-group'>
+                                <input type='radio' name='merge' value='' class='iradio_minimal-blue' checked/> " . trans("admin.merge_mode_merge") . " 
+                                <span style='margin-left: 2em;'>&nbsp;</span>
+                                <input type='radio' name='merge' value='keep' class='iradio_minimal-blue' /> " . trans("admin.merge_mode_keep") . "
                             </div></div>
                         </div>
                         <div class='form-group'>
@@ -93,7 +103,7 @@ class MergeServerController extends Controller
                             <label for='name' class='col-sm-2 control-label'></label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-check fa-fw'></i></span>
-                                <input type='submit' class='form-control' value='开始' />
+                                <input type='submit' class='form-control' value='" . trans("admin.start") . "' />
                             </div></div>
                         </div>
                     </div>
@@ -102,8 +112,9 @@ class MergeServerController extends Controller
             <link href='https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css' rel='stylesheet' />
             <link href='https://cdn.bootcss.com/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css' rel='stylesheet'>
             <script src='https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js'></script>
-            <script>$(document).ready(function() { $('.merge-server-list').select2({placeholder: '选择服务器'}); });</script>
-            <script>$(window).resize(function() { $('.merge-server-list').select2({placeholder: '选择服务器'}); });</script>
+            <script>$(document).ready(function() { $('.merge-server-list').select2({placeholder: '" . trans("admin.server") . "'}); });</script>
+            <script>$(window).resize(function() { $('.merge-server-list').select2({placeholder: '" . trans("admin.server") . "'}); });</script>
+            <script>$(document).ready(function(){ $('input').iCheck({ checkboxClass: 'icheckbox_minimal-blue', radioClass: 'iradio_minimal-blue', increaseArea: '20%' }); });</script>
         ");
     }
 }

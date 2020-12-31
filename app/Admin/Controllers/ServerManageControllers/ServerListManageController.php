@@ -12,7 +12,7 @@ class ServerListManageController extends Controller
     {
         $content = $this->sendRequest($content);
         $data = SwitchServerController::getServerList("local");
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->server_name . "</td><td>" . $row->center_name . "</td><td>" . $row->world . "</td><td>" . date("Y-m-d H:i:s", $row->open_time) . "</td><td>" . $row->state . "</td><td><a href='server-list-manage?command=refuse&server={$row->server_node}'>" . trans("admin.refuse") . "</a> | <a href='server-list-manage?command=master&server={$row->server_node}'>" . trans("admin.master") . "</a> | <a href='server-list-manage?command=insider&server={$row->server_node}'>" . trans("admin.insider") . "</a> | <a href='server-list-manage?command=normal&server={$row->server_node}'>" . trans("admin.normal") . "</a></td></tr>"; }, $data));
+        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->server_name . "</td><td>" . $row->center_name . "</td><td>" . $row->world . "</td><td>" . date("Y-m-d H:i:s", $row->open_time) . "</td><td>" . $row->state . "</td><td><a href='server-list-manage?command=set_state_refuse&server={$row->server_node}'>" . trans("admin.refuse") . "</a> | <a href='server-list-manage?command=set_state_normal&server={$row->server_node}'>" . trans("admin.normal") . "</a> | <a href='server-list-manage?command=set_state_insider&server={$row->server_node}'>" . trans("admin.insider") . "</a> | <a href='server-list-manage?command=set_state_master&server={$row->server_node}'>" . trans("admin.master") . "</a></td></tr>"; }, $data));
         return $content->body("
             <style>.panel{border-radius: 0px;}</style>
             <div class='panel panel-default'>

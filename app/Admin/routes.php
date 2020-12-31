@@ -25,12 +25,12 @@ $router = Route::group([
     $router->get('/user-online',                     'ActiveStatisticsControllers\\UserOnlineController@index')->name('admin.home');
     $router->get('/user-register',                   'ActiveStatisticsControllers\\UserRegisterController@index')->name('admin.home');
     $router->get('/user-login',                      'ActiveStatisticsControllers\\UserLoginController@index')->name('admin.home');
-    $router->get('/user-retain',                     'ActiveStatisticsControllers\\UserRetainController@index')->name('admin.home');
     $router->get('/user-survival',                   'ActiveStatisticsControllers\\UserSurvivalController@index')->name('admin.home');
-    $router->get('/user-loss',                       'ActiveStatisticsControllers\\UserLossController@index')->name('admin.home');
+    $router->get('/daily-online-time',               'ActiveStatisticsControllers\\DailyOnlineTimeController@index')->name('admin.home');
 
     // User Recharge Statistics
-    $router->get('/user-recharge',                   'RechargeStatisticsControllers\\UserRechargeController@index')->name('admin.home');
+    $router->get('/daily-recharge',                  'RechargeStatisticsControllers\\DailyRechargeController@index')->name('admin.home');
+    $router->get('/recharge-rank',                   'RechargeStatisticsControllers\\RechargeRankController@index')->name('admin.home');
     $router->get('/recharge-ratio',                  'RechargeStatisticsControllers\\RechargeRatioController@index')->name('admin.home');
     $router->get('/recharge-distribution',           'RechargeStatisticsControllers\\RechargeDistributionController@index')->name('admin.home');
     $router->get('/first-recharge-time-distribution','RechargeStatisticsControllers\\FirstRechargeTimeDistributionController@index')->name('admin.home');
@@ -50,6 +50,7 @@ $router = Route::group([
     $router->get('/erl-configure',                   'GameConfigureControllers\\ConfigureListController@showErl')->name('admin.home');
     $router->get('/lua-configure',                   'GameConfigureControllers\\ConfigureListController@showLua')->name('admin.home');
     $router->get('/js-configure',                    'GameConfigureControllers\\ConfigureListController@showJs')->name('admin.home');
+    $router->get('/configure-assistant',             'GameConfigureControllers\\ConfigureAssistantController@index')->name('admin.home');
 
     // Game Server Manage
     $router->get('/server-list-manage',              'ServerManageControllers\\ServerListManageController@index')->name('admin.home');

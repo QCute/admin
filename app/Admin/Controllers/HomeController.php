@@ -2,16 +2,11 @@
 
 namespace App\Admin\Controllers;
 
-use App\Admin\Controllers\ServerManageControllers\ServerListManageController;
 use App\Http\Controllers\Controller;
-use Encore\Admin\Facades\Admin;
 use Encore\Admin\Controllers\Dashboard;
 use Encore\Admin\Layout\Column;
 use Encore\Admin\Layout\Content;
 use Encore\Admin\Layout\Row;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Route;
-
 
 class HomeController extends Controller
 {
@@ -37,6 +32,7 @@ class HomeController extends Controller
                 $row->column(4, function (Column $column) {
                     $column->append(Dashboard::dependencies());
                 });
-            })->body(""); // pyrite troilite marcasite
+            })
+            ->body("");
     }
 }

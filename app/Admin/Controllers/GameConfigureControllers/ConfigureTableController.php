@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers\GameConfigureControllers;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
@@ -29,7 +30,7 @@ class ConfigureTableController extends Controller
                 else
                     // retuan file not found
                     return response(json_encode($result), 404);
-            }break;
+            }
             case "import": 
             {
                 // file upload
@@ -44,8 +45,10 @@ class ConfigureTableController extends Controller
                 unlink(storage_path("admin") . "/xml/" . $file->getClientOriginalName());
                 // handle result
                 $result = implode("", $result);
-                if ($result == "ok") 
+                if ($result == "ok") {
+                    DB::insert("INSERT INTO `table_import_log` (`username`, `name`, `table_name`) VALUES ('" . Auth::user()->name . "', '" . basename($file->getClientOriginalName(), ".xml") . "', '')");
                     $result = "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
+                }
                 else
                     $result = "toastr.error(" . json_encode($result) . ")";
             }break;
@@ -58,8 +61,8 @@ class ConfigureTableController extends Controller
             }
         }
         // view
-        $data = DB::select("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = '" . SwitchServerController::getCurrentServer() . "' AND `TABLE_NAME` LIKE '%_data'");
-        $html = implode("", array_map(function($row){ return "<tr><td>{$row->TABLE_COMMENT}</td><td>{$row->TABLE_NAME}</td><td><a class='action' onclick='$.fileDownload(\"configure-table?action=export&table={$row->TABLE_NAME}&xml={$row->TABLE_COMMENT}\").fail(result => toastr.error(result))'>" . trans("admin.export") . "</tr>"; }, $data));
+        $data = DB::select("SELECT `TABLES`.`TABLE_COMMENT`, `TABLES`.`TABLE_NAME`, `table_import_log`.* FROM information_schema.`TABLES` LEFT JOIN (SELECT `table_import_log`.`username`, `table_import_log`.`name`, `table_import_log`.`time` FROM `table_import_log` JOIN (SELECT MAX(`id`) AS `id` FROM `table_import_log` GROUP BY `name`) AS `group_table_import_log` ON `table_import_log`.`id` = `group_table_import_log`.`id`) AS `table_import_log` ON `TABLES`.`TABLE_COMMENT` = `table_import_log`.`name` WHERE `TABLE_SCHEMA` = '" . SwitchServerController::getCurrentServer() . "' AND `TABLE_NAME` LIKE '%_data'");
+        $html = implode("", array_map(function($row){ return "<tr><td>{$row->TABLE_COMMENT}</td><td>{$row->TABLE_NAME}</td><td>{$row->username}</td><td>{$row->time}</td><td><a class='action' onclick='$.fileDownload(\"configure-table?action=export&table={$row->TABLE_NAME}&xml={$row->TABLE_COMMENT}\").fail(result => toastr.error(result))'>" . trans("admin.export") . "</tr>"; }, $data));
         return $content->body("
             <script>$(document).ready(function(){{$result}});</script>
             <style>
@@ -82,7 +85,7 @@ class ConfigureTableController extends Controller
             </div>
             <div class='panel panel-default'>
                 <table class='table'>
-                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
+                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.username") . "</th><th>" . trans("admin.time") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
                     {$html}
                 </table>
             </div>
