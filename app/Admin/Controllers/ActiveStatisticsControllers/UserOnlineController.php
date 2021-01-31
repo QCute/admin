@@ -4,34 +4,34 @@ namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Controllers\TimeTabController;
+use App\Admin\Controllers\SwitchServerController;
 
 class UserOnlineController extends TimeTabController
 {
     public function index(Content $content)
     {
-        list($before, $now, $current, $nav) = $this->makeNav(array("hour", "day", "pick_time"), "hour");
+        $database = SwitchServerController::getCurrentServer();
+        list($before, $now, $current, $nav) = $this->makeNav(["hour", "day", "pick_time"], "hour");
         if ($current == "day")
         {
             $step = 3600;
             $format = "'H'";
-            $data = DB::select("SELECT AVG(`all`) AS `all`, AVG(`online`) AS `online`, AVG(`hosting`) AS `hosting`, `hour` AS `date` FROM " . SwitchServerController::getCurrentServer() . ".`online_log` WHERE `time` BETWEEN " . $before . " AND " . $now . " GROUP BY `date` ");
+            $data = DB::select("SELECT AVG(`all`) AS `all`, AVG(`online`) AS `online`, AVG(`hosting`) AS `hosting`, `hour` AS `date` FROM `{$database}`.`online_log` WHERE `time` BETWEEN ? AND ? GROUP BY `date`", [$before, $now]);
         }
         else
         {
             $step = 60;
             $format = "'H-i'";
-            $data = DB::select("SELECT `all`, `online`, `hosting`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`time`), '%H:%i'), \"'\") AS `date` FROM " . SwitchServerController::getCurrentServer() . ".`online_log` WHERE `time` BETWEEN " . $before . " AND " . $now . "");
+            $data = DB::select("SELECT `all`, `online`, `hosting`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`time`), '%H:%i'), \"'\") AS `date` FROM `{$database}`.`online_log` WHERE `time` BETWEEN ? AND ?", [$before, $now]);
         }
         // chart data
         if (empty($data))
         {
-            $category = array();
-            $all = array();
-            $online = array();
-            $hosting = array();
+            $category = [];
+            $all = [];
+            $online = [];
+            $hosting = [];
             for ($start = $before; $start <= $now; $start += $step)
             {
                 array_push($category, date($format, $start));
@@ -52,7 +52,7 @@ class UserOnlineController extends TimeTabController
             $hosting = implode(",", array_column($data, "hosting"));
         }
         // draw
-        return $content->body("
+        return $content->title('')->body("
             {$nav}
             <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>

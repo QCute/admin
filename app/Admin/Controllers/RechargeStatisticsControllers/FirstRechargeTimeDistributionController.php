@@ -4,9 +4,8 @@ namespace App\Admin\Controllers\RechargeStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Controllers\TimeTabController;
+use App\Admin\Controllers\SwitchServerController;
 
 class FirstRechargeTimeDistributionController extends TimeTabController
 {
@@ -28,20 +27,21 @@ class FirstRechargeTimeDistributionController extends TimeTabController
 
     public function index(Content $content)
     {
-        list(, , , $nav) = $this->makeNav(array("all"), "all");
-        $data = DB::select("SELECT (`first_recharge_time` - `register_time`) div 86400 + 1 AS `name`, COUNT(1) AS `value` FROM " . SwitchServerController::getCurrentServer() . ".`role` where `first_recharge_time` > 0 GROUP BY `name`");
+        $database = SwitchServerController::getCurrentServer();
+        list(, , , $nav) = $this->makeNav(["all"], "all");
+        $data = DB::select("SELECT (`first_recharge_time` - `register_time`) div 86400 + 1 AS `name`, COUNT(1) AS `value` FROM `{$database}`.`role` where `first_recharge_time` > 0 GROUP BY `name`");
         if (empty($data))
         {
             $color = "color: ['rgba(128, 128, 128, 1)']";
-            $data = array(array("name" => "0", "value" => "0", "label" => array("formatter" => "{b}: {c} (100%)")));
+            $data = [["name" => "0", "value" => "0", "label" => ["formatter" => "{b}: {c} (100%)"]]];
         }
         else
         {
             $color = "color: ['#37a2da','#32c5e9','#9fe6b8','#ffdb5c','#ff9f7f','#fb7293','#e7bcf3','#8378ea']";
-            $data = array_map(function($object){ $object->label = array("formatter" => "{b}: {c} ({d}%)"); return self::slice($object); }, $data);
+            $data = array_map(function($object){ $object->label = ["formatter" => "{b}: {c} ({d}%)"]; $object->name .= trans("admin.day"); return $object; }, $data);
         }
         // draw
-        return $content->body("
+        return $content->title('')->body("
             {$nav}
             <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>

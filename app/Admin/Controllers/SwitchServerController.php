@@ -14,13 +14,13 @@ class SwitchServerController extends Controller
         $server = request()->input("server");
         Cookie::queue("current_server", $server);
         if ($server)
-            return response()->json(array("result" => "ok", "server" => $server, "msg" => trans('admin.switch_server_ok')));
+            return response()->json(["result" => "ok", "server" => $server, "msg" => trans('admin.switch_server_ok')]);
         else
-            return response()->json(array("result" => "failed", "server" => $server, "msg" => trans('admin.switch_server_failed')));
+            return response()->json(["result" => "failed", "server" => $server, "msg" => trans('admin.switch_server_failed')]);
     }
 
     // nav bar server list
-    public static function showServerList()
+    public static function serverList()
     {
         $list = '';
         $data = self::getServerList("local");
@@ -37,9 +37,9 @@ class SwitchServerController extends Controller
         $list = "<option value='$currentServerNode'>" . $currentServerName . "</option>" . $list;
         return "
             <style>
-                .server-select{margin: 10px 10px 10px 10px;}
-                .server-list + .select2-container--default .select2-selection__rendered { line-height: 25px !important; }
-                .server-list + .select2-container--default .select2-selection--single { height: 30px !important; }
+                .server-select{margin: 8px 8px 0px 0px;}
+                .x-server-list + .select2-container--default .select2-selection__rendered { line-height: 45px !important; }
+                .x-server-list + .select2-container--default .select2-selection--single { height: 34px !important; }
             </style>
             <script>
             function switchServer(server) {
@@ -51,14 +51,14 @@ class SwitchServerController extends Controller
             }
             </script>
             <li></li>
-            <li class='server-select'><div class='input-group'><select class='form-control server-list' onchange='switchServer(this.value)' style='min-width:16em;outline:none;'>{$list}</select></div></li>
-            <script src='https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js'></script>
-            <script>$('.server-list').select2({placeholder: '" . trans("admin.chose-server"). "'});</script>
+            <li class='server-select'><div class='input-group'><select class='form-control server-list' onchange='switchServer(this.value)' style='min-width:18em;outline:none;'>{$list}</select></div></li>
+            
+            <script>$(document).ready(function() { $('.server-list').select2({ placeholder: '" . trans("admin.chose-server"). "' }); });</script>
         ";
     }
 
     // get and set default if null
-    static function getCookieServer(String $default = null)
+    static function getCookieServer(string $default = null)
     {
         $server = Cookie::get('current_server', $default);
         Cookie::queue("current_server", $server);
@@ -71,13 +71,6 @@ class SwitchServerController extends Controller
         return Cookie::get('current_server');
     }
 
-    public static function getCurrentServerOpenDays()
-    {
-        $server = self::getCurrentServer();
-        $server = self::getServer($server);
-        return intval((time() - $server->open_time) / 86400) + 1;
-    }
-
     public static function getCurrentServerOpenTime()
     {
         $server = self::getCurrentServer();
@@ -85,39 +78,49 @@ class SwitchServerController extends Controller
         return $server->open_time;
     }
 
-    // server list
-    public static function getServerList(String $type = null)
+    public static function getCurrentServerOpenDays()
     {
-        if (!is_null($type) && !empty($type)) {
-            return DB::select("SELECT * FROM `server_list_data` WHERE `server_type` = '{$type}' ORDER BY `server_id` ASC");
-        } else {
-            return DB::select("SELECT * FROM `server_list_data` ORDER BY `server_id` ASC");
-        }
+        $server = self::getCurrentServer();
+        $server = self::getServer($server);
+        return intval((time() - $server->open_time) / 86400) + 1;
     }
 
     // server
-    public static function getServer($node)
+    public static function getServer(string $server)
     {
-        return DB::selectOne("SELECT * FROM `server_list_data` WHERE `server_node` = '{$node}'");
+        return DB::table("server_list")->where("server_node", $server)->orWhere("server_id", "LIKE", $server)->first();
     }
 
     // has server
-    public static function hasServer($node)
+    public static function hasServer(string $node)
     {
         return !is_null(self::getServer($node));
     }
 
-    public static function nextServerId($type)
+    public static function nextServerId(string $type)
     {
-        return intval(DB::selectOne("SELECT MAX(`server_id`) + 1 AS `server_id` FROM `server_list_data` WHERE `server_type` = '{$type}'")->server_id);
+        return DB::table("server_list")->where("server_type", $type)->max("server_id") + 1;
+        // return intval(DB::selectOne("SELECT MAX(`server_id`) + 1 AS `server_id` FROM `server_list` WHERE `server_type` = '{$type}'")->server_id);
     }
 
-    public static function nextServerPort($type)
+    public static function nextServerPort(string $type)
     {
-        return intval(DB::selectOne("SELECT MAX(`server_port`) + 1 AS `server_port` FROM `server_list_data` WHERE `server_type` = '{$type}'")->server_port);
+        return DB::table("server_list")->where("server_type", $type)->max("server_port") + 1;
+        // return intval(DB::selectOne("SELECT MAX(`server_port`) + 1 AS `server_port` FROM `server_list` WHERE `server_type` = '{$type}'")->server_port);
     }
 
-    public static function send(String $server = "this", String $command = "", String $data = "", String $method = "GET", int $timeout = 5)
+    // server list
+    public static function getServerList(string $type = null)
+    {
+        if (!is_null($type) && !empty($type)) {
+            return DB::table("server_list")->where("server_type", $type)->orderBy("server_id")->get()->toArray();
+        } else {
+            return DB::table("server_list")->orderBy("server_id")->get()->toArray();
+        }
+    }
+
+    // send request
+    public static function send(string $server = "this", string $command = "", string $data = "", string $method = "GET", int $timeout = 5)
     {
         if ($server == "all") {
             // get all current node-type's node
@@ -125,23 +128,23 @@ class SwitchServerController extends Controller
             $server_list = self::getServerList($current_node->server_type);
         } else if ($server == "this")
             // get current node
-            $server_list = array(self::getServer(self::getCurrentServer()));
+            $server_list = [self::getServer(self::getCurrentServer())];
         else if(self::hasServer($server))
-            $server_list = array(self::getServer($server));
+            $server_list = [self::getServer($server)];
         else
-            return array(trans("unknown_server") => $server);
+            return [trans("unknown_server") => $server];
         // send and get result
-        $result = array("ok" => array(), "error" => array());
+        $result = ["ok" => [], "error" => []];
         foreach ($server_list as $server)
         {
-            $opts = array (
-                "http" => array (
+            $opts = [
+                "http" => [
                     "method" => $method,
                     "timeout" => $timeout,
                     "header" => "Content-Type: application/x-www-form-urlencoded\r\nCommand: {$command}\r\nContent-Length: " . strlen($data) . "\r\n",
                     "content" => $data
-                )
-            );
+                ]
+            ];
             try {
                 $result["ok"][$server->server_name] = file_get_contents("http://" . env("SERVER_URL", "127.0.0.1") . ":" . $server->server_port, false, stream_context_create($opts));
             } catch (Exception $exception) {
@@ -151,25 +154,25 @@ class SwitchServerController extends Controller
         return $result;
     }
 
-    // public server list
-    public static function getPublicServerList()
+    // publish server list
+    public static function getPublishServerList()
     {
         return array_map(function($server) {
-            return array(
+            return [
                 "server_name" => $server->server_name,
                 "server_id" => $server->server_id,
                 "server_ip" => $server->server_ip,
                 "server_port" => $server->server_port,
                 "tab_name" => $server->tab_name,
-            );
+            ];
         }, self::getServerList("local"));
     }
 
     // reload static server list
-    public static function publicServerList(String $path = "")
+    public static function publishServerList(string $path = "")
     {
         if ($path == "") $path = public_path("server-list.php");
-        $list = self::getPublicServerList();
+        $list = self::getPublishServerList();
         $data =  "<?php header('content-type:application:json;charset=utf8');"  . "header('Access-Control-Allow-Origin: *');" . "header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');" . " echo '" . json_encode($list) . "';";
         file_put_contents($path, $data);
     }

@@ -3,15 +3,15 @@
 
  Source Server         : windows
  Source Server Type    : MariaDB
- Source Server Version : 100505
+ Source Server Version : 100508
  Source Host           : localhost:3306
  Source Schema         : admin
 
  Target Server Type    : MariaDB
- Target Server Version : 100505
+ Target Server Version : 100508
  File Encoding         : 65001
 
- Date: 21/12/2020 22:03:48
+ Date: 31/01/2021 14:33:54
 */
 
 SET NAMES utf8mb4;
@@ -32,51 +32,62 @@ CREATE TABLE `admin_menu`  (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 43 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 54 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_menu
 -- ----------------------------
 INSERT INTO `admin_menu` VALUES (1, 0, 1, '仪表盘', 'fa-dashboard', '/', NULL, NULL, '2020-11-29 17:30:37');
-INSERT INTO `admin_menu` VALUES (2, 0, 36, '管理员', 'fa-tasks', NULL, NULL, NULL, '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (3, 2, 37, '用户', 'fa-users', 'auth/users', NULL, NULL, '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (4, 2, 38, '角色', 'fa-user', 'auth/roles', NULL, NULL, '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (5, 2, 39, '权限', 'fa-ban', 'auth/permissions', NULL, NULL, '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (6, 2, 40, '菜单', 'fa-bars', 'auth/menu', NULL, NULL, '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (7, 2, 41, '操作日志', 'fa-history', 'auth/logs', NULL, NULL, '2020-12-12 15:18:46');
+INSERT INTO `admin_menu` VALUES (2, 0, 38, '管理员', 'fa-tasks', NULL, NULL, NULL, '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (3, 2, 39, '用户', 'fa-users', 'auth/users', NULL, NULL, '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (4, 2, 40, '角色', 'fa-user', 'auth/roles', NULL, NULL, '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (5, 2, 41, '权限', 'fa-ban', 'auth/permissions', NULL, NULL, '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (6, 2, 42, '菜单', 'fa-bars', 'auth/menu', NULL, NULL, '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (7, 2, 43, '操作日志', 'fa-history', 'auth/logs', NULL, NULL, '2021-01-23 22:20:27');
 INSERT INTO `admin_menu` VALUES (8, 0, 2, '活跃统计', 'fa-area-chart', NULL, NULL, '2020-05-24 14:00:57', '2020-11-29 18:24:18');
-INSERT INTO `admin_menu` VALUES (9, 0, 10, '充值统计', 'fa-line-chart', NULL, NULL, '2020-05-24 14:01:08', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (10, 0, 16, '游戏数据', 'fa-save', NULL, NULL, '2020-05-24 14:01:25', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (11, 0, 21, '配置管理', 'fa-database', NULL, NULL, '2020-05-24 14:01:31', '2020-12-19 22:58:35');
-INSERT INTO `admin_menu` VALUES (12, 0, 27, '服务器管理', 'fa-gears', NULL, NULL, '2020-05-24 14:01:41', '2020-12-12 15:18:46');
+INSERT INTO `admin_menu` VALUES (9, 0, 8, '充值统计', 'fa-line-chart', NULL, NULL, '2020-05-24 14:01:08', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (10, 0, 14, '游戏数据', 'fa-save', NULL, NULL, '2020-05-24 14:01:25', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (11, 0, 19, '配置管理', 'fa-database', NULL, NULL, '2020-05-24 14:01:31', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (12, 0, 24, '服务器管理', 'fa-gears', NULL, NULL, '2020-05-24 14:01:41', '2021-01-21 20:42:25');
 INSERT INTO `admin_menu` VALUES (13, 8, 3, '实时在线人数', 'fa-area-chart', '/user-online', NULL, '2020-05-24 14:02:30', '2020-12-12 15:37:17');
 INSERT INTO `admin_menu` VALUES (14, 8, 4, '注册统计', 'fa-bar-chart', '/user-register', NULL, '2020-05-24 14:02:53', '2020-12-12 21:12:53');
 INSERT INTO `admin_menu` VALUES (15, 8, 5, '登录统计', 'fa-bar-chart', '/user-login', NULL, '2020-05-24 14:03:17', '2020-12-12 21:13:03');
 INSERT INTO `admin_menu` VALUES (16, 8, 6, '玩家存活', 'fa-bar-chart', '/user-survival', NULL, '2020-05-24 14:04:00', '2020-11-29 20:05:15');
 INSERT INTO `admin_menu` VALUES (17, 8, 7, '每日在线时长', 'fa-bar-chart', '/daily-online-time', NULL, '2020-05-24 14:04:19', '2020-12-13 00:00:44');
-INSERT INTO `admin_menu` VALUES (18, 9, 11, '每日充值统计', 'fa-bar-chart', '/daily-recharge', NULL, '2020-05-24 14:05:04', '2020-12-12 21:13:15');
-INSERT INTO `admin_menu` VALUES (19, 9, 14, '充值区间分布', 'fa-pie-chart', '/recharge-distribution', NULL, '2020-05-24 14:05:24', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (20, 10, 17, '玩家数据', 'fa-user-plus', '/user-data', NULL, '2020-05-24 14:05:44', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (21, 10, 18, '配置数据', 'fa-tags', '/configure-data', NULL, '2020-05-24 14:06:00', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (22, 10, 19, '日志数据', 'fa-history', '/log-data', NULL, '2020-05-24 14:06:15', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (23, 10, 20, '客户端错误日志', 'fa-warning', '/client-error-log', NULL, '2020-05-24 14:06:37', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (24, 11, 22, '配置表', 'fa-list-ol', '/configure-table', NULL, '2020-05-24 14:07:11', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (25, 11, 23, '服务器配置(erl)', 'fa-server', '/erl-configure', NULL, '2020-05-24 14:07:48', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (26, 11, 24, '客户端配置(lua)', 'fa-desktop', '/lua-configure', NULL, '2020-05-24 14:08:13', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (27, 11, 25, '客户端配置(js)', 'fa-tv', '/js-configure', NULL, '2020-05-24 14:10:21', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (28, 12, 28, '服务器列表', 'fa-list-ul', '/server-list-manage', NULL, '2020-05-24 14:10:41', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (29, 12, 29, '玩家管理', 'fa-sliders', '/user-manage', NULL, '2020-05-24 14:10:57', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (30, 12, 30, '服务器邮件', 'fa-envelope-o', '/server-mail', NULL, '2020-05-24 14:11:16', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (31, 12, 31, '服务器公告', 'fa-edit', '/server-notice', NULL, '2020-05-24 14:11:30', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (32, 12, 32, '开服', 'fa-clone', '/open-server', NULL, '2020-05-24 14:11:46', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (33, 12, 33, '合服', 'fa-copy', '/merge-server', NULL, '2020-05-24 14:12:06', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (34, 12, 34, '玩家举报', 'fa-info-circle', '/user-impeach', NULL, '2020-05-24 14:12:33', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (35, 12, 35, '敏感词', 'fa-filter', '/sensitive-word', NULL, '2020-05-24 14:12:47', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (36, 9, 15, '首充时间分布', 'fa-pie-chart', '/first-recharge-time-distribution', NULL, '2020-06-14 18:14:45', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (37, 9, 13, '充值比例', 'fa-pie-chart', '/recharge-ratio', NULL, '2020-06-14 18:49:31', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (38, 0, 42, '计划任务', 'fa-clock-o', 'scheduling', NULL, '2020-11-29 21:52:01', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (39, 9, 12, '充值排行', 'fa-bar-chart', '/recharge-rank', NULL, '2020-12-05 21:36:04', '2020-12-12 15:18:46');
-INSERT INTO `admin_menu` VALUES (40, 11, 26, '配表助手', 'fa-magic', '/configure-assistant', NULL, '2020-12-12 14:44:27', '2020-12-12 15:18:46');
+INSERT INTO `admin_menu` VALUES (18, 9, 9, '每日充值统计', 'fa-bar-chart', '/daily-recharge', NULL, '2020-05-24 14:05:04', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (19, 9, 12, '充值区间分布', 'fa-pie-chart', '/recharge-distribution', NULL, '2020-05-24 14:05:24', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (20, 10, 15, '玩家数据', 'fa-user-plus', '/user-data', NULL, '2020-05-24 14:05:44', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (21, 10, 16, '配置数据', 'fa-tags', '/configure-data', NULL, '2020-05-24 14:06:00', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (22, 10, 17, '日志数据', 'fa-history', '/log-data', NULL, '2020-05-24 14:06:15', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (23, 10, 18, '客户端错误日志', 'fa-warning', '/client-error-log', NULL, '2020-05-24 14:06:37', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (24, 11, 20, '配置表', 'fa-list-ol', '/configure-table', NULL, '2020-05-24 14:07:11', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (25, 11, 21, '服务器配置(erl)', 'fa-server', '/erl-configure', NULL, '2020-05-24 14:07:48', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (26, 11, 22, '客户端配置(lua)', 'fa-desktop', '/lua-configure', NULL, '2020-05-24 14:08:13', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (27, 11, 23, '客户端配置(js)', 'fa-tv', '/js-configure', NULL, '2020-05-24 14:10:21', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (28, 12, 25, '服务器列表', 'fa-list-ul', '/server-list-manage', NULL, '2020-05-24 14:10:41', '2021-01-21 20:42:25');
+INSERT INTO `admin_menu` VALUES (29, 45, 29, '封号/禁言', 'fa-sliders', '/user-manage', NULL, '2020-05-24 14:10:57', '2021-01-24 13:49:01');
+INSERT INTO `admin_menu` VALUES (30, 45, 30, '邮件', 'fa-envelope-o', '/game-mail', NULL, '2020-05-24 14:11:16', '2021-01-24 12:13:22');
+INSERT INTO `admin_menu` VALUES (31, 45, 31, '公告', 'fa-edit', '/game-notice', NULL, '2020-05-24 14:11:30', '2021-01-24 12:13:47');
+INSERT INTO `admin_menu` VALUES (32, 12, 26, '开服', 'fa-clone', '/open-server', NULL, '2020-05-24 14:11:46', '2021-01-21 22:34:47');
+INSERT INTO `admin_menu` VALUES (33, 12, 27, '合服', 'fa-copy', '/merge-server', NULL, '2020-05-24 14:12:06', '2021-01-21 22:34:47');
+INSERT INTO `admin_menu` VALUES (34, 45, 33, '举报信息', 'fa-info-circle', '/impeach', NULL, '2020-05-24 14:12:33', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (35, 45, 34, '敏感词', 'fa-filter', '/sensitive-word', NULL, '2020-05-24 14:12:47', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (36, 9, 13, '首充时间分布', 'fa-pie-chart', '/first-recharge-time-distribution', NULL, '2020-06-14 18:14:45', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (37, 9, 11, '充值比例', 'fa-pie-chart', '/recharge-ratio', NULL, '2020-06-14 18:49:31', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (38, 0, 44, '计划任务', 'fa-clock-o', 'scheduling', NULL, '2020-11-29 21:52:01', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (39, 9, 10, '充值排行', 'fa-bar-chart', '/recharge-rank', NULL, '2020-12-05 21:36:04', '2021-01-12 20:57:49');
+INSERT INTO `admin_menu` VALUES (40, 43, 36, '配表助手', 'fa-magic', '/configure-assistant', NULL, '2020-12-12 14:44:27', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (43, 0, 35, '工具', 'fa-wrench', NULL, NULL, '2021-01-12 20:56:52', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (44, 43, 37, 'SSH Key生成', 'fa-key', '/key-assistant', NULL, '2021-01-12 20:58:37', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (45, 0, 28, '运营管理', 'fa-user-plus', NULL, NULL, '2021-01-21 20:45:18', '2021-01-21 22:34:47');
+INSERT INTO `admin_menu` VALUES (46, 45, 32, '维护公告', 'fa-bullhorn', '/maintain-notice', NULL, '2021-01-23 22:20:03', '2021-01-23 22:20:27');
+INSERT INTO `admin_menu` VALUES (47, 0, 45, '日志查看器', 'fa-search-plus', 'logs', NULL, '2021-01-23 23:06:39', '2021-01-23 23:13:09');
+INSERT INTO `admin_menu` VALUES (48, 0, 46, 'Helpers', 'fa-gears', '', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
+INSERT INTO `admin_menu` VALUES (49, 48, 47, 'Scaffold', 'fa-keyboard-o', 'helpers/scaffold', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
+INSERT INTO `admin_menu` VALUES (50, 48, 48, 'Database terminal', 'fa-database', 'helpers/terminal/database', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
+INSERT INTO `admin_menu` VALUES (51, 48, 49, 'Laravel artisan', 'fa-terminal', 'helpers/terminal/artisan', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
+INSERT INTO `admin_menu` VALUES (52, 48, 50, 'Routes', 'fa-list-alt', 'helpers/routes', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
+INSERT INTO `admin_menu` VALUES (53, 48, 51, 'Api tester', 'fa-sliders', 'api-tester', NULL, '2021-01-23 23:17:29', '2021-01-23 23:20:13');
 
 -- ----------------------------
 -- Table structure for admin_operation_log
@@ -93,7 +104,7 @@ CREATE TABLE `admin_operation_log`  (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `admin_operation_log_user_id_index`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_operation_log
@@ -114,7 +125,7 @@ CREATE TABLE `admin_permissions`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `admin_permissions_name_unique`(`name`) USING BTREE,
   UNIQUE INDEX `admin_permissions_slug_unique`(`slug`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_permissions
@@ -125,6 +136,9 @@ INSERT INTO `admin_permissions` VALUES (3, 'Login', 'auth.login', '', '/auth/log
 INSERT INTO `admin_permissions` VALUES (4, 'User setting', 'auth.setting', 'GET,PUT', '/auth/setting', NULL, NULL);
 INSERT INTO `admin_permissions` VALUES (5, 'Auth management', 'auth.management', '', '/auth/roles\r\n/auth/permissions\r\n/auth/menu\r\n/auth/logs', NULL, NULL);
 INSERT INTO `admin_permissions` VALUES (7, 'Scheduling', 'ext.scheduling', '', '/scheduling*', '2020-11-29 21:52:01', '2020-11-29 21:52:01');
+INSERT INTO `admin_permissions` VALUES (8, 'Logs', 'ext.log-viewer', '', '/logs*', '2021-01-23 23:06:39', '2021-01-23 23:06:39');
+INSERT INTO `admin_permissions` VALUES (9, 'Admin helpers', 'ext.helpers', '', '/helpers/*', '2021-01-23 23:14:23', '2021-01-23 23:14:23');
+INSERT INTO `admin_permissions` VALUES (10, 'Api tester', 'ext.api-tester', '', '/api-tester*', '2021-01-23 23:17:29', '2021-01-23 23:17:29');
 
 -- ----------------------------
 -- Table structure for admin_role_menu
@@ -261,7 +275,7 @@ CREATE TABLE `admin_users`  (
 -- ----------------------------
 -- Records of admin_users
 -- ----------------------------
-INSERT INTO `admin_users` VALUES (1, 'Admin', '$2y$10$zQsAsXvy0ZkRZcdsyIrizuCJacEf5jEyI/fhZucQZnWwNSdxHy5B6', '管理员', NULL, 'q52Gr2IEh9oqaYQZ1jC766TuxJSxiB7G4HSKOLgSn3VtdCcPYFUktwtPJrUB', '2020-05-16 23:41:12', '2020-11-29 22:05:40');
+INSERT INTO `admin_users` VALUES (1, 'Admin', '$2y$10$zQsAsXvy0ZkRZcdsyIrizuCJacEf5jEyI/fhZucQZnWwNSdxHy5B6', '管理员', NULL, 'iaOlzw1e1w2GSPG9zIKigDyy6MCCTfjEThDCjqjyd016eqdsecWoL8ALgxJx', '2020-05-16 23:41:12', '2020-11-29 22:05:40');
 INSERT INTO `admin_users` VALUES (2, 'Backend', '$2y$10$Liq.fqESpgmaVV0WhP0/reFdPwjmiJd6VlVVDBYJiz6zm.g2FTX8y', '服务端', NULL, 'ARwBxLfZdRWig5X0VqxRc6NPgTYuiESEQZ0Wg476qGAn9vKEeuYR1UTdgbVu', '2020-06-13 22:47:31', '2020-12-02 22:27:07');
 INSERT INTO `admin_users` VALUES (3, 'Frontend', '$2y$10$0ibpv2RoCoKNVlbvjqj5VOexsPxBgNrKYdYGfm3NRVVfIrk7iNQjq', '客户端', NULL, NULL, '2020-06-13 22:59:49', '2020-12-02 22:35:56');
 INSERT INTO `admin_users` VALUES (4, 'Product', '$2y$10$26HKN0.WffEx3JnZcMEic.hb4KW12lpC9bDl.yqw4Ulm/A/d1GRhm', '策划', NULL, NULL, '2020-06-13 23:00:58', '2020-12-02 22:36:11');
@@ -296,12 +310,13 @@ CREATE TABLE `client_error_log`  (
   `account` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '账号',
   `role_id` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '玩家ID',
   `role_name` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '玩家名',
+  `device` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '设备',
   `env` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '环境',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '标题',
   `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '内容',
   `content_kernel` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '内核内容',
   `ip` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'IP地址',
-  `time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间',
+  `time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `role_id`(`role_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '客户端错误日志表' ROW_FORMAT = Compressed;
@@ -319,19 +334,40 @@ CREATE TABLE `impeach`  (
   `server_id` smallint(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT '举报方玩家服号',
   `role_id` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '举报方玩家ID',
   `role_name` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '举报方玩家名字',
-  `impeach_server_id` smallint(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT '被举报玩家服号',
-  `impeach_role_id` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '被举报玩家ID',
-  `impeach_role_name` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '被举报玩家名字',
+  `impeacher_server_id` smallint(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT '被举报玩家服号',
+  `impeacher_role_id` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '被举报玩家ID',
+  `impeacher_role_name` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '被举报玩家名字',
   `type` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '举报类型(1:言语辱骂他人/2:盗取他人账号/3:非正规充值交易/4:其他)',
   `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '举报内容',
-  `time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间',
+  `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'IP地址',
+  `time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '时间',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `impeach_role_server`(`impeach_role_id`, `impeach_server_id`) USING BTREE,
+  INDEX `impeach_role_server`(`impeacher_role_id`, `impeacher_server_id`) USING BTREE,
   INDEX `role_server`(`role_id`, `server_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '举报信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of impeach
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for maintain_notice
+-- ----------------------------
+DROP TABLE IF EXISTS `maintain_notice`;
+CREATE TABLE `maintain_notice`  (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `platform` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '平台类型',
+  `title` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '公告标题',
+  `content` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '公告内容',
+  `start_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '开始时间',
+  `end_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '结束时间',
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '维护公告表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of maintain_notice
 -- ----------------------------
 
 -- ----------------------------
@@ -356,6 +392,8 @@ DROP TABLE IF EXISTS `sensitive_word_data`;
 CREATE TABLE `sensitive_word_data`  (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `word` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '敏感词',
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '敏感词配置表' ROW_FORMAT = Dynamic;
 
@@ -364,10 +402,10 @@ CREATE TABLE `sensitive_word_data`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for server_list_data
+-- Table structure for server_list
 -- ----------------------------
-DROP TABLE IF EXISTS `server_list_data`;
-CREATE TABLE `server_list_data`  (
+DROP TABLE IF EXISTS `server_list`;
+CREATE TABLE `server_list`  (
   `server_node` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服节点',
   `server_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服名',
   `server_host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服域名',
@@ -387,19 +425,19 @@ CREATE TABLE `server_list_data`  (
   `state` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '当前状态',
   `recommend` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '推荐',
   PRIMARY KEY (`server_node`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '服务器列表配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '服务器列表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of server_list_data
+-- Records of server_list
 -- ----------------------------
-INSERT INTO `server_list_data` VALUES ('activity', '活动服', 'fake.me', 'fake.me', 11006, 1006, 'local', 1577808000, '二', '', '', '', '', 0, 0, ' ', '', '推荐');
-INSERT INTO `server_list_data` VALUES ('center', '小跨服', 'fake.me', 'fake.me', 0, 100, 'center', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
-INSERT INTO `server_list_data` VALUES ('dev', '开发服', 'fake.me', 'fake.me', 11004, 1004, 'local', 1577808000, '一', '', '', '', '', 0, 0, '', '', '火爆');
-INSERT INTO `server_list_data` VALUES ('local', '本地服', 'fake.me', 'fake.me', 11001, 1001, 'local', 1577808000, '一', '', '', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list_data` VALUES ('publish', '版署服', 'fake.me', 'fake.me', 11005, 1005, 'local', 1577808000, '二', '', '', '', '', 0, 0, '', '', '推荐');
-INSERT INTO `server_list_data` VALUES ('stable', '稳定服', 'fake.me', 'fake.me', 11002, 1002, 'local', 1577808000, '一', '', '', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list_data` VALUES ('test', '测试服', 'fake.me', 'fake.me', 11003, 1003, 'local', 1577808000, '三', '', '', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list_data` VALUES ('world', '大世界', 'fake.me', 'fake.me', 0, 0, 'world', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES ('activity', '活动服', 'fake.me', 'fake.me', 11006, 1006, 'local', 1577808000, '二', '', '', '', '', 0, 0, ' ', '', '推荐');
+INSERT INTO `server_list` VALUES ('center', '小跨服', 'fake.me', 'fake.me', 0, 100, 'center', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES ('dev', '开发服', 'fake.me', 'fake.me', 11004, 1004, 'local', 1577808000, '一', '', '', '', '', 0, 0, '', '', '火爆');
+INSERT INTO `server_list` VALUES ('local', '本地服', 'fake.me', 'fake.me', 11001, 1001, 'local', 1577808000, '一', 'center', '小跨服', '', '', 0, 0, '', '', '新开');
+INSERT INTO `server_list` VALUES ('publish', '版署服', 'fake.me', 'fake.me', 11005, 1005, 'local', 1577808000, '二', 'center', '小跨服', '', '', 0, 0, '', '', '推荐');
+INSERT INTO `server_list` VALUES ('stable', '稳定服', 'fake.me', 'fake.me', 11002, 1002, 'local', 1577808000, '一', 'center', '小跨服', '', '', 0, 0, '', '', '新开');
+INSERT INTO `server_list` VALUES ('test', '测试服', 'fake.me', 'fake.me', 11003, 1003, 'local', 1577808000, '三', '', '', '', '', 0, 0, '', '', '新开');
+INSERT INTO `server_list` VALUES ('world', '大世界', 'fake.me', 'fake.me', 0, 0, 'world', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
 
 -- ----------------------------
 -- Table structure for table_import_log

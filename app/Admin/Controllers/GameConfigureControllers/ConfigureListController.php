@@ -17,15 +17,15 @@ class ConfigureListController extends Controller
             case "load":
             {
                 // make
-                exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
                 if (implode("", $result) != "ok") {return implode("", $result);}
                 // compile
                 unset($result);
-                exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh debug " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/maker.sh debug " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
                 if (implode("", $result) != "ok") {return implode("", $result);}
                 // reload
                 unset($result);
-                exec(env("SERVER_CODE_PATH") . "/script/shell/runner.sh " . SwitchServerController::getCurrentServer() . " load " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/runner.sh " . SwitchServerController::getCurrentServer() . " load " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
                 // handle result
                 $result = implode("", $result);
                 if($result == "ok") 
@@ -35,7 +35,7 @@ class ConfigureListController extends Controller
             }
             case "erl":
             {
-                exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
                 // handle result
                 $result = implode("", $result);
                 if($result == "ok") 
@@ -45,7 +45,7 @@ class ConfigureListController extends Controller
             }
             case "lua":
             {
-                exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh lua " . basename(request()->input("file"), ".lua") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/maker.sh lua " . basename(request()->input("file"), ".lua") . " 2>&1", $result);
                 // handle result
                 $result = implode("", $result);
                 if($result == "ok") 
@@ -55,7 +55,7 @@ class ConfigureListController extends Controller
             }
             case "js":
             {
-                exec(env("SERVER_CODE_PATH") . "/script/shell/maker.sh js " . basename(request()->input("file"), ".js") . " 2>&1", $result);
+                exec(env("SERVER_PATH") . "/script/shell/maker.sh js " . basename(request()->input("file"), ".js") . " 2>&1", $result);
                 // handle result
                 $result = implode("", $result);
                 if($result == "ok") 
@@ -73,18 +73,18 @@ class ConfigureListController extends Controller
         }
     }
 
-    public function showErl(Content $content)
+    public function erl(Content $content)
     {
         // action
         $result = $this->action();
         // read configure from data script
-        $script = file_get_contents(env("SERVER_CODE_PATH") . "/script/make/script/data_script.erl");
+        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/data_script.erl");
         $script = substr($script, strpos($script, "data() ->"), strlen($script));
         // extract meta info
         preg_match_all("/(?<=\%\%).*/", $script, $name);
         preg_match_all("/\w+\.erl/", $script, $file);
         $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a> | <a class='action' href='erl-configure?action=load&file={$row}'>" . trans("admin.update") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->body("
+        return $content->title('')->body("
             <style>.action{cursor: pointer;}</style>
             <style>.panel{border-radius: 0px;}</style>
             <script>$(document).ready(function(){{$result}})</script>
@@ -97,18 +97,18 @@ class ConfigureListController extends Controller
         ");
     }
 
-    public function showLua(Content $content)
+    public function lua(Content $content)
     {
         // action
         $result = $this->action();
         // read configure from data script
-        $script = file_get_contents(env("SERVER_CODE_PATH") . "/script/make/script/lua_script.erl");
+        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/lua_script.erl");
         $script = substr($script, strpos($script, "lua() ->"), strlen($script));
         // extract meta info
         preg_match_all("/(?<=\%\%).*/", $script, $name);
         preg_match_all("/\w+\.lua/", $script, $file);
         $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->body("
+        return $content->title('')->body("
             <style>.action{cursor: pointer;}</style>
             <style>.panel{border-radius: 0px;}</style>
             <script>$(document).ready(function(){{$result}})</script>
@@ -121,18 +121,18 @@ class ConfigureListController extends Controller
         ");
     }
 
-    public function showJs(Content $content)
+    public function js(Content $content)
     {
         // action
         $result = $this->action();
         // read configure from data script
-        $script = file_get_contents(env("SERVER_CODE_PATH") . "/script/make/script/js_script.erl");
+        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/js_script.erl");
         $script = substr($script, strpos($script, "js() ->"), strlen($script));
         // extract meta info
         preg_match_all("/(?<=\%\%).*/", $script, $name);
         preg_match_all("/\w+\.js/", $script, $file);
         $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->body("
+        return $content->title('')->body("
             <style>.action{cursor: pointer;}</style>
             <style>.panel{border-radius: 0px;}</style>
             <script>$(document).ready(function(){{$result}})</script>

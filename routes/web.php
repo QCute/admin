@@ -19,27 +19,23 @@ Route::domain(env("APP_URL"))->group(function () {
     Route::get("", function () { return view('welcome'); });
 });
 
-// web
-Route::domain("www" . "." . env("APP_URL"))->group(function () {
-    Route::get("", function () { return view('welcome'); });
-});
-
 // api
-Route::domain(env("API_ROUTE_DOMAIN", "api" . "." . env("APP_URL")))->group(function () {
+Route::domain(env("API_DOMAIN", "api" . "." . env("APP_URL")))->group(function () {
     // server list
-    Route::get("/", function () {
+    Route::get("/server-list", function () {
         header('content-type:application:json;charset=utf8');
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-        return json_encode(SwitchServerController::getPublicServerList());
+        return json_encode(SwitchServerController::getPublishServerList());
     });
-
-    // client error report
-    Route::get("/error", "ClientErrorLogReportController@report");
-});
-
-// payment api
-Route::domain(env("PAYMENT_ROUTE_DOMAIN", "payment" . "." . env("APP_URL")))->group(function () {
-    Route::get("", "PaymentController@pay");
-    Route::post("", "PaymentController@pay");
+    // post csrf token
+    Route::get("/csrf-token", function (){ return json_encode(["_token" => csrf_token()]); });
+    // notice
+    Route::get("/maintain-notice", "MaintainNoticeController@get");
+    // impeach
+    Route::get("/impeach", "ImpeachReportController@report");
+    // client error log
+    Route::get("/client-error-log", "ClientErrorLogReportController@report");
+    // payment
+    Route::get("/payment", "PaymentController@pay");
 });

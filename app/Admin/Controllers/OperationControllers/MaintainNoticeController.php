@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Admin\Controllers\GameDataControllers;
+namespace App\Admin\Controllers\OperationControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\GameDataModels\ClientErrorLogModel;
+use App\Admin\Models\OperationModels\MaintainNoticeModel;
 
-class ClientErrorLogController extends AdminController
+class MaintainNoticeController extends AdminController
 {
 
     /**
@@ -25,12 +25,12 @@ class ClientErrorLogController extends AdminController
      */
     protected function grid()
     {
-        $grid = new Grid(new ClientErrorLogModel());
+        $grid = new Grid(new MaintainNoticeModel());
         $table = $grid->model()->getTable();
         // data
         // $array = DB::SELECT("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . env("DB_DATABASE") . "' AND `TABLE_NAME` = '{$table}'");
-        $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->get();
-        foreach ($data as $row) {
+        $array = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->get();
+        foreach ($array as $row) {
             $grid->column($row->COLUMN_NAME, $row->COLUMN_COMMENT);
         }
 
@@ -41,8 +41,8 @@ class ClientErrorLogController extends AdminController
 
             // filter
             // $array = DB::select("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . env("DB_DATABASE") . "' AND `TABLE_NAME` = '{$table}' AND `COLUMN_KEY` IN ('PRI', 'UNI', 'MUL')");
-            $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])->get();
-            foreach ($data as $row) {
+            $array = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])->get();
+            foreach ($array as $row) {
                 $filter->like($row->COLUMN_NAME, $row->COLUMN_COMMENT);
             }
 
@@ -51,14 +51,14 @@ class ClientErrorLogController extends AdminController
         // actions
         $grid->actions(function ($actions) {
             // remove edit
-            $actions->disableEdit();
+            // $actions->disableEdit();
 
             // remove view
-            $actions->disableView();
+            // $actions->disableView();
         });
 
         // no create
-        $grid->disableCreateButton(true);
+        // $grid->disableCreateButton(true);
         return $grid;
     }
 
@@ -69,6 +69,13 @@ class ClientErrorLogController extends AdminController
      */
     protected function form()
     {
-        return new Form(new ClientErrorLogModel());
+        $form = new Form(new MaintainNoticeModel());
+        $form->text('platform', trans("admin.platform"))->rules('required');
+        $form->textarea('title', trans("admin.title"))->rules('required');
+        $form->textarea('content', trans("admin.content"))->rules('required');
+        $form->datetime('start_time', trans("admin.start_time"))->rules('required');
+        $form->datetime('end_time', trans("admin.end_time"))->rules('required');
+        $form->saving(function (Form $form) {});
+        return $form;
     }
 }

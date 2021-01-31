@@ -4,28 +4,28 @@ namespace App\Admin\Controllers\RechargeStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Controllers\TimeTabController;
+use App\Admin\Controllers\SwitchServerController;
 
 class RechargeDistributionController extends TimeTabController
 {
     public function index(Content $content)
     {
-        list($before, $now, $current, $nav) = $this->makeNav(array("day", "week", "month", "all", "pick_time"), "day");
-        $data = DB::select("SELECT `money` AS `name`, COUNT(1) AS `value` FROM " . SwitchServerController::getCurrentServer(). ".`recharge` WHERE `time` BETWEEN {$before} AND {$now} GROUP BY `recharge_id`");
+        $database = SwitchServerController::getCurrentServer();
+        list($before, $now, , $nav) = $this->makeNav(["day", "week", "month", "all", "pick_time"], "day");
+        $data = DB::select("SELECT `money` AS `name`, COUNT(1) AS `value` FROM `{$database}`.`recharge` WHERE `time` BETWEEN ? AND ? GROUP BY `recharge_id`", [$before, $now]);
         if (empty($data))
         {
             $color = "color: ['rgba(128, 128, 128, 1)']";
-            $data = array(array("name" => "0", "value" => "0", "label" => array("formatter" => "{b}: {c} (100%)")));
+            $data = [["name" => "0", "value" => "0", "label" => ["formatter" => "{b}: {c} (100%)"]]];
         }
         else 
         {
             $color = "color: []";
-            $data = array_map(function($object){ $object->label = array("formatter" => "{b}: {c} ({d}%)"); return $object; }, $data);
+            $data = array_map(function($object){ $object->label = ["formatter" => "{b}: {c} ({d}%)"]; return $object; }, $data);
         }
         // draw
-        return $content->body("
+        return $content->title('')->body("
             {$nav}
             <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>

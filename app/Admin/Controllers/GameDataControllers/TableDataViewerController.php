@@ -3,51 +3,81 @@
 namespace App\Admin\Controllers\GameDataControllers;
 
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Form;
+use Encore\Admin\Grid;
+use App\Admin\Models\GameDataModels\TableDataModel;
 use App\Admin\Controllers\SwitchServerController;
 
-class TableDataViewerController extends Controller
+class TableDataViewerController extends AdminController
 {
-    public function index(Content $content)
+
+    /**
+     * Title for current resource.
+     *
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * Make a grid builder.
+     *
+     * @return Grid
+     */
+    protected function grid()
     {
-        $db = SwitchServerController::getCurrentServer();
+        $database = SwitchServerController::getCurrentServer();
         $table = request()->input("table", "");
-        // default page
-        $page = max(request()->input("page", 1) - 1, 0) * 100;
-        // key index list
-        $keys = DB::select("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '{$db}' AND `TABLE_NAME` = '{$table}' AND `COLUMN_KEY` IN ('PRI', 'MUL')");
-        // filter        
-        $filter = implode("", array_map(function($key){ return " AND " . $key->COLUMN_NAME . " = '" . request()->input($key->COLUMN_NAME) . "'"; }, array_filter($keys, function($key){return null !== (request()->input($key->COLUMN_NAME)); })));
-        // search index
-        $search = implode("", array_map(function($key){ return " <div class='form-group'><input type='text' class='form-control filter-field' name='{$key->COLUMN_NAME}' value='" . request()->input($key->COLUMN_NAME) . "' placeholder='{$key->COLUMN_COMMENT}'></div>"; }, $keys));
-        // head column
-        $comment = DB::SELECT("SELECT `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '{$db}' AND `TABLE_NAME` = '{$table}'");
-        $table_text = "<tr>" . implode("", array_map(function($row){ return "<th class='table-title' title='{$row->COLUMN_COMMENT}'>" . mb_substr($row->COLUMN_COMMENT, 0, 8) . "</th>"; }, $comment)) . "</tr>";
-        // row data list
-        $data = DB::select("SELECT * FROM {$db}.{$table} WHERE 1 = 1 {$filter} LIMIT {$page}, 100");
-        $table_text .= implode("", array_map(function($row){ return "<tr class='table-row'>" . implode("", array_map(function($value){ return "<td class='table-data'>" . $value . "</td>"; }, json_decode(json_encode($row) ,true))) . "</tr>"; }, $data));
-        // body
-        return $content->body("
-            <style>
-                .table-title{min-width:8em;}
-                .table-row{max-height:0.2em;}
-                .btn{border-radius: unset;}
-                .input-group-btn-ok{width:4em;}
-                .input-group-content{max-width:8em;}
-                .input-group-addon{border: none;}
-                .panel{border-radius: 0px;}
-            </style>
-            <form action='table-viewer?table={$table}' class='form-inline' id='filter'>
-                {$search}
-                <a class='btn btn-dropbox 5eb1618670366-filter-btn' onclick=\"this.href = 'table-viewer?table={$table}&' + Array.prototype.slice.call(document.getElementsByClassName('filter-field')).filter((e)=>e.value.trim().length!==0).map((e)=>e.name + '=' + e.value).join('&')\">" . trans("admin.ok") . "</a>
-            </form>
-            <br/>
-            <div class='panel panel-default' style='overflow:auto;'>
-                <table class='table table-bordered table-hover' style='min-width:640px;' data-toggle='table'>
-                    {$table_text}
-                </table>
-            </div>
-        ");
+        $grid = new Grid(new TableDataModel( $database . "." . $table));
+        // $table = $grid->model()->getTable();
+        // data
+        // $array = DB::SELECT("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . $database . "' AND `TABLE_NAME` = '{$table}'");
+        $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", $database)->where("TABLE_NAME", $table)->get();
+        foreach ($data as $row) {
+            $grid->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)->style("min-width:8em");
+        }
+
+        // filter
+        $grid->filter(function($filter) use ($database, $table) {
+            // remove default id filter
+            $filter->disableIdFilter();
+
+            // filter
+            // $array = DB::select("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . $database . "' AND `TABLE_NAME` = '{$table}' AND `COLUMN_KEY` IN ('PRI', 'UNI', 'MUL')");
+            $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", $database)->where("TABLE_NAME", $table)->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])->get();
+            foreach ($data as $row) {
+                $filter->like($row->COLUMN_NAME, $row->COLUMN_COMMENT);
+            }
+
+        });
+
+        // actions
+        $grid->actions(function ($actions) {
+            // remove edit
+            $actions->disableEdit();
+
+            // remove view
+            $actions->disableView();
+
+            // remove delete
+            $actions->disableDelete();
+
+        });
+        // no action
+        $grid->disableActions();
+        // no create
+        $grid->disableCreateButton(true);
+        $grid->disableBatchActions(true);
+        return $grid;
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @return Form
+     */
+    protected function form()
+    {
+        return new Form(new TableDataModel());
     }
 }

@@ -2,10 +2,7 @@
 
 namespace App\Admin\Controllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 
 class TimeTabController extends Controller
 {
@@ -15,27 +12,28 @@ class TimeTabController extends Controller
         switch ($current)
         {
             case "hour": {
-                return array(time() - (60 * 60), time(), $current);
+                return [time() - (60 * 60), time(), $current];
             }
             case "day": {
-                return array(strtotime(date('Y-m-d', time())), time(), $current);
+                return [strtotime(date('Y-m-d', time())), time(), $current];
             }
             case "week": {
-                return array(strtotime("-1 monday"), time(), $current);
+                return [strtotime("-1 monday"), time(), $current];
             }
             case "month": {
-                return array(strtotime(date('Y-m-01', time())), time(), $current);
+                return [strtotime(date('Y-m-01', time())), time(), $current];
             }
             case "all": {
                 $start = SwitchServerController::getCurrentServerOpenTime();
-                return array($start, time(), $current);
+                return [$start, time(), $current];
             }
             case "pick_time": {
                 $start = request()->input("start-date", date('Y-m-d', time()));
                 $end = request()->input("end-date", date('Y-m-d', time()));
-                return array(strtotime($start), strtotime($end), $current);
+                return [strtotime($start), strtotime($end), $current];
             }
         }
+        return [];
     }
 
     public function makeNav($array, $default = "day")
@@ -80,6 +78,6 @@ class TimeTabController extends Controller
             $(function () { $('.date-picker').datetimepicker({ format: 'YYYY-MM-DD', defaultDate: 'now', locale: moment.locale('" . config("locale") . "') }); });
         </script>";
         // view
-        return array($before, $now, $current, $nav);
+        return [$before, $now, $current, $nav];
     }
 }

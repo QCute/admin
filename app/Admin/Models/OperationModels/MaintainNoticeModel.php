@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Admin\Models\GameDataModels;
+namespace App\Admin\Models\OperationModels;
 
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Illuminate\Database\Eloquent\Model;
 
-class ClientErrorLogModel extends Model {
+class MaintainNoticeModel extends Model {
     use DefaultDatetimeFormat;
-    protected $table = 'client_error_log';
+    protected $table = 'maintain_notice';
 }

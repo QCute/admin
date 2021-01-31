@@ -25,9 +25,10 @@ use App\Admin\Controllers\SwitchServerController;
 // remove plugin
 Form::forget(['map', 'editor']);
 // echarts libs
-Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/4.8.0/echarts.min.js');
+Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.0.1/echarts.min.js');
+// date picker
 Admin::js('https://cdn.bootcdn.net/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js');
 // navigate bar
 Admin::navbar(function (Encore\Admin\Widgets\Navbar $navbar) {
-    $navbar->right(SwitchServerController::showServerList());
+    $navbar->right(SwitchServerController::serverList());
 });

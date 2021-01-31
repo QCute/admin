@@ -58,7 +58,9 @@ return [
     */
     'route' => [
 
-        'prefix' => env('ADMIN_ROUTE_PREFIX', 'admin'),
+        'domain' => env('ADMIN_ROUTE_DOMAIN', 'admin') . "." . env('APP_URL'),
+
+        'prefix' => env('ADMIN_ROUTE_PREFIX', ''),
 
         'namespace' => 'App\\Admin\\Controllers',
 
@@ -95,7 +97,7 @@ return [
     | If your page is going to be accessed via https, set it to `true`.
     |
     */
-    'https' => env('ADMIN_HTTPS', false),
+    'https' => env('APP_HTTPS', true),
 
     /*
     |--------------------------------------------------------------------------

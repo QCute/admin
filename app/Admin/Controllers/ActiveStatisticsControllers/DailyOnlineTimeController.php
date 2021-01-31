@@ -4,28 +4,27 @@ namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Controllers\TimeTabController;
+use App\Admin\Controllers\SwitchServerController;
 
 class DailyOnlineTimeController extends TimeTabController
 {
     private static function slice($data)
     {
-        $result = array(
-            array("name" => "0-5" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "5-10" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "10-20" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "20-30" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "30-40" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "40-50" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "50-60" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "60-70" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "70-80" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "80-90" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "90-100" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-            array("name" => "100-∞" . trans("admin.minute"), "value" => 0, "label" => array("formatter" => "{b}: {c} ({d}%)")),
-        );
+        $result = [
+            ["name" => "0-5" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "5-10" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "10-20" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "20-30" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "30-40" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "40-50" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "50-60" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "60-70" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "70-80" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "80-90" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "90-100" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+            ["name" => "100-∞" . trans("admin.minute"), "value" => 0, "label" => ["formatter" => "{b}: {c} ({d}%)"]],
+        ];
         foreach ($data as $row)
         {
             if ($row->time < (5 * 60))
@@ -82,13 +81,14 @@ class DailyOnlineTimeController extends TimeTabController
 
     public function index(Content $content)
     {
-        list($before, $now, $current, $nav) = $this->makeNav(array("week", "month", "all", "pick_time"), "week");
-        $data = DB::select("SELECT `role_id`, SUM( `online_time` ) AS `time`, DATE_FORMAT( FROM_UNIXTIME(`login_log`.`logout_time`), '%Y-%m-%d' ) AS `date` FROM " . SwitchServerController::getCurrentServer(). ".`login_log` WHERE `time` BETWEEN " . $before . " AND " . $now . " GROUP BY `date`, `role_id` ORDER BY `logout_time` ASC ");
+        $database = SwitchServerController::getCurrentServer();
+        list($before, $now, , $nav) = $this->makeNav(["week", "month", "all", "pick_time"], "week");
+        $data = DB::select("SELECT `role_id`, SUM( `online_time` ) AS `time`, DATE_FORMAT( FROM_UNIXTIME(`logout_time`), '%Y-%m-%d' ) AS `date` FROM `{$database}`.`login_log` WHERE `time` BETWEEN ? AND ? GROUP BY `date`, `role_id` ORDER BY `logout_time` ASC ", [$before, $now]);
         // chart data
         if (empty($data))
         {
             $color = "color: ['rgba(128, 128, 128, 1)']";
-            $data = array(array("name" => "0", "value" => "0", "label" => array("formatter" => "{b}: {c} (100%)")));
+            $data = [["name" => "0", "value" => "0", "label" => ["formatter" => "{b}: {c} (100%)"]]];
         }
         else
         {
@@ -96,7 +96,7 @@ class DailyOnlineTimeController extends TimeTabController
             $color = "color: ['#37a2da','#32c5e9','#9fe6b8','#ffdb5c','#ff9f7f','#fb7293','#e7bcf3','#8378ea', '#5bc2e7', '#6980c5', '#12ED93', '#f376e0']";
         }
         // draw
-        return $content->body("
+        return $content->title('')->body("
             {$nav}
             <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>

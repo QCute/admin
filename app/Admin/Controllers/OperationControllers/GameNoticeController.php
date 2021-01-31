@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Admin\Controllers\ServerManageControllers;
+namespace App\Admin\Controllers\OperationControllers;
 
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Controllers\SwitchServerController;
 
-class ServerNoticeController extends Controller
+class GameNoticeController extends Controller
 {
     public function send(Content $content)
     {
@@ -14,7 +14,7 @@ class ServerNoticeController extends Controller
         $server = request()->input("server", "");
         if (empty($server)) return $content;
         // construct data
-        $json = json_encode(array("title" => request()->input("title"), "content" => request()->input("content"), "item" => request()->input("item")));
+        $json = json_encode(["title" => request()->input("title"), "content" => request()->input("content"), "items" => request()->input("items")]);
         // request
         $array = SwitchServerController::send($server, "notice", $json);
         // handle result
@@ -32,53 +32,62 @@ class ServerNoticeController extends Controller
     {
         $content = $this->send($content);
         // view
-        return $content->body("
-            <div classs='row'><div class='col-mod-12'><div class='box box-info'>
-                <div class='box-header with-border'>编辑公告</div>
-                <form name='form' class='form-horizontal' action='server-notice' method='POST' pjax-container>
+        return $content->title('')->body("
+            <div class='box box-info'>
+                <div class='box-header with-border'>" . trans("admin.notice") .  "</div>
+                <form name='form' class='form-horizontal' action='" . request()->path() . "' method='POST' pjax-container>
                     " . csrf_field() . "
                     <div class='box-body'>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 asterisk control-label'>服务器</label>
+                            <label for='server' class='col-sm-2 asterisk control-label'>" . trans("admin.server"). "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
                                 <select class='form-control' name='server' style='outline:none;'>
-                                    <option value='this'>当前服</option>
-                                    <option value='all'>全服</option>
+                                    <option value='this'>" . trans("admin.current_server"). "</option>
+                                    <option value='all'>" . trans("admin.all_server"). "</option>
                                 </select>
                             </div></div>
                         </div>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 asterisk control-label'>标题</label>
+                            <label for='title' class='col-sm-2 asterisk control-label'>" . trans("admin.title"). "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='title' placeholder='标题' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='title'></textarea>
+                                
                             </div></div>
                         </div>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 asterisk control-label'>内容</label>
+                            <label for='content' class='col-sm-2 asterisk control-label'>" . trans("admin.content"). "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='title' placeholder='内容' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='content'></textarea>
+                                
                             </div></div>
                         </div>
                         <div class='form-group'>
-                            <label for='name' class='col-sm-2 control-label'>物品</label>
+                            <label for='items' class='col-sm-2 control-label'></label>
+                            <div class='col-sm-8'><div class='input-group'>
+                                <span class='help-block'><i class='fa fa-info-circle'></i> 物品可使用<a href='/configure-assistant' target='_blank'>配表助手</a>生成</span>
+                            </div></div>
+                        </div>
+                        <div class='form-group'>
+                            <label for='items' class='col-sm-2 control-label'>" . trans("admin.items"). "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='title' placeholder='物品' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='items'></textarea>
+                                
                             </div></div>
                         </div>
                         <div class='form-group'>
                             <label for='name' class='col-sm-2 control-label'></label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-send-o fa-fw'></i></span>
-                                <input type='submit' class='form-control' value='发送' />
+                                <input type='submit' class='form-control' value='" . trans("admin.send"). "' />
                             </div></div>
                         </div>
                     </div>
                 </form>
-            </div></div></div>
+            </div>
         ");
     }
 }

@@ -10,8 +10,12 @@ use App\Admin\Controllers\SwitchServerController;
 
 class OpenServerController extends Controller
 {
-    private static function replace(Array $array, String $input)
+    private static function replace(Array $array, String $input, String $output = "")
     {
+        $output = empty($output) ? $input : $output;
+        // read file
+        $input = file_get_contents($input);
+        // replace loop
         foreach($array as $one)
         {
             // match row and field by regex
@@ -22,33 +26,35 @@ class OpenServerController extends Controller
             $diff = strlen($one["replace"]) - strlen($field[0]);
             // generate padding
             // $padding = implode("", array_map(function($_){ return " "; }, range(0, $space - $diff - 1)));
-            $padding = implode("", array_pad(array(), $space - $diff, " "));
+            $padding = implode("", array_pad([], $space - $diff, " "));
             // replace into field and row
             $row = preg_replace($one["field"], $one["replace"], rtrim($row[0]));
             $input = preg_replace($one["row"], $row . $padding, $input);
         }
-        // return replace result
-        return $input;
+        // write file
+        file_put_contents($output, $input);
     }
+
     public function open(Content $content) 
     {
         if(empty(request()->input("_token", ""))) return $content;
         $name = request()->input("name", "");
         $tab = request()->input("tab", "");
-        $center = request()->input("center", "");
-        $world = request()->input("world", "");
+        $center = trim(request()->input("center", ""));
+        $world = trim(request()->input("world", ""));
         $recommend = request()->input("recommend", "");
         // $isConnectWorld = request()->input('is_connect_world');
         if(empty($name)) return $content->withError(trans("admin.failed"), trans("admin.empty_name"));
-        if(!empty($dst) && ($center != "undefined" && !SwitchServerController::hasServer($center))) return $content->withError(trans("admin.failed"), trans("admin.invalid_center"));
-        // node 
+        if(!empty($dst) && !SwitchServerController::hasServer($center)) return $content->withError(trans("admin.failed"), trans("admin.invalid_center"));
+        if(!empty($dst) && !SwitchServerController::hasServer($world)) return $content->withError(trans("admin.failed"), trans("admin.invalid_world"));
+        // node
         $server_id = SwitchServerController::nextServerId("local");
         $port = SwitchServerController::nextServerPort("local");
-        $node = basename(env("SERVER_CODE_PATH", "erlang")) . "_" . $server_id;
+        $node = basename(env("SERVER_PATH", "erlang")) . "_" . $server_id;
         // create new database
         DB::statement("CREATE DATABASE IF NOT EXISTS {$node} DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci");
         // import sql
-        $sql = str_replace("\n", "", preg_replace("/\s*--.*\n?/", "", file_get_contents(env("SERVER_CODE_PATH") . "/script/sql/open.sql")));
+        $sql = str_replace("\n", "", preg_replace("/\s*--.*\n?/", "", file_get_contents(env("SERVER_PATH") . "/script/sql/open.sql")));
         // new database connection
         $connection = new Connection(new \PDO("mysql:host=" . env("DB_HOST") . ";port=" . env("DB_PORT") . ";dbname=" . $node, env("DB_USERNAME"), env("DB_PASSWORD")));
         // import each sql sentence
@@ -59,25 +65,20 @@ class OpenServerController extends Controller
             if(!empty(trim($row))) $connection->insert($row);
         }
         // insert node data
-        DB::insert("INSERT INTO `server_list_data` (`server_node`, `server_name`, `server_port`, `server_id`, `server_type`, `open_time`, `tab_name`, `state`, `recommend`) VALUES ('{$node}', '{$name}', {$port}, {$server_id}, 'local', " . time(). ", '{$tab}',  1, '${recommend}')");
+        DB::insert("INSERT INTO `server_list` (`server_node`, `server_name`, `server_port`, `server_id`, `server_type`, `open_time`, `tab_name`, `state`, `recommend`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [$node, $name, $port, $server_id, 'local', time(), $tab,  1, $recommend]);
         //  generate erlang config file
-        $config = env("SERVER_CODE_PATH") . "/config/example/local.config.example";
-        // read
-        $config = file_get_contents($config);
-        $list = array(
-            array("row" => "/\{\s*database\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => $node),
-            array("row" => "/\{\s*server_id\s*,\s*.*?\},?\s*/", "field" => "/\d+/", "replace" => $server_id),
-            array("row" => "/\{\s*open_time\s*,\s*.*?\},?\s*/", "field" => "/\d+/", "replace" => strtotime(date("Y-m-d", time()))),
-            array("row" => "/\{\s*center_node\s*,\s*.*?\},?\s*/", "field" => "/\w+(?=\s*\})/", "replace" => "\"{$center}\""),
-            array("row" => "/\{\s*center_ip\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => ""),
-            array("row" => "/\{\s*world_node\s*,\s*.*?\},?\s*/", "field" => "/\w+(?=\s*\})/", "replace" => "\"{$world}\""),
-            array("row" => "/\{\s*world_ip\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => ""),
-        );
-        $config = OpenServerController::replace($list, $config);
-        // write
-        file_put_contents(env("SERVER_CODE_PATH") . "/config/" . $node . ".config", $config);
+        $list = [
+            ["row" => "/\{\s*database\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => $node],
+            ["row" => "/\{\s*server_id\s*,\s*.*?\},?\s*/", "field" => "/\d+/", "replace" => $server_id],
+            ["row" => "/\{\s*open_time\s*,\s*.*?\},?\s*/", "field" => "/\d+/", "replace" => strtotime(date("Y-m-d", time()))],
+            ["row" => "/\{\s*center_node\s*,\s*.*?\},?\s*/", "field" => "/\w+(?=\s*\})/", "replace" => "\"{$center}\""],
+            ["row" => "/\{\s*center_ip\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => ""],
+            ["row" => "/\{\s*world_node\s*,\s*.*?\},?\s*/", "field" => "/\w+(?=\s*\})/", "replace" => "\"{$world}\""],
+            ["row" => "/\{\s*world_ip\s*,\s*.*?\},?\s*/", "field" => "/(?<=\").*?(?=\")/", "replace" => ""],
+        ];
+        self::replace($list, env("SERVER_PATH") . "/config/src/local.config.src", env("SERVER_PATH") . "/config/{$node}.config");
         // update server list
-        SwitchServerController::publicServerList();
+        SwitchServerController::publishServerList();
         // success tips
         return $content->withSuccess(trans("admin.succeeded" . $center), trans("admin.completed"));
     }
@@ -88,16 +89,18 @@ class OpenServerController extends Controller
         $content = $this->open($content);
         // view
         // center option
-        $centerList = SwitchServerController::getServerList("center");
-        $centerList = implode("", array_map(function($row) { return "<option value='" . $row->server_node . "'>" . $row->server_name . "</option>"; }, $centerList));
+        $center_list = SwitchServerController::getServerList("center");
+        $center_list = implode("", array_map(function($row) { return "<option value='" . $row->server_node . "'>" . $row->server_name . "</option>"; }, $center_list));
+        // world option
+        $world_list = SwitchServerController::getServerList("world");
+        $world_list = implode("", array_map(function($row) { return "<option value='" . $row->server_node . "'>" . $row->server_name . "</option>"; }, $world_list));
         // recommend option
-        $serverRecommendList = trans("admin.server_recommend");
-        $serverRecommendList = implode("", array_map(function($row) { return "<option value='" . $row . "'>" . $row . "</option>"; }, array_values($serverRecommendList)));
-        return $content->body("
-            <style>.open-server-list + .select2-container--default .select2-selection--single {height: 34px !important;}</style>
-            <div classs='row'><div class='col-mod-12'><div class='box box-info'>
+        $recommend_list = trans("admin.server_recommend");
+        $recommend_list = implode("", array_map(function($row) { return "<option value='" . $row . "'>" . $row . "</option>"; }, array_values($recommend_list)));
+        return $content->title('')->body("
+            <div class='box box-info'>
                 <div class='box-header with-border'>" . trans("admin.open_server") . "</div>
-                <form name='form' class='form-horizontal' action='open-server' method='POST' pjax-container>
+                <form name='form' class='form-horizontal' action='" . request()->path() . "' method='POST' pjax-container>
                     " . csrf_field() . "
                     <div class='box-body'>
                         <div class='form-group'>
@@ -118,8 +121,8 @@ class OpenServerController extends Controller
                             <label for='recommend' class='col-sm-2 asterisk control-label'>" . trans("admin.state") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
-                                <select class='form-control open-server-list' name='recommend' style='outline:none;'>
-                                    {$serverRecommendList}
+                                <select class='form-control open-server-state' name='recommend' style='outline:none;'>
+                                    {$recommend_list}
                                 </select>
                             </div></div>
                         </div>
@@ -128,17 +131,19 @@ class OpenServerController extends Controller
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
                                 <select class='form-control open-server-list' name='center'>
-                                    <option value='undefined'>" . trans("admin.no_center") . "</option>
-                                    {$centerList}
+                                    <option value=' ' selected='selected'>" . trans("admin.no_center") . "</option>
+                                    {$center_list}
                                 </select>
                             </div></div>
                         </div>
                         <div class='form-group'>
-                            <label for='world' class='col-sm-2 asterisk control-label'>" . trans("admin.connect_world") . "</label>
+                            <label for='world' class='col-sm-2 asterisk control-label'>" . trans("admin.world_name") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
-                                <input type='radio' name='world' value='world' class='iradio_minimal-blue' checked/> " . trans("admin.yes") . " 
-                                <span style='margin-left: 2em;'>&nbsp;</span>
-                                <input type='radio' name='world' value='' class='iradio_minimal-blue' /> " . trans("admin.no") . "
+                                <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
+                                <select class='form-control open-server-list' name='world'>
+                                    <option value=' ' selected='selected'>" . trans("admin.no_world") . "</option>
+                                    {$world_list}
+                                </select>
                             </div></div>
                         </div>
                         <div class='form-group'>
@@ -158,13 +163,13 @@ class OpenServerController extends Controller
                         </div>
                     </div>
                 </form>
-            </div></div></div>
-            <link href='https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css' rel='stylesheet' />
-            <link href='https://cdn.bootcss.com/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css' rel='stylesheet'>
-            <script src='https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js'></script>
+            </div>
+
+            <script>$(document).ready(function() { $('.open-server-state').select2({placeholder: '" . trans("admin.state") . "'}); });</script>
             <script>$(document).ready(function() { $('.open-server-list').select2({placeholder: '" . trans("admin.server") . "'}); });</script>
+            <script>$(window).resize(function() { $('.open-server-state').select2({placeholder: '" . trans("admin.state") . "'}); });</script>
             <script>$(window).resize(function() { $('.open-server-list').select2({placeholder: '" . trans("admin.server") . "'}); });</script>
-            <script>$(document).ready(function(){ $('input').iCheck({ checkboxClass: 'icheckbox_minimal-blue', radioClass: 'iradio_minimal-blue', increaseArea: '20%' }); });</script>
+            <script>$(document).ready(function(){ $('input').iCheck({ checkboxClass: 'icheckbox_minimal-blue', radioClass: 'iradio_minimal-blue', increaseArea: '50%' }); });</script>
         ");
     }
 }

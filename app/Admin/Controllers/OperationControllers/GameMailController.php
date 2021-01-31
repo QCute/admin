@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Admin\Controllers\ServerManageControllers;
+namespace App\Admin\Controllers\OperationControllers;
 
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Controllers\SwitchServerController;
 
-class ServerMailController extends Controller
+class GameMailController extends Controller
 {
     public function send(Content $content)
     {
         $server = request()->input("server", "");
         if (empty($server)) return $content;
         // construct data
-        $args = array(
+        $args = [
             "title" => request()->input("title", ""),
             "content" => request()->input("content", ""),
-            "item" => request()->input("item", ""),
-            "role" => request()->input("role", ""),
-        );
+            "items" => request()->input("items", ""),
+            "role_id" => request()->input("role_id", ""),
+        ];
         // request
         $array = SwitchServerController::send($server, "mail", json_encode($args));
         // handle result
@@ -35,14 +35,14 @@ class ServerMailController extends Controller
     public function index(Content $content)
     {
         $content = $this->send($content);
-        return $content->body("
-            <div classs='row'><div class='col-mod-12'><div class='box box-info'>
+        return $content->title('')->body("
+            <div class='box box-info'>
                 <div class='box-header with-border'>" . trans("admin.mail") . "</div>
-                <form name='form' class='form-horizontal' action='server-mail' method='POST' pjax-container>
+                <form name='form' class='form-horizontal' action='" . request()->path() . "' method='POST' pjax-container>
                     " . csrf_field() . "
                     <div class='box-body'>
                         <div class='form-group'>
-                            <label for='server' class='col-sm-2 asterisk control-label'>" . trans("admin.current_server") . "</label>
+                            <label for='server' class='col-sm-2 asterisk control-label'>" . trans("admin.server") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
                                 <select class='form-control' name='server' style='outline:none;'>
@@ -55,28 +55,36 @@ class ServerMailController extends Controller
                             <label for='title' class='col-sm-2 asterisk control-label'>" . trans("admin.title") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='title' placeholder='" . trans("admin.title") . "' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='title'></textarea>
                             </div></div>
                         </div>
                         <div class='form-group'>
                             <label for='content' class='col-sm-2 asterisk control-label'>" . trans("admin.content") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='content' placeholder='" . trans("admin.content") . "' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='content'></textarea>
+                                
+                            </div></div>
+                        </div>
+                        <div class='form-group'>
+                            <label for='items' class='col-sm-2 control-label'></label>
+                            <div class='col-sm-8'><div class='input-group'>
+                                <span class='help-block'><i class='fa fa-info-circle'></i> 物品可使用<a href='/configure-assistant' target='_blank'>配表助手</a>生成</span>
                             </div></div>
                         </div>
                         <div class='form-group'>
                             <label for='items' class='col-sm-2 control-label'>" . trans("admin.items") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='items' placeholder='" . trans("admin.items") . "' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='items'></textarea>
                             </div></div>
                         </div>
                         <div class='form-group'>
                             <label for='role_id' class='col-sm-2 asterisk control-label'>" . trans("admin.role_id") . "</label>
                             <div class='col-sm-8'><div class='input-group'>
                                 <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <input type='text' class='form-control' name='role_id' placeholder='" . trans("admin.role_id") . "' aria-describedby='basic-addon3'>
+                                <textarea class='form-control' rows='10' name='items'></textarea>
+                                
                             </div></div>
                         </div>
                         <div class='form-group'>
@@ -88,7 +96,7 @@ class ServerMailController extends Controller
                         </div>
                     </div>
                 </form>
-            </div></div></div>
+            </div>
         ");
     }
 }

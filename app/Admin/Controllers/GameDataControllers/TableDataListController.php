@@ -10,11 +10,12 @@ use App\Admin\Controllers\SwitchServerController;
 class TableDataListController extends Controller
 {
 
-    public function showRole(Content $content)
+    public function user(Content $content)
     {
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = '" . SwitchServerController::getCurrentServer() . "' AND `TABLE_NAME` NOT LIKE '%_log' AND `TABLE_NAME` NOT LIKE '%_data'");
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->body("
+        $database = SwitchServerController::getCurrentServer();
+        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` NOT LIKE '%_log' AND `TABLE_NAME` NOT LIKE '%_data'", [$database]);
+        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
+        return $content->title('')->body("
             <style>.panel{border-radius: 0px;}</style>
             <div class='panel panel-default'>
                 <table class='table'>
@@ -25,11 +26,12 @@ class TableDataListController extends Controller
         ");
     }
 
-    public function showConfigure(Content $content)
+    public function configure(Content $content)
     {
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = '" . SwitchServerController::getCurrentServer() . "' AND `TABLE_NAME` LIKE '%_data'");
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->body("
+        $database = SwitchServerController::getCurrentServer();
+        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` LIKE '%_data'", [$database]);
+        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
+        return $content->title('')->body("
             <style>.panel{border-radius: 0px;}</style>
             <div class='panel panel-default'>
                 <table class='table'>
@@ -40,11 +42,12 @@ class TableDataListController extends Controller
         ");
     }
 
-    public function showLog(Content $content)
+    public function log(Content $content)
     {
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = '" . SwitchServerController::getCurrentServer() . "' AND `TABLE_NAME` LIKE '%_log'");
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->body("
+        $database = SwitchServerController::getCurrentServer();
+        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` LIKE '%_log'", [$database]);
+        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
+        return $content->title('')->body("
             <style>.panel{border-radius: 0px;}</style>
             <div class='panel panel-default'>
                 <table class='table'>

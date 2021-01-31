@@ -4,32 +4,32 @@ namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Controllers\TimeTabController;
+use App\Admin\Controllers\SwitchServerController;
 
 class UserRegisterController extends TimeTabController
 {
     public function index(Content $content)
     {
-        list($before, $now, $current, $nav) = $this->makeNav(array("day", "week", "month", "all", "pick_time"), "day");
+        $database = SwitchServerController::getCurrentServer();
+        list($before, $now, $current, $nav) = $this->makeNav(["day", "week", "month", "all", "pick_time"], "day");
         if ($current == "day")
         {
             $step = 3600;
             $format = "'H'";
-            $data = DB::select("SELECT COUNT(1) AS `number`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%H'), \"'\") AS `date` FROM " . SwitchServerController::getCurrentServer() . ".`role` WHERE `register_time` BETWEEN " . $before . " AND " . $now . " GROUP BY `date`");
+            $data = DB::select("SELECT COUNT(1) AS `number`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%H'), \"'\") AS `date` FROM `{$database}`.`role` WHERE `register_time` BETWEEN ? AND ? GROUP BY `date`", [$before, $now]);
         }
         else
         {
             $step = 86400;
             $format = "'m-d'";
-            $data = DB::select("SELECT COUNT(1) AS `number`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%m-%d'), \"'\") AS `date` FROM " . SwitchServerController::getCurrentServer() . ".`role` WHERE `register_time` BETWEEN " . $before . " AND " . $now . " GROUP BY `date`");
+            $data = DB::select("SELECT COUNT(1) AS `number`, CONCAT(\"'\", DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%m-%d'), \"'\") AS `date` FROM `{$database}`.`role` WHERE `register_time` BETWEEN ? AND ? GROUP BY `date`", [$before, $now]);
         }
         // chart data
         if (empty($data))
         {
-            $category = array();
-            $register = array();
+            $category = [];
+            $register = [];
             for ($start = $before; $start <= $now; $start += $step)
             {
                 array_push($category, date($format, $start));
@@ -44,7 +44,7 @@ class UserRegisterController extends TimeTabController
             $register = implode(",", array_column($data, "number"));
         }
         // draw
-        return $content->body("
+        return $content->title('')->body("
             {$nav}
             <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
             <script>
