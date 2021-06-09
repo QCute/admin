@@ -15,13 +15,12 @@ class PaymentController extends Controller
         // api.fake.me/payment?order_id=order_id&recharge_id=1&channel=channel&role_id=1&role_name=role_name&server_id=1001&account_name=account_name&money=0&mark=mark&coupon=coupon&sign=a5a5af8edc03300e44aa8ba9ff96dcb3
         $time = time();
         // parameter
-        $order_id = request()->input("order_id", "");
         $recharge_id = request()->input("recharge_id", 0);
+        $order_id = request()->input("order_id", "");
         $channel = request()->input("channel", "");
         $role_id = request()->input("role_id", 0);
         $role_name = request()->input("role_name", "");
         $server_id = request()->input("server_id", 0);
-        $account_name = request()->input("account_name", "");
         $money = request()->input("money", 0);
         $mark = request()->input("mark", "");
         $coupon = request()->input("coupon", "");
@@ -37,8 +36,8 @@ class PaymentController extends Controller
         }
         // save recharge data
         try {
-            $data = ["order_id" => $order_id, "recharge_id" => $recharge_id, "channel" => $channel, "role_id" => $role_id, "role_name" => $role_name, "server_id" => $server_id, "account_name" => $account_name, "money" => $money, "time" => $time];
-            $recharge_no = DB::insert("INSERT INTO `{$server->server_node}`.`recharge` (`order_id`, `recharge_id`, `channel`, `role_id`, `role_name`, `server_id`, `account_name`, `money`, `time`) VALUES (:order_id, :recharge_id, :channel, :server_id, :role_id, :role_name, :account_name, :money, :time)", $data);
+            $data = ["recharge_id" => $recharge_id, "order_id" => $order_id, "channel" => $channel, "role_id" => $role_id, "role_name" => $role_name, "money" => $money, "time" => $time];
+            $recharge_no = DB::insert("INSERT INTO `{$server->server_node}`.`recharge` (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`) VALUES (:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)", $data);
             // notify server
             SwitchServerController::send($server_id, "recharge", json_encode(["recharge_no" => $recharge_no, "role_id" => $role_id]));
             return json_encode(["status" => "success", "code" => 0, "msg" => ""]);

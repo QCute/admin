@@ -120,6 +120,7 @@ return [
     'empty_name'            => "名字不能为空",
     'end'                   => "结束",
     'end_time'              => "结束时间",
+    'ensure'                => "确认",
     'error'                 => "错误",
     'file'                  => "文件",
     'free'                  => "非付费",

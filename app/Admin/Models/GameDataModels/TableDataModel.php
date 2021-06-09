@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class TableDataModel extends Model {
     use DefaultDatetimeFormat;
+    protected $connection = '';
     protected $table = '';
-    public function __construct($name = '')
+    public function __construct($connection = '', $table = '')
     {
-        $this->table = $name;
+        $this->connection = $connection;
+        $this->table = $table;
         parent::__construct();
     }
 }

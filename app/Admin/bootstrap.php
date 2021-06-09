@@ -24,6 +24,13 @@ use App\Admin\Controllers\SwitchServerController;
 
 // remove plugin
 Form::forget(['map', 'editor']);
+// vue
+// Admin::js('https://cdn.jsdelivr.net/npm/vue@3.0.10/dist/vue.global.js');
+// element+
+// Admin::css('https://unpkg.com/element-plus/lib/theme-chalk/index.css');
+// Admin::js('https://unpkg.com/element-plus/lib/index.full.js');
+// axios
+// Admin::js('https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js');
 // echarts libs
 Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.0.1/echarts.min.js');
 // date picker

@@ -3,9 +3,9 @@
 namespace App\Admin\Controllers;
 
 use Exception;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class SwitchServerController extends Controller
 {
@@ -175,5 +175,31 @@ class SwitchServerController extends Controller
         $list = self::getPublishServerList();
         $data =  "<?php header('content-type:application:json;charset=utf8');"  . "header('Access-Control-Allow-Origin: *');" . "header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');" . " echo '" . json_encode($list) . "';";
         file_put_contents($path, $data);
+    }
+
+    /**
+     * Make a grid builder.
+     *
+     * @return string
+     */
+    public static function changeConnection(): string
+    {
+        $connection = "GameDataMySQL";
+        $server = self::getServer(self::getCurrentServer());
+        // get database config
+        $database = app('config')->get('database');
+        // chose this connection
+        $data = $database['connections'][$connection];
+        // modify config
+        $data["host"] = $server->db_host;
+        $data["port"] = $server->db_port;
+        $data["database"] = $server->db_name;
+        // store connection
+        $database['connections']['GameDataMySQL'] = $data;
+        // save database config
+        app('config')->set('database', $database);
+        // reconnect
+        DB::connection($connection)->reconnect();
+        return $connection;
     }
 }

@@ -23,15 +23,19 @@ class ClientErrorLogController extends AdminController
      *
      * @return Grid
      */
-    protected function grid()
+    protected function grid(): Grid
     {
         $grid = new Grid(new ClientErrorLogModel());
         $table = $grid->model()->getTable();
         // data
-        // $array = DB::SELECT("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . env("DB_DATABASE") . "' AND `TABLE_NAME` = '{$table}'");
-        $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->get();
+        $data = DB::table("information_schema.COLUMNS")
+            ->where("TABLE_SCHEMA", env("DB_DATABASE"))
+            ->where("TABLE_NAME", $table)
+            ->get();
         foreach ($data as $row) {
-            $grid->column($row->COLUMN_NAME, $row->COLUMN_COMMENT);
+            $grid
+                ->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                ->style("min-width:8em");
         }
 
         // filter
@@ -40,8 +44,11 @@ class ClientErrorLogController extends AdminController
             $filter->disableIdFilter();
 
             // filter
-            // $array = DB::select("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . env("DB_DATABASE") . "' AND `TABLE_NAME` = '{$table}' AND `COLUMN_KEY` IN ('PRI', 'UNI', 'MUL')");
-            $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", env("DB_DATABASE"))->where("TABLE_NAME", $table)->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])->get();
+            $data = DB::table("information_schema.COLUMNS")
+                ->where("TABLE_SCHEMA", env("DB_DATABASE"))
+                ->where("TABLE_NAME", $table)
+                ->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])
+                ->get();
             foreach ($data as $row) {
                 $filter->like($row->COLUMN_NAME, $row->COLUMN_COMMENT);
             }
@@ -52,11 +59,9 @@ class ClientErrorLogController extends AdminController
         $grid->actions(function ($actions) {
             // remove edit
             $actions->disableEdit();
-
             // remove view
             $actions->disableView();
         });
-
         // no create
         $grid->disableCreateButton(true);
         return $grid;
@@ -67,7 +72,7 @@ class ClientErrorLogController extends AdminController
      *
      * @return Form
      */
-    protected function form()
+    protected function form(): Form
     {
         return new Form(new ClientErrorLogModel());
     }

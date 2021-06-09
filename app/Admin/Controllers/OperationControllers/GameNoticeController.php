@@ -2,19 +2,113 @@
 
 namespace App\Admin\Controllers\OperationControllers;
 
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Form;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
+use App\Admin\Models\OperationModels\GameNoticeModel;
 use App\Admin\Controllers\SwitchServerController;
 
-class GameNoticeController extends Controller
+
+class GameNoticeController extends AdminController
 {
-    public function send(Content $content)
+    /**
+     * Title for current resource.
+     *
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function index(Content $content): Content
+    {
+        $action = request()->input("action", "");
+        if (!empty($action)) {
+            return $this->action($content, $action);
+        }
+        return $this->displayIndex($content);
+    }
+
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function displayIndex(Content $content): Content
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description['create'] ?? trans('admin.create'))
+            ->body($this->form());
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @return Form
+     */
+    public function form(): Form
+    {
+        $form = new Form(new GameNoticeModel());
+        $form->setTitle(trans("admin.notice"));
+        $options = [
+            "this" => trans("admin.current_server"),
+            "all" => trans("admin.all_server"),
+        ];
+        $form->select("server", trans("admin.server"))->options($options);
+        $form->text("title", trans("admin.title"));
+        $form->textarea("content", trans("admin.content"))->style("resize", "vertical");
+        $help = "物品可使用<a href='/configure-assistant' target='_blank'>配表助手</a>生成";
+        $form->textarea("items", trans("admin.items"))->style("resize", "vertical")->help($help);
+        $form->hidden("action")->value("generate");
+
+        $form->disableViewCheck();
+        $form->disableCreatingCheck();
+        $form->disableEditingCheck();
+
+        $form->tools(function (Form\Tools $tools) {
+            // remove list
+            $tools->disableList();
+            // remove delete
+            $tools->disableDelete();
+            // remove view
+            $tools->disableView();
+        });
+
+        $form->setAction(request()->path());
+
+        return $form;
+    }
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @param string $action;
+     *
+     * @return Content
+     */
+    public function action(Content $content, string $action)
     {
         // send notice
         $server = request()->input("server", "");
-        if (empty($server)) return $content;
+        if (empty($server)) {
+            return $this->displayIndex($content)->withError(trans("admin.error"));
+        }
         // construct data
-        $json = json_encode(["title" => request()->input("title"), "content" => request()->input("content"), "items" => request()->input("items")]);
+        $json = json_encode([
+            "title" => request()->input("title"),
+            "content" => request()->input("content"),
+            "items" => request()->input("items")
+        ]);
         // request
         $array = SwitchServerController::send($server, "notice", $json);
         // handle result
@@ -25,69 +119,6 @@ class GameNoticeController extends Controller
             return $content->withSuccess(trans("admin.succeeded"), $ok);
         if (!empty($error))
             return $content->withError(trans("admin.failed"), $error);
-        return $content;
-    }
-
-    public function index(Content $content)
-    {
-        $content = $this->send($content);
-        // view
-        return $content->title('')->body("
-            <div class='box box-info'>
-                <div class='box-header with-border'>" . trans("admin.notice") .  "</div>
-                <form name='form' class='form-horizontal' action='" . request()->path() . "' method='POST' pjax-container>
-                    " . csrf_field() . "
-                    <div class='box-body'>
-                        <div class='form-group'>
-                            <label for='server' class='col-sm-2 asterisk control-label'>" . trans("admin.server"). "</label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='input-group-addon'><i class='fa fa-list fa-fw'></i></span>
-                                <select class='form-control' name='server' style='outline:none;'>
-                                    <option value='this'>" . trans("admin.current_server"). "</option>
-                                    <option value='all'>" . trans("admin.all_server"). "</option>
-                                </select>
-                            </div></div>
-                        </div>
-                        <div class='form-group'>
-                            <label for='title' class='col-sm-2 asterisk control-label'>" . trans("admin.title"). "</label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <textarea class='form-control' rows='10' name='title'></textarea>
-                                
-                            </div></div>
-                        </div>
-                        <div class='form-group'>
-                            <label for='content' class='col-sm-2 asterisk control-label'>" . trans("admin.content"). "</label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <textarea class='form-control' rows='10' name='content'></textarea>
-                                
-                            </div></div>
-                        </div>
-                        <div class='form-group'>
-                            <label for='items' class='col-sm-2 control-label'></label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='help-block'><i class='fa fa-info-circle'></i> 物品可使用<a href='/configure-assistant' target='_blank'>配表助手</a>生成</span>
-                            </div></div>
-                        </div>
-                        <div class='form-group'>
-                            <label for='items' class='col-sm-2 control-label'>" . trans("admin.items"). "</label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='input-group-addon'><i class='fa fa-pencil fa-fw'></i></span>
-                                <textarea class='form-control' rows='10' name='items'></textarea>
-                                
-                            </div></div>
-                        </div>
-                        <div class='form-group'>
-                            <label for='name' class='col-sm-2 control-label'></label>
-                            <div class='col-sm-8'><div class='input-group'>
-                                <span class='input-group-addon'><i class='fa fa-send-o fa-fw'></i></span>
-                                <input type='submit' class='form-control' value='" . trans("admin.send"). "' />
-                            </div></div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        ");
+        return $this->displayIndex($content);
     }
 }

@@ -16,7 +16,7 @@ $router = Route::group([
 
     // Dashboard
     $router->get('/',                                'HomeController@index')->name('admin.home');
-    $router->get('/example',                         'ExampleController@index')->name('admin.home');
+
 
     // Switch Server Database
 
@@ -24,7 +24,7 @@ $router = Route::group([
 
     // assistant
     $router->get('/key-assistant',                   'AssistantControllers\\KeyAssistantController@index')->name('admin.home');
-    $router->post('/key-assistant-generate',         'AssistantControllers\\KeyAssistantController@generate')->name('admin.home');
+    $router->post('/key-assistant',                  'AssistantControllers\\KeyAssistantController@index')->name('admin.home');
     $router->get('/configure-assistant',             'AssistantControllers\\ConfigureAssistantController@index')->name('admin.home');
 
     // User Active Statistics
@@ -46,21 +46,21 @@ $router = Route::group([
     // $router->get('/configure-data',                  'GameDataControllers\\TableDataListController@showConfigure')->name('admin.home');
     // $router->get('/log-data',                        'GameDataControllers\\TableDataListController@showLog')->name('admin.home');
 
-    $router->get('/user-data',                       'GameDataControllers\\TableDataListController@user');
-    $router->get('/configure-data',                  'GameDataControllers\\TableDataListController@configure');
-    $router->get('/log-data',                        'GameDataControllers\\TableDataListController@log');
-    $router->get('/table-data-viewer',               'GameDataControllers\\TableDataViewerController@index');
-    $router->resource('client-error-log',       'GameDataControllers\\ClientErrorLogController');
+    $router->resource('/user-data',                  'GameDataControllers\\TableDataListController');
+    $router->resource('/configure-data',             'GameDataControllers\\TableDataListController');
+    $router->resource('/log-data',                   'GameDataControllers\\TableDataListController');
+    $router->resource('/table-data-viewer',          'GameDataControllers\\TableDataViewerController');
+    $router->resource('client-error-log',            'GameDataControllers\\ClientErrorLogController');
 
     // Game Configure Data
-    $router->get('/configure-table',                 'GameConfigureControllers\\ConfigureTableController@index')->name('admin.home');
-    $router->post('/configure-table',                'GameConfigureControllers\\ConfigureTableController@index')->name('admin.home');
-    $router->get('/erl-configure',                   'GameConfigureControllers\\ConfigureListController@erl')->name('admin.home');
-    $router->get('/lua-configure',                   'GameConfigureControllers\\ConfigureListController@lua')->name('admin.home');
-    $router->get('/js-configure',                    'GameConfigureControllers\\ConfigureListController@js')->name('admin.home');
+    $router->resource('/configure-table',            'GameConfigureControllers\\ConfigureTableController');
+    $router->post('/configure-table',                'GameConfigureControllers\\ConfigureTableController@index');
+    $router->resource('/erl-configure',              'GameConfigureControllers\\ConfigureListController');
+    $router->resource('/lua-configure',              'GameConfigureControllers\\ConfigureListController');
+    $router->resource('/js-configure',               'GameConfigureControllers\\ConfigureListController');
 
     // Game Server Manage
-    $router->get('/server-list-manage',              'ServerManageControllers\\ServerListManageController@index')->name('admin.home');
+    $router->resource('/server-list-manage',         'ServerManageControllers\\ServerListManageController');
     $router->post('/server-list-manage',             'ServerManageControllers\\ServerListManageController@index')->name('admin.home');
     $router->get('/server-list-manage-publish',      'ServerManageControllers\\ServerListManageController@publish')->name('admin.home');
 
@@ -81,8 +81,8 @@ $router = Route::group([
     $router->get('/game-notice',                     'OperationControllers\\GameNoticeController@index')->name('admin.home');
     $router->post('/game-notice',                    'OperationControllers\\GameNoticeController@index')->name('admin.home');
 
-    $router->resource('impeach',                'OperationControllers\\ImpeachController');
-    $router->resource('maintain-notice',        'OperationControllers\\MaintainNoticeController');
-    $router->resource('sensitive-word',         'OperationControllers\\SensitiveWordController');
+    $router->resource('impeach',                     'OperationControllers\\ImpeachController');
+    $router->resource('maintain-notice',             'OperationControllers\\MaintainNoticeController');
+    $router->resource('sensitive-word',              'OperationControllers\\SensitiveWordController');
 
 });

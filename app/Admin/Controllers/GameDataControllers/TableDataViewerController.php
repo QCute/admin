@@ -24,27 +24,34 @@ class TableDataViewerController extends AdminController
      *
      * @return Grid
      */
-    protected function grid()
+    protected function grid(): Grid
     {
+        $connection = SwitchServerController::changeConnection();
         $database = SwitchServerController::getCurrentServer();
         $table = request()->input("table", "");
-        $grid = new Grid(new TableDataModel( $database . "." . $table));
-        // $table = $grid->model()->getTable();
+        $grid = new Grid(new TableDataModel($connection, $table));
         // data
-        // $array = DB::SELECT("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . $database . "' AND `TABLE_NAME` = '{$table}'");
-        $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", $database)->where("TABLE_NAME", $table)->get();
+        $data = DB::connection($connection)
+            ->table("information_schema.COLUMNS")
+            ->where("TABLE_SCHEMA", $database)
+            ->where("TABLE_NAME", $table)
+            ->get();
         foreach ($data as $row) {
             $grid->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)->style("min-width:8em");
         }
 
         // filter
-        $grid->filter(function($filter) use ($database, $table) {
+        $grid->filter(function($filter) use ($connection, $database, $table) {
             // remove default id filter
             $filter->disableIdFilter();
 
             // filter
-            // $array = DB::select("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = '" . $database . "' AND `TABLE_NAME` = '{$table}' AND `COLUMN_KEY` IN ('PRI', 'UNI', 'MUL')");
-            $data = DB::table("information_schema.COLUMNS")->where("TABLE_SCHEMA", $database)->where("TABLE_NAME", $table)->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])->get();
+            $data = DB::connection($connection)
+                ->table("information_schema.COLUMNS")
+                ->where("TABLE_SCHEMA", $database)
+                ->where("TABLE_NAME", $table)
+                ->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])
+                ->get();
             foreach ($data as $row) {
                 $filter->like($row->COLUMN_NAME, $row->COLUMN_COMMENT);
             }
@@ -55,18 +62,16 @@ class TableDataViewerController extends AdminController
         $grid->actions(function ($actions) {
             // remove edit
             $actions->disableEdit();
-
             // remove view
             $actions->disableView();
-
             // remove delete
             $actions->disableDelete();
-
         });
         // no action
         $grid->disableActions();
         // no create
         $grid->disableCreateButton(true);
+        // no batch
         $grid->disableBatchActions(true);
         return $grid;
     }
@@ -76,7 +81,7 @@ class TableDataViewerController extends AdminController
      *
      * @return Form
      */
-    protected function form()
+    protected function form(): Form
     {
         return new Form(new TableDataModel());
     }

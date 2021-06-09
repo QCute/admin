@@ -2,94 +2,245 @@
 
 namespace App\Admin\Controllers\GameConfigureControllers;
 
-use Illuminate\Support\Facades\DB;
+use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Form;
+use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
 use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Models\GameConfigureModels\ConfigureTableModel;
 
-class ConfigureTableController extends Controller
+class ConfigureTableController extends AdminController
 {
-    public function index(Content $content)
+
+    /**
+     * Title for current resource.
+     *
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function index(Content $content): Content
+    {
+        $action = request()->input("action", "");
+        if (!empty($action)) {
+            return $this->action($content, $action);
+        }
+        return $this->displayIndex($content);
+    }
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function displayIndex(Content $content): Content
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description['index'] ?? trans('admin.list'))
+            ->body($this->grid());
+    }
+
+    /**
+     * Make a grid builder.
+     *
+     * @return Grid
+     */
+    protected function grid(): Grid
+    {
+        $path = request()->path();
+        $database = SwitchServerController::getCurrentServer();
+        $grid = new Grid(new ConfigureTableModel($database));
+        $grid->header(function ($query) use ($path) {
+            return "
+<style>.action{cursor: pointer;}</style>
+<div class=input-group file-caption-main'>
+    <div class='file-caption form-control kv-fileinput-caption icon-visible'>
+        <span class='file-caption-icon'><i class='glyphicon glyphicon-file'></i></span>
+        <input class='file-caption-name' onkeydown='return false;' onpaste='return false;' id='filename' placeholder='" . trans("admin.choose_file") . "'>
+    </div>
+    <div class='input-group-btn input-group-append'>
+        <form action='{$path}' method='POST' enctype='multipart/form-data' pjax-container>
+            " . csrf_field() . "
+            <input type='hidden' name='action' value='import'>
+            <div class='btn btn-primary btn-file'>
+                <i class='glyphicon glyphicon-folder-open'></i>
+                <span>" . trans("admin.browse") . "</span>
+                <input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='xml'>
+            </div>
+            <input class='btn btn-primary btn-file' type='submit' value='" . trans("admin.import") . "'/>
+        </form>
+    </div>
+</div>
+            ";
+        });
+        $data = [
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "TABLE_NAME",
+                "COMMENT" => trans("admin.table"),
+            ],
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "TABLE_COMMENT",
+                "COMMENT" => trans("admin.name"),
+            ],
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "username",
+                "COMMENT" => trans("admin.username"),
+            ],
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "time",
+                "COMMENT" => trans("admin.time"),
+            ],
+            (object)[
+                "OPERATION" => true,
+                "NAME" => "comment",
+                "COMMENT" => trans("admin.operation"),
+            ],
+        ];
+        foreach ($data as $row) {
+            $grid
+                ->column($row->NAME, $row->COMMENT)
+                ->style("min-width:8em")
+                ->display(function () use ($path, $row) {
+                    if ($row->OPERATION) {
+                        $href = "{$path}?action=export&table={$this->TABLE_NAME}&xml={$this->TABLE_COMMENT}";
+                        return "<a href=\"{$href}\" target='_blank'>" . trans("admin.export"). "</a>";
+                    } else {
+                        return $this->{$row->NAME};
+                    }
+                });
+        }
+
+        // filter
+        $grid->filter(function($filter) use ($data) {
+            // remove default id filter
+            $filter->disableIdFilter();
+
+            // filter
+            foreach ($data as $row) {
+                if ($row->OPERATION) continue;
+                $filter->like($row->NAME, $row->COMMENT);
+            }
+
+        });
+
+        // actions
+        $grid->actions(function ($actions) {
+            // remove edit
+            $actions->disableEdit();
+            // remove view
+            $actions->disableView();
+            // remove delete
+            $actions->disableDelete();
+        });
+        // no action
+        $grid->disableActions();
+        // no create
+        $grid->disableCreateButton(true);
+        // no batch
+        $grid->disableBatchActions(true);
+        return $grid;
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @return Form
+     */
+    protected function form(): Form
+    {
+        $database = SwitchServerController::getCurrentServer();
+        $form = new Form(new ConfigureTableModel($database));
+        $form->ignore(['updated_at', 'created_at']);
+
+        return $form;
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @param Content $content
+     * @param  string $action
+     *
+     * @return Content
+     */
+    public function action(Content $content, string $action): Content
     {
         // action
-        $action = request()->input("action", "");
-        switch ($action) 
-        {
-            case "export": 
-            {
-                // ensure dir
-                if (!file_exists(storage_path("admin") . "/xml/")) mkdir (storage_path("admin") . "/xml",0755,true);
-                // generate xml file
-                exec("cd " . storage_path("admin") . "/xml/" . " && " . env("SERVER_PATH") . "/script/shell/maker.sh xml " . request()->input("table") . " 2>&1", $result);
-                // download xml file
-                $file = storage_path("admin") . "/xml/" . request()->input("xml") . ".xml";
-                if (file_exists($file))
-                    // pjax use location.href redirection to download file or use ajax 
-                    return response()->download($file, basename($file), ["Content-Type: text/xml"]);
-                else
-                    // retuan file not found
-                    return response(json_encode($result), 404);
+        if ($action == "export") {
+            // ensure dir
+            $path = storage_path("admin") . "/xml/";
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
             }
-            case "import": 
-            {
-                // file upload
-                $file = request()->file("xml");
-                $boolResult = $file->storeAs(env("XML_PATH", "xml"), $file->getClientOriginalName(), ["disk" => "admin"]);
-                if(!$boolResult) return "toastr.error(" . json_encode(trans("admin.upload-error")) . ")";
-                // ensure dir
-                if (!file_exists(storage_path("admin") . "/xml/")) mkdir (storage_path("admin") . "/xml",0755,true);
-                // import table data
-                exec("cd " . storage_path("admin") . "/xml/" . " && " . env("SERVER_PATH") . "/script/shell/maker.sh table " . $file->getClientOriginalName() . " 2>&1", $result);
-                // delete file
-                unlink(storage_path("admin") . "/xml/" . $file->getClientOriginalName());
-                // handle result
-                $result = implode("", $result);
-                if ($result == "ok") {
-                    DB::insert("INSERT INTO `table_import_log` (`username`, `name`, `table_name`) VALUES (?, ?, ?)", [Auth::user()->name, basename($file->getClientOriginalName(), ".xml"), ""]);
-                    $result = "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
-                }
-                else
-                    $result = "toastr.error(" . json_encode($result) . ")";
-            }break;
-            default:
-            {
-                if (empty($action)) 
-                    $result = "";
-                else 
-                    $result = "toastr.error(" . json_encode("unknown action: " . request()->input("action")) . ")";
+            // generate xml file
+            $table = request()->input("table");
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path);
+            $process->run();
+            // result
+            if (!$process->isSuccessful()) {
+                return $this->displayIndex($content)->withError($process->getErrorOutput());
             }
+            $result = $process->getOutput();
+            // download xml file
+            $file = $path . request()->input("xml") . ".xml";
+            if (file_exists($file)) {
+                // pjax use location.href redirection to download file or use ajax
+                return response()->download($file, basename($file), ["Content-Type: text/xml"]);
+            } else {
+                // return file not found
+                return $this->displayIndex($content)->withError($result);
+            }
+        } else if ($action == "import") {
+            // file upload
+            $path = storage_path("admin") . "/xml/";
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+            $file = request()->file("xml");
+            $file_name = $file->getClientOriginalName();
+            $result = $file->storeAs("xml", $file_name, ["disk" => "admin"]);
+            // handle store result
+            if(!$result) {
+                return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
+            }
+            // import table data
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path);
+            $process->run();
+            // result
+            if (!$process->isSuccessful()) {
+                return $this->displayIndex($content)->withError($process->getErrorOutput());
+            }
+            $result = $process->getOutput();
+            // delete file
+            unlink($path . $file_name);
+            // handle result
+            if ($result == "ok") {
+                // todo fill table name
+                $data = [Auth::user()->name, basename($file_name, ".xml"), ""];
+                DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
+                return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"));
+            } else {
+                return $this->displayIndex($content)->withError($result);
+            }
+        } else {
+            return $this->displayIndex($content)->withError("Unknown Action: {$action}");
         }
-        // view
-        $database = SwitchServerController::getCurrentServer();
-        $data = DB::select("SELECT `TABLES`.`TABLE_COMMENT`, `TABLES`.`TABLE_NAME`, `table_import_log`.* FROM information_schema.`TABLES` LEFT JOIN (SELECT `table_import_log`.`username`, `table_import_log`.`name`, `table_import_log`.`time` FROM `table_import_log` JOIN (SELECT MAX(`id`) AS `id` FROM `table_import_log` GROUP BY `name`) AS `group_table_import_log` ON `table_import_log`.`id` = `group_table_import_log`.`id`) AS `table_import_log` ON `TABLES`.`TABLE_COMMENT` = `table_import_log`.`name` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` LIKE '%_data'", [$database]);
-        $html = implode("", array_map(function($row){ return "<tr><td>{$row->TABLE_COMMENT}</td><td>{$row->TABLE_NAME}</td><td>{$row->username}</td><td>{$row->time}</td><td><a class='action' onclick='$.fileDownload(\"configure-table?action=export&table={$row->TABLE_NAME}&xml={$row->TABLE_COMMENT}\").fail(result => toastr.error(result))'>" . trans("admin.export") . "</tr>"; }, $data));
-        return $content->title('')->body("
-            <script>$(document).ready(function(){{$result}});</script>
-            <style>
-                .action{cursor: pointer;}
-            </style>
-            <div class=input-group file-caption-main'>
-                <div class='file-caption form-control  kv-fileinput-caption icon-visible'>
-                    <span class='file-caption-icon'><i class='glyphicon glyphicon-file'></i></span>
-                    <input class='file-caption-name' onkeydown='return false;' onpaste='return false;' id='filename' placeholder='" . trans("admin.choose_file") . "'>
-                </div>
-                <div class='input-group-btn input-group-append'>
-                    <form action='configure-table' method='POST' enctype='multipart/form-data' pjax-container>
-                        " . csrf_field() . "
-                        <input type='hidden' name='action' value='import'>
-                        <div class='btn btn-primary btn-file'><i class='glyphicon glyphicon-folder-open'></i>&nbsp;  <span class='hidden-xs'>" . trans("admin.browse") . "</span><input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='xml'></div>
-                        <input class='btn btn-primary btn-file' type='submit' value='" . trans("admin.import") . "'/>
-                    </form>
-                </div>
-            </div>
-            <div class='panel panel-default' style='overflow:auto;border-radius: 0px;'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.username") . "</th><th>" . trans("admin.time") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-            <script src='https://cdn.bootcss.com/jquery.fileDownload/1.4.2/jquery.fileDownload.min.js'></script>
-        ");
     }
 }

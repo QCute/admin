@@ -38,9 +38,9 @@ class DailyRechargeController extends TimeTabController
             <script>
             function format(value) {
                 if (value >= " . trans("admin.unit") . ") { 
-                    return (value / " . trans("admin.unit") . ").toLocaleString() + '" . trans("admin.unit_name") . "'; 
+                    return (value / " . trans("admin.unit") . ").toLocalestring() + '" . trans("admin.unit_name") . "'; 
                 } else { 
-                    return value.toLocaleString(); 
+                    return value.toLocalestring(); 
                 }
             }
             $(function () {

@@ -2,146 +2,232 @@
 
 namespace App\Admin\Controllers\GameConfigureControllers;
 
+use Exception;
+use Symfony\Component\Process\Process;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Form;
+use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
-use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Models\GameConfigureModels\ConfigureListModel;
 
-class ConfigureListController extends Controller
+class ConfigureListController extends AdminController
 {
-    public function action()
+
+    /**
+     * Title for current resource.
+     *
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     * @throws Exception
+     */
+    public function index(Content $content): Content
+    {
+        $action = request()->input("action", "");
+        if (!empty($action)) {
+            return $this->action($content, $action);
+        }
+        return $this->displayIndex($content);
+    }
+
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     * @throws Exception
+     */
+    public function displayIndex(Content $content): Content
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description['index'] ?? trans('admin.list'))
+            ->body($this->grid());
+    }
+
+    /**
+     * Make a grid builder.
+     *
+     * @return Grid
+     * @throws Exception
+     */
+    protected function grid(): Grid
+    {
+        $path = request()->path();
+        $route = $this->getRoute($path);
+        $grid = new Grid(new ConfigureListModel($route));
+        $data = [
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "description",
+                "COMMENT" => trans("admin.description"),
+            ],
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "file",
+                "COMMENT" => trans("admin.file"),
+            ],
+            (object)[
+                "OPERATION" => true,
+                "NAME" => "TABLE_SCHEMA",
+                "COMMENT" => trans("admin.operation"),
+            ],
+        ];
+        foreach ($data as $row) {
+            $grid
+                ->column($row->NAME, $row->COMMENT)
+                ->style("min-width:8em")
+                ->display(function () use ($path, $route, $row) {
+                    if ($row->OPERATION) {
+                        $href = "{$path}?action={$route}&file={$this->file}";
+                        return "<a href='{$href}'>" . trans("admin.generate"). "</a>";
+                    } else {
+                        return $this->{$row->NAME};
+                    }
+                });
+        }
+
+        // filter
+        $grid->filter(function($filter) use ($data) {
+            // remove default id filter
+            $filter->disableIdFilter();
+
+            // filter
+            foreach ($data as $row) {
+                if ($row->OPERATION) continue;
+                $filter->like($row->NAME, $row->COMMENT);
+            }
+
+        });
+
+        // actions
+        $grid->actions(function ($actions) {
+            // remove edit
+            $actions->disableEdit();
+            // remove view
+            $actions->disableView();
+            // remove delete
+            $actions->disableDelete();
+        });
+        // no action
+        $grid->disableActions();
+        // no create
+        $grid->disableCreateButton(true);
+        // no batch
+        $grid->disableBatchActions(true);
+        return $grid;
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @return Form
+     */
+    protected function form(): Form
+    {
+        return new Form(new ConfigureListModel());
+    }
+
+    /**
+     * Make a form builder.
+     *
+     * @param string $path
+     *
+     * @return string
+     * @throws Exception
+     */
+    private function getRoute(string $path): string
+    {
+        if (is_int(strpos($path, "erl"))) {
+            return "erl";
+        } else if (is_int(strpos($path, "lua"))) {
+            return "lua";
+        } else if (is_int(strpos($path, "js"))) {
+            return "js";
+        } else {
+            throw new Exception("Unknown Path: $path");
+        }
+    }
+
+    /**
+     * @param Content $content
+     * @param string $action
+     *
+     * @return Content
+     * @throws Exception
+     */
+    public function action(Content $content, string $action): Content
     {
         // act action
-        $action = request()->input("action", "");
         switch ($action)
         {
-            case "load":
-            {
-                // make
-                exec(env("SERVER_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
-                if (implode("", $result) != "ok") {return implode("", $result);}
-                // compile
-                unset($result);
-                exec(env("SERVER_PATH") . "/script/shell/maker.sh debug " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
-                if (implode("", $result) != "ok") {return implode("", $result);}
-                // reload
-                unset($result);
-                exec(env("SERVER_PATH") . "/script/shell/runner.sh " . SwitchServerController::getCurrentServer() . " load " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
-                // handle result
-                $result = implode("", $result);
-                if($result == "ok") 
-                    return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
-                else
-                    return "toastr.error(" . json_encode($result) . ")";
-            }
             case "erl":
             {
-                exec(env("SERVER_PATH") . "/script/shell/maker.sh data " . basename(request()->input("file"), ".erl") . " 2>&1", $result);
-                // handle result
-                $result = implode("", $result);
-                if($result == "ok") 
-                    return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
-                else
-                    return "toastr.error(" . json_encode($result) . ")";
+                $file = basename(request()->input("file"), ".erl");
+                // generate
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data", $file]);
+                $process->run();
+                if (!$process->isSuccessful()) {
+                    return $this->displayIndex($content)->withError($process->getErrorOutput());
+                }
+                $result = $process->getOutput();
+                $content->withSuccess($result);
+                // compile
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "release", $file]);
+                $process->run();
+                if (!$process->isSuccessful()) {
+                    return $this->displayIndex($content)->withError($process->getErrorOutput());
+                }
+                $result = $process->getOutput();
+                $content->withSuccess($result);
+                // load
+                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", "-load", $file]);
+                $process->run();
+                if (!$process->isSuccessful()) {
+                    return $this->displayIndex($content)->withError($process->getErrorOutput());
+                }
+                $result = $process->getOutput();
+                $content->withSuccess($result);
+                // index page
+                return $this->displayIndex($content);
             }
             case "lua":
             {
-                exec(env("SERVER_PATH") . "/script/shell/maker.sh lua " . basename(request()->input("file"), ".lua") . " 2>&1", $result);
-                // handle result
-                $result = implode("", $result);
-                if($result == "ok") 
-                    return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
-                else
-                    return "toastr.error(" . json_encode($result) . ")";
+                $file = basename(request()->input("file"), ".lua");
+                // generate
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua", $file]);
+                $process->run();
+                // result
+                if (!$process->isSuccessful()) {
+                    return $this->displayIndex($content)->withError($process->getErrorOutput());
+                }
+                return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
             }
             case "js":
             {
-                exec(env("SERVER_PATH") . "/script/shell/maker.sh js " . basename(request()->input("file"), ".js") . " 2>&1", $result);
-                // handle result
-                $result = implode("", $result);
-                if($result == "ok") 
-                    return "toastr.success(" . json_encode(trans("admin.succeeded")) . ")";
-                else
-                    return "toastr.error(" . json_encode($result) . ")";
+                $file = basename(request()->input("file"), ".lua");
+                // generate
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js", $file]);
+                $process->run();
+                // result
+                if (!$process->isSuccessful()) {
+                    return $this->displayIndex($content)->withError($process->getErrorOutput());
+                }
+                return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
             }
             default:
             {
-                if (empty($action)) 
-                    return "";
-                else 
-                    return "toastr.error(" . json_encode("unknown action: " . request()->input("action")) . ")";
+                return $this->displayIndex($content)->withError("Unknown Action: {$action}");
             }
         }
     }
 
-    public function erl(Content $content)
-    {
-        // action
-        $result = $this->action();
-        // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/data_script.erl");
-        $script = substr($script, strpos($script, "data() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.erl/", $script, $file);
-        $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a> | <a class='action' href='erl-configure?action=load&file={$row}'>" . trans("admin.update") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->title('')->body("
-            <style>.action{cursor: pointer;}</style>
-            <style>.panel{border-radius: 0px;}</style>
-            <script>$(document).ready(function(){{$result}})</script>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.description") . "</th><th>" . trans("admin.file") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
-    }
-
-    public function lua(Content $content)
-    {
-        // action
-        $result = $this->action();
-        // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/lua_script.erl");
-        $script = substr($script, strpos($script, "lua() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.lua/", $script, $file);
-        $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->title('')->body("
-            <style>.action{cursor: pointer;}</style>
-            <style>.panel{border-radius: 0px;}</style>
-            <script>$(document).ready(function(){{$result}})</script>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.description") . "</th><th>" . trans("admin.file") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
-    }
-
-    public function js(Content $content)
-    {
-        // action
-        $result = $this->action();
-        // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/js_script.erl");
-        $script = substr($script, strpos($script, "js() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.js/", $script, $file);
-        $html = implode("", array_map(function($row, $name){ return "<tr><td>{$name}</td><td>{$row}</td><td><a class='action' href='erl-configure?action=erl&file={$row}'>" . trans("admin.generate") . "</a></td></tr>"; }, $file[0], $name[0]));
-        return $content->title('')->body("
-            <style>.action{cursor: pointer;}</style>
-            <style>.panel{border-radius: 0px;}</style>
-            <script>$(document).ready(function(){{$result}})</script>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.description") . "</th><th>" . trans("admin.file") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
-    }
 }

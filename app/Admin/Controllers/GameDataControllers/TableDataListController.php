@@ -2,60 +2,121 @@
 
 namespace App\Admin\Controllers\GameDataControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
+use Exception;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Form;
+use Encore\Admin\Grid;
+use App\Admin\Models\GameDataModels\TableDataModel;
 use App\Admin\Controllers\SwitchServerController;
 
-class TableDataListController extends Controller
+class TableDataListController extends AdminController
 {
 
-    public function user(Content $content)
+    /**
+     * Title for current resource.
+     *
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * Make a grid builder.
+     *
+     * @return Grid
+     * @throws Exception
+     */
+    protected function grid(): Grid
     {
+        $path = request()->path();
+        $connection = SwitchServerController::changeConnection();
         $database = SwitchServerController::getCurrentServer();
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` NOT LIKE '%_log' AND `TABLE_NAME` NOT LIKE '%_data'", [$database]);
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->title('')->body("
-            <style>.panel{border-radius: 0px;}</style>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
+        $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES"));
+        $grid->model()->where("TABLE_SCHEMA", "=", $database);
+        if (is_int(strpos($path, "user"))) {
+            $grid
+                ->model()
+                ->where("TABLE_NAME", "NOT LIKE", "%_data")
+                ->where("TABLE_NAME", "NOT LIKE", "%_log");
+        } else if (is_int(strpos($path, "configure"))) {
+            $grid
+                ->model()
+                ->where("TABLE_NAME", "LIKE", "%_data");
+        } else if (is_int(strpos($path, "log"))) {
+            $grid
+                ->model()
+                ->where("TABLE_NAME", "LIKE", "%_log");
+        } else {
+            throw new Exception("Unknown Path: $path");
+        }
+        $data = [
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "TABLE_NAME",
+                "COMMENT" => trans("admin.table"),
+            ],
+            (object)[
+                "OPERATION" => false,
+                "NAME" => "TABLE_COMMENT",
+                "COMMENT" => trans("admin.name"),
+            ],
+            (object)[
+                "OPERATION" => true,
+                "NAME" => "TABLE_SCHEMA",
+                "COMMENT" => trans("admin.operation"),
+            ],
+        ];
+        foreach ($data as $row) {
+            $grid
+                ->column($row->NAME, $row->COMMENT)
+                ->style("min-width:8em")
+                ->display(function () use ($row) {
+                    if ($row->OPERATION) {
+                        $href = "table-data-viewer?table={$this->TABLE_NAME}";
+                        return "<a href='{$href}'>" . trans("admin.view"). "</a>";
+                    } else {
+                        return $this->{$row->NAME};
+                    }
+                });
+        }
+
+        // filter
+        $grid->filter(function($filter) use ($data) {
+            // remove default id filter
+            $filter->disableIdFilter();
+
+            // filter
+            foreach ($data as $row) {
+                if ($row->OPERATION) continue;
+                $filter->like($row->NAME, $row->COMMENT);
+            }
+
+        });
+
+        // actions
+        $grid->actions(function ($actions) {
+            // remove edit
+            $actions->disableEdit();
+            // remove view
+            $actions->disableView();
+            // remove delete
+            $actions->disableDelete();
+        });
+        // no action
+        $grid->disableActions();
+        // no create
+        $grid->disableCreateButton(true);
+        // no batch
+        $grid->disableBatchActions(true);
+        return $grid;
     }
 
-    public function configure(Content $content)
+    /**
+     * Make a form builder.
+     *
+     * @return Form
+     */
+    protected function form(): Form
     {
-        $database = SwitchServerController::getCurrentServer();
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` LIKE '%_data'", [$database]);
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->title('')->body("
-            <style>.panel{border-radius: 0px;}</style>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
+        return new Form(new TableDataModel());
     }
-
-    public function log(Content $content)
-    {
-        $database = SwitchServerController::getCurrentServer();
-        $data = DB::SELECT("SELECT `TABLE_COMMENT`, `TABLE_NAME` FROM information_schema.`TABLES` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` LIKE '%_log'", [$database]);
-        $html = implode("", array_map(function($row){ return "<tr><td>" . $row->TABLE_COMMENT . "</td><td>" . $row->TABLE_NAME . "</td><td><a href='table-data-viewer?table={$row->TABLE_NAME}'>" . trans("admin.lookup") . "</a></td></tr>"; }, $data));
-        return $content->title('')->body("
-            <style>.panel{border-radius: 0px;}</style>
-            <div class='panel panel-default'>
-                <table class='table'>
-                    <thead><tr><th>" . trans("admin.name") . "</th><th>" . trans("admin.table") . "</th><th>" . trans("admin.operation") . "</th></tr></thead>
-                    {$html}
-                </table>
-            </div>
-        ");
-    }
-
 }

@@ -8,6 +8,7 @@ use Encore\Admin\Layout\Column;
 use Encore\Admin\Layout\Content;
 use Encore\Admin\Layout\Row;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Process\Process;
 
 class HomeController extends Controller
 {
@@ -33,6 +34,8 @@ class HomeController extends Controller
                     $column->append(Dashboard::dependencies());
                 });
             })
-            ->body("");
+            ->body("
+            
+            ");
     }
 }
