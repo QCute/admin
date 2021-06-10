@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [[ -z "$1" ]];then
+    [[ "$(whoami)" != "root" ]] && echo "This script must be run as root!" && exit
+    php artisan serve --host=0.0.0.0 --port=80
+elif [[ "$1" == "swoole" ]];then
+    # run with swoole
+    [[ "$(whoami)" != "root" ]] && echo "This script must be run as root!" && exit
+    php artisan swoole:http start
+elif [[ "$1" == "ms" ]];then
+    sed -i "s/animationSpeed:\\d+/animationSpeed:200/" ./public/vendor/laravel-admin/AdminLTE/dist/js/app.min.js
+elif [[ "$1" == "fix" ]];then
+    # fix lararvel session flash to now
+    # ./vendor/encore/laravel-admin/src/helpers.php
+    sed -i "s/session()->flash/session()->now/g" ./vendor/encore/laravel-admin/src/helpers.php
+elif [[ "$1" == "install" ]];then
+    template="
+[Unit]
+Description=Laravel Admin Service
+# start after mariadb
+After=mariadb.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+# lararvel admin directory
+WorkingDirectory={{WorkingDirectory}}
+# start
+ExecStart=/usr/bin/php artisan swoole:http start
+# reload
+ExecReload=/usr/bin/php artisan swoole:http reload
+# stop
+ExecStop=/usr/bin/php artisan swoole:http stop
+# restart
+Restart=on-failure
+# restart time
+RestartSec=5s
+"
+    [[ "$(whoami)" != "root" ]] && echo "This script must be run as root!" && exit
+    template=${template/"{{WorkingDirectory}}"/$(pwd)}
+    echo "${template}" > /lib/systemd/system/laravel-admin.service
+    chmod 644 /lib/systemd/system/laravel-admin.service
+    # chcon need selinux
+    chcon -u system_u -r object_r -t laravel-admin_unit_file_t /lib/systemd/system/laravel-admin.service
+    systemctl daemon-reload
+    systemctl enable laravel-admin.service
+else
+    echo "swoole | fix | install"
+fi

@@ -11,7 +11,7 @@
  Target Server Version : 100508
  File Encoding         : 65001
 
- Date: 31/01/2021 14:33:54
+ Date: 10/06/2021 21:46:54
 */
 
 SET NAMES utf8mb4;
@@ -81,13 +81,6 @@ INSERT INTO `admin_menu` VALUES (43, 0, 35, '工具', 'fa-wrench', NULL, NULL, '
 INSERT INTO `admin_menu` VALUES (44, 43, 37, 'SSH Key生成', 'fa-key', '/key-assistant', NULL, '2021-01-12 20:58:37', '2021-01-23 22:20:27');
 INSERT INTO `admin_menu` VALUES (45, 0, 28, '运营管理', 'fa-user-plus', NULL, NULL, '2021-01-21 20:45:18', '2021-01-21 22:34:47');
 INSERT INTO `admin_menu` VALUES (46, 45, 32, '维护公告', 'fa-bullhorn', '/maintain-notice', NULL, '2021-01-23 22:20:03', '2021-01-23 22:20:27');
-INSERT INTO `admin_menu` VALUES (47, 0, 45, '日志查看器', 'fa-search-plus', 'logs', NULL, '2021-01-23 23:06:39', '2021-01-23 23:13:09');
-INSERT INTO `admin_menu` VALUES (48, 0, 46, 'Helpers', 'fa-gears', '', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
-INSERT INTO `admin_menu` VALUES (49, 48, 47, 'Scaffold', 'fa-keyboard-o', 'helpers/scaffold', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
-INSERT INTO `admin_menu` VALUES (50, 48, 48, 'Database terminal', 'fa-database', 'helpers/terminal/database', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
-INSERT INTO `admin_menu` VALUES (51, 48, 49, 'Laravel artisan', 'fa-terminal', 'helpers/terminal/artisan', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
-INSERT INTO `admin_menu` VALUES (52, 48, 50, 'Routes', 'fa-list-alt', 'helpers/routes', NULL, '2021-01-23 23:14:23', '2021-01-23 23:20:13');
-INSERT INTO `admin_menu` VALUES (53, 48, 51, 'Api tester', 'fa-sliders', 'api-tester', NULL, '2021-01-23 23:17:29', '2021-01-23 23:20:13');
 
 -- ----------------------------
 -- Table structure for admin_operation_log
@@ -406,15 +399,22 @@ CREATE TABLE `sensitive_word_data`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `server_list`;
 CREATE TABLE `server_list`  (
-  `server_node` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服节点',
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `channel` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '渠道',
+  `server_node` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服节点名',
   `server_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服名',
   `server_host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服域名',
   `server_ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服IP',
   `server_port` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '游戏服端口',
+  `db_host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服数据库域名',
+  `db_port` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服数据库端口',
+  `db_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服数据库名',
+  `db_username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服数据库用户名',
+  `db_password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '游戏服数据库密码',
   `server_id` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '游戏服编号',
   `server_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '服务器类型',
   `open_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '开服时间',
-  `tab_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分页名字',
+  `tab_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '分页名字',
   `center_node` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '中央服节点',
   `center_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '中央服名',
   `center_host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '中央服域名',
@@ -424,20 +424,21 @@ CREATE TABLE `server_list`  (
   `world` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '连接大世界',
   `state` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '当前状态',
   `recommend` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '推荐',
-  PRIMARY KEY (`server_node`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '服务器列表' ROW_FORMAT = Dynamic;
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `server_node`(`server_node`) USING BTREE,
+  INDEX `server_name`(`server_name`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '服务器列表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of server_list
 -- ----------------------------
-INSERT INTO `server_list` VALUES ('activity', '活动服', 'fake.me', 'fake.me', 11006, 1006, 'local', 1577808000, '二', '', '', '', '', 0, 0, ' ', '', '推荐');
-INSERT INTO `server_list` VALUES ('center', '小跨服', 'fake.me', 'fake.me', 0, 100, 'center', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
-INSERT INTO `server_list` VALUES ('dev', '开发服', 'fake.me', 'fake.me', 11004, 1004, 'local', 1577808000, '一', '', '', '', '', 0, 0, '', '', '火爆');
-INSERT INTO `server_list` VALUES ('local', '本地服', 'fake.me', 'fake.me', 11001, 1001, 'local', 1577808000, '一', 'center', '小跨服', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list` VALUES ('publish', '版署服', 'fake.me', 'fake.me', 11005, 1005, 'local', 1577808000, '二', 'center', '小跨服', '', '', 0, 0, '', '', '推荐');
-INSERT INTO `server_list` VALUES ('stable', '稳定服', 'fake.me', 'fake.me', 11002, 1002, 'local', 1577808000, '一', 'center', '小跨服', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list` VALUES ('test', '测试服', 'fake.me', 'fake.me', 11003, 1003, 'local', 1577808000, '三', '', '', '', '', 0, 0, '', '', '新开');
-INSERT INTO `server_list` VALUES ('world', '大世界', 'fake.me', 'fake.me', 0, 0, 'world', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (1, '', 'local', '本地服', 'fake.me', '127.0.0.1', 11001, 'fake.me', '3306', 'local', 'root', 'root', 1001, 'local', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (2, '', 'test', '测试服', 'fake.me', '127.0.0.1', 11001, 'fake.me', '3306', 'test', 'root', 'root', 1002, 'local', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (3, '', 'activity', '活动服', 'fake.me', '127.0.0.1', 11001, 'fake.me', '3306', 'activity', 'root', 'root', 1003, 'local', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (4, '', 'stable', '稳定服', 'fake.me', '127.0.0.1', 11001, 'fake.me', '3306', 'stable', 'root', 'root', 1004, 'local', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (5, '', 'publish', '版署服', 'fake.me', '127.0.0.1', 11001, 'fake.me', '3306', 'publish', 'root', 'root', 1005, 'local', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (6, '', 'center', '中央服', 'fake.me', '127.0.0.1', 54321, 'fake.me', '3306', 'center', 'root', 'root', 101, 'center', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
+INSERT INTO `server_list` VALUES (7, '', 'world', '世界服', 'fake.me', '127.0.0.1', 65432, 'fake.me', '3306', 'world', 'root', 'root', 0, 'world', 1577808000, '', '', '', '', '', 0, 0, '', '', '');
 
 -- ----------------------------
 -- Table structure for table_import_log
@@ -446,12 +447,14 @@ DROP TABLE IF EXISTS `table_import_log`;
 CREATE TABLE `table_import_log`  (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '用户名',
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '名称',
-  `table_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '表名',
-  `time` datetime NOT NULL DEFAULT current_timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT '时间',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '表名',
+  `comment` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '名称',
+  `time` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP COMMENT '时间',
   `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '状态',
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '配置表导入日志' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '配置表导入日志' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of table_import_log
