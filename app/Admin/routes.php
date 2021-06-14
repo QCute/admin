@@ -1,26 +1,23 @@
 <?php
 
-
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Encore\Admin\Facades\Admin;
 
 Admin::routes();
 
-$router = Route::group([
-    'domain'        => config('admin.route.domain'),
+Route::group([
     'prefix'        => config('admin.route.prefix'),
     'namespace'     => config('admin.route.namespace'),
     'middleware'    => config('admin.route.middleware'),
+    'as'            => config('admin.route.prefix') . '.',
+    'domain'        => config('admin.route.domain'),
 ], function (Router $router) {
 
-    // Dashboard
-    $router->get('/',                                'HomeController@index')->name('admin.home');
-
+    $router->get('/', 'HomeController@index')->name('home');
 
     // Switch Server Database
-
-    $router->get('/switch-server',                   'SwitchServerController@index')->name('admin.home');
+    $router->get('/switch-server',                   'SwitchServerController@switch')->name('admin.home');
 
     // assistant
     $router->get('/key-assistant',                   'AssistantControllers\\KeyAssistantController@index')->name('admin.home');
@@ -54,6 +51,7 @@ $router = Route::group([
 
     // Game Configure Data
     $router->resource('/configure-table',            'GameConfigureControllers\\ConfigureTableController');
+    $router->get('/configure-table-download',        'GameConfigureControllers\\ConfigureTableController@download');
     $router->post('/configure-table',                'GameConfigureControllers\\ConfigureTableController@index');
     $router->resource('/erl-configure',              'GameConfigureControllers\\ConfigureListController');
     $router->resource('/lua-configure',              'GameConfigureControllers\\ConfigureListController');

@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers\GameConfigureControllers;
 
 use Symfony\Component\Process\Process;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Controllers\AdminController;
@@ -39,7 +40,7 @@ class ConfigureTableController extends AdminController
     }
 
     /**
-     * Index interface.
+     * Index.
      *
      * @param Content $content
      *
@@ -120,7 +121,7 @@ class ConfigureTableController extends AdminController
                 ->display(function () use ($path, $row) {
                     if ($row->OPERATION) {
                         $href = "{$path}?action=export&table={$this->TABLE_NAME}&xml={$this->TABLE_COMMENT}";
-                        return "<a href=\"{$href}\" target='_blank'>" . trans("admin.export"). "</a>";
+                        return "<a href=\"{$href}\">" . trans("admin.export"). "</a>";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -134,6 +135,8 @@ class ConfigureTableController extends AdminController
 
             // filter
             foreach ($data as $row) {
+                if ($row->NAME == "username") continue;
+                if ($row->NAME == "time") continue;
                 if ($row->OPERATION) continue;
                 $filter->like($row->NAME, $row->COMMENT);
             }
@@ -185,13 +188,13 @@ class ConfigureTableController extends AdminController
         // action
         if ($action == "export") {
             // ensure dir
-            $path = storage_path("admin") . "/xml/";
+            $path = storage_path("app/admin/sheets/");
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
             // generate xml file
             $table = request()->input("table");
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path);
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path, ["PATH" => `echo \$PATH`]);
             $process->run();
             // result
             if (!$process->isSuccessful()) {
@@ -202,14 +205,20 @@ class ConfigureTableController extends AdminController
             $file = $path . request()->input("xml") . ".xml";
             if (file_exists($file)) {
                 // pjax use location.href redirection to download file or use ajax
-                return response()->download($file, basename($file), ["Content-Type: text/xml"]);
+                $url = request()->path();
+                $base_name = basename($file);
+                $content->body("
+                <a href='{$url}-download?file={$base_name}' target='_blank' style='display: none;' id='download'></a>
+                <script>document.getElementById('download').click();</script>
+                ");
+                return $this->displayIndex($content);
             } else {
                 // return file not found
                 return $this->displayIndex($content)->withError($result);
             }
         } else if ($action == "import") {
             // file upload
-            $path = storage_path("admin") . "/xml/";
+            $path = storage_path("app/admin/sheets");
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
@@ -221,7 +230,7 @@ class ConfigureTableController extends AdminController
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
             // import table data
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path);
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path, ["PATH" => `echo \$PATH`]);
             $process->run();
             // result
             if (!$process->isSuccessful()) {
@@ -230,17 +239,19 @@ class ConfigureTableController extends AdminController
             $result = $process->getOutput();
             // delete file
             unlink($path . $file_name);
-            // handle result
-            if ($result == "ok") {
-                // todo fill table name
-                $data = [Auth::user()->name, basename($file_name, ".xml"), ""];
-                DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
-                return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"));
-            } else {
-                return $this->displayIndex($content)->withError($result);
-            }
+            // todo fill table name
+            $data = [Auth::user()->name, basename($file_name, ".xml"), ""];
+            DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
+            return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {
             return $this->displayIndex($content)->withError("Unknown Action: {$action}");
         }
+    }
+
+    public function download(): BinaryFileResponse
+    {
+        $file = request()->input("file", "");
+        $path = storage_path("app/admin/sheets/{$file}");
+        return response()->download($path, $file, ["Content-Type: text/xml"]);
     }
 }

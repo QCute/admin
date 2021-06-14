@@ -8,31 +8,42 @@ A Game Manage System Power By [Laravel-Admin](https://github.com/z-song/laravel-
 # Installation
 
 Install dependency
-```
+```sh
 composer install -vvv
 ```
 
 Make env file
-```
+```sh
 cp .env.example .env
 ```
 
-Add prefix admin to .env
+Change Domain and/or Prefix
 ```
+# http://admin.localhost
+ADMIN_ROUTE_DOMAIN=admin
+# http://localhost/admin
 ADMIN_ROUTE_PREFIX=admin
-DB_DATABASE=laravel(or your database name)
 ```
 
-Import SQL dump file
-``` 
-create database `laravel`; -- (or your database name)
-use `laravel`; -- (or your database name)
-source storage/mysql_dump/laravel.sql;
+Create Database  
+```sql
+create database `admin`; -- database name
 ```
 
-Run
-```
-php -S 0.0.0.0:80 -t public/
+Install Admin  
+```sh
+php artisan admin:install
 ```
 
-Open http://localhost/admin/ in browser, use username admin and password admin to login.
+Import User/Role/Permission/Menu Data  
+```sh
+php artisan db:seed --class=AdminTablesSeeder
+```
+
+Run  
+```sh
+php artisan serve --host=0.0.0.0 --port=80
+```
+
+# Usage 
+Open http://admin.localhost/ or http://localhost/admin/ in browser, use username admin and password admin to login.

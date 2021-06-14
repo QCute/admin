@@ -3,70 +3,93 @@
 namespace App\Admin\Controllers;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\ConnectionInterface;
 use App\Http\Controllers\Controller;
 
 class SwitchServerController extends Controller
 {
-    public function index()
+    private const connection = "GameDataMySQL";
+
+    /** Switch server
+     *
+     * @return  RedirectResponse
+     */
+    public function switch(): RedirectResponse
     {
         $server = request()->input("server");
         Cookie::queue("current_server", $server);
-        if ($server)
-            return response()->json(["result" => "ok", "server" => $server, "msg" => trans('admin.switch_server_ok')]);
-        else
-            return response()->json(["result" => "failed", "server" => $server, "msg" => trans('admin.switch_server_failed')]);
+        self::changeConnection($server);
+        return back();
     }
 
-    // nav bar server list
-    public static function serverList()
+    /** Nav bar server list
+     *
+     * @return string
+     */
+    public static function list(): string
     {
-        $list = '';
-        $data = self::getServerList("local");
-        $currentServerNode = self::getCookieServer($data[0]->server_node);
-        $currentServerName = $data[0]->server_name;
-        foreach($data as $row) {
-            if ($row->server_node === $currentServerNode) {
-                $currentServerName = $row->server_name;
-                continue;
+        $data = self::getServerList();
+        if (!empty($data)) {
+            // first as default
+            $current = $data[0];
+            // get and set current cookie server with default
+            $current_server_node = self::getCookieServer($current->server_node);
+            // change connection
+            self::changeConnection($current_server_node);
+            // build select list
+            $list = "";
+            foreach($data as $row) {
+                if ($row->server_node === $current_server_node) {
+                    $current = $row;
+                    continue;
+                }
+                $list .= "<option value='{$row->server_node}'>{$row->server_name}</option>";
             }
-            // $list .= "<li><a class='server-node' onclick='switchServer(\"" . $row->server_node . "\")'>" . $row->server_name . "</a></li>";
-            $list .= "<option value='{$row->server_node}'>" . $row->server_name . "</option>";
+            $list = "<option value='{$current->server_node}'>{$current->server_name}</option>" . $list;
+        } else {
+            $list = "";
         }
-        $list = "<option value='$currentServerNode'>" . $currentServerName . "</option>" . $list;
         return "
-            <style>
-                .server-select{margin: 8px 8px 0px 0px;}
-                .x-server-list + .select2-container--default .select2-selection__rendered { line-height: 45px !important; }
-                .x-server-list + .select2-container--default .select2-selection--single { height: 34px !important; }
-            </style>
+            <style>.server-select{margin: 8px 8px 0px 0px;}</style>
+            <li class='server-select'>
+                <select class='form-control server-list' style='min-width:18em;outline:none;'>
+                    {$list}
+                </select>
+            </li>
             <script>
-            function switchServer(server) {
-                $.ajax({
-                    url: location.origin + '/' + 'switch-server?server=' + server,
-                    success: () => $.pjax({container: '#pjax-container', url: location.pathname}),
-                    error: (jqXHR, textStatus, errorThrown) => alert(errorThrown)
+                $(document).ready(function() { 
+                    $('.server-list').select2({placeholder: ''}).on('change', function(){
+                        $.pjax({container: '#pjax-container', url: 'switch-server?server=' + this.value});
+                    });
                 });
-            }
             </script>
-            <li></li>
-            <li class='server-select'><div class='input-group'><select class='form-control server-list' onchange='switchServer(this.value)' style='min-width:18em;outline:none;'>{$list}</select></div></li>
-            
-            <script>$(document).ready(function() { $('.server-list').select2({ placeholder: '" . trans("admin.chose-server"). "' }); });</script>
         ";
     }
 
-    // get and set default if null
-    static function getCookieServer(string $default = null)
+    /**
+     * Get current cookie server
+     *
+     * @param string $default
+     *
+     * @return string
+     */
+    static function getCookieServer(string $default = ''): string
     {
         $server = Cookie::get('current_server', $default);
         Cookie::queue("current_server", $server);
         return $server;
     }
 
-    // get current server
-    public static function getCurrentServer()
+    /**
+     * Get current cookie server
+     *
+     * @return string
+     */
+    public static function getCurrentServer(): string
     {
         return Cookie::get('current_server');
     }
@@ -78,21 +101,34 @@ class SwitchServerController extends Controller
         return $server->open_time;
     }
 
-    public static function getCurrentServerOpenDays()
+    public static function getCurrentServerOpenDays(): int
     {
         $server = self::getCurrentServer();
         $server = self::getServer($server);
         return intval((time() - $server->open_time) / 86400) + 1;
     }
 
-    // server
-    public static function getServer(string $server)
+    /**
+     * Get current server from database
+     *
+     * @return object|null
+     */
+    public static function getServer(string $server): object
     {
-        return DB::table("server_list")->where("server_node", $server)->orWhere("server_id", "LIKE", $server)->first();
+        return DB::table("server_list")
+            ->where("server_node", $server)
+            ->orWhere("server_id", "LIKE", $server)
+            ->first();
     }
 
-    // has server
-    public static function hasServer(string $node)
+    /**
+     * Check server exists from database
+     *
+     * @param string $node
+     *
+     * @return bool
+     */
+    public static function hasServer(string $node): bool
     {
         return !is_null(self::getServer($node));
     }
@@ -109,44 +145,57 @@ class SwitchServerController extends Controller
         // return intval(DB::selectOne("SELECT MAX(`server_port`) + 1 AS `server_port` FROM `server_list` WHERE `server_type` = '{$type}'")->server_port);
     }
 
-    // server list
-    public static function getServerList(string $type = null)
+    /**
+     * Get server list from database
+     *
+     * @param string|null $type
+     *
+     * @return array
+     */
+    public static function getServerList(string $type = null): array
     {
         if (!is_null($type) && !empty($type)) {
-            return DB::table("server_list")->where("server_type", $type)->orderBy("server_id")->get()->toArray();
+            return DB::table("server_list")
+                ->where("server_type", $type)
+                ->orderBy("id")
+                ->get()
+                ->toArray();
         } else {
-            return DB::table("server_list")->orderBy("server_id")->get()->toArray();
+            return DB::table("server_list")
+                ->orderBy("id")
+                ->get()
+                ->toArray();
         }
     }
 
     // send request
-    public static function send(string $server = "this", string $command = "", string $data = "", string $method = "GET", int $timeout = 5)
+    public static function send(string $server = "this", string $command = "", array $data = [], string $method = "POST", int $timeout = 5): array
     {
         if ($server == "all") {
             // get all current node-type's node
             $current_node = self::getServer(self::getCurrentServer());
             $server_list = self::getServerList($current_node->server_type);
-        } else if ($server == "this")
+        } else if ($server == "this") {
             // get current node
             $server_list = [self::getServer(self::getCurrentServer())];
-        else if(self::hasServer($server))
+        } else if(self::hasServer($server)) {
             $server_list = [self::getServer($server)];
-        else
+        } else {
             return [trans("unknown_server") => $server];
+        }
         // send and get result
         $result = ["ok" => [], "error" => []];
-        foreach ($server_list as $server)
-        {
-            $opts = [
-                "http" => [
-                    "method" => $method,
-                    "timeout" => $timeout,
-                    "header" => "Content-Type: application/x-www-form-urlencoded\r\nCommand: {$command}\r\nContent-Length: " . strlen($data) . "\r\n",
-                    "content" => $data
-                ]
-            ];
+        foreach ($server_list as $server) {
             try {
-                $result["ok"][$server->server_name] = file_get_contents("http://" . env("SERVER_URL", "127.0.0.1") . ":" . $server->server_port, false, stream_context_create($opts));
+                $headers = ['Command' => $command];
+                $url = "http://{$server->server_ip}:{$server->server_port}";
+                if ($method == 'POST') {
+                    $response = Http::withHeaders($headers)->timeout($timeout)->post($url, $data);
+                } else {
+                    $response = Http::withHeaders($headers)->timeout($timeout)->get($url, $data);
+                }
+                $response->throw();
+                $result["ok"][$server->server_name] = $response->body();
             } catch (Exception $exception) {
                 $result["error"][$server->server_name] = $exception->getMessage();
             }
@@ -154,16 +203,22 @@ class SwitchServerController extends Controller
         return $result;
     }
 
-    // publish server list
-    public static function getPublishServerList()
+    /**
+     * Publish server list
+     *
+     * @return array
+     */
+    public static function getPublishServerList(): array
     {
         return array_map(function($server) {
             return [
                 "server_name" => $server->server_name,
                 "server_id" => $server->server_id,
+                "server_host" => $server->server_host,
                 "server_ip" => $server->server_ip,
                 "server_port" => $server->server_port,
                 "tab_name" => $server->tab_name,
+                "status" => $server->status,
             ];
         }, self::getServerList("local"));
     }
@@ -171,25 +226,31 @@ class SwitchServerController extends Controller
     // reload static server list
     public static function publishServerList(string $path = "")
     {
-        if ($path == "") $path = public_path("server-list.php");
-        $list = self::getPublishServerList();
-        $data =  "<?php header('content-type:application:json;charset=utf8');"  . "header('Access-Control-Allow-Origin: *');" . "header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');" . " echo '" . json_encode($list) . "';";
+        if ($path == "") {
+            $path = public_path("server-list.php");
+        }
+        $list = json_encode(self::getPublishServerList());
+        $data =  "<?php 
+            header('content-type:application:json;charset=utf8');
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+            echo '{$list}'
+        ?>";
         file_put_contents($path, $data);
     }
 
     /**
-     * Make a grid builder.
+     * Change game data connection
      *
-     * @return string
+     * @param string $server
      */
-    public static function changeConnection(): string
+    public static function changeConnection(string $server)
     {
-        $connection = "GameDataMySQL";
-        $server = self::getServer(self::getCurrentServer());
+        $server = self::getServer($server);
         // get database config
         $database = app('config')->get('database');
         // chose this connection
-        $data = $database['connections'][$connection];
+        $data = $database['connections'][self::connection];
         // modify config
         $data["host"] = $server->db_host;
         $data["port"] = $server->db_port;
@@ -199,7 +260,26 @@ class SwitchServerController extends Controller
         // save database config
         app('config')->set('database', $database);
         // reconnect
-        DB::connection($connection)->reconnect();
-        return $connection;
+        DB::connection(self::connection)->reconnect();
+    }
+
+    /**
+     * Get game data connection
+     *
+     * @return string
+     */
+    public static function getConnection(): string
+    {
+        return self::connection;
+    }
+
+    /**
+     * Get connection DB interface
+     *
+     * @return ConnectionInterface
+     */
+    public static function getDB(): ConnectionInterface
+    {
+        return DB::connection(self::connection);
     }
 }

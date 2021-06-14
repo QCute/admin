@@ -28,7 +28,7 @@ class TableDataListController extends AdminController
     protected function grid(): Grid
     {
         $path = request()->path();
-        $connection = SwitchServerController::changeConnection();
+        $connection = SwitchServerController::getConnection();
         $database = SwitchServerController::getCurrentServer();
         $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES"));
         $grid->model()->where("TABLE_SCHEMA", "=", $database);

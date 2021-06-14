@@ -7,21 +7,14 @@ use Encore\Admin\Controllers\Dashboard;
 use Encore\Admin\Layout\Column;
 use Encore\Admin\Layout\Content;
 use Encore\Admin\Layout\Row;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\Process\Process;
 
 class HomeController extends Controller
 {
-    public function index(Content $content)
+    public function index(Content $content): Content
     {
-        // 二维码登录
-        // web shell
         return $content
-            ->title('')
-            ->description('Description...')
-            ->row(Dashboard::title())
+            ->title("")
             ->row(function (Row $row) {
-
                 $row->column(4, function (Column $column) {
                     $column->append(Dashboard::environment());
                 });
@@ -33,9 +26,6 @@ class HomeController extends Controller
                 $row->column(4, function (Column $column) {
                     $column->append(Dashboard::dependencies());
                 });
-            })
-            ->body("
-            
-            ");
+            });
     }
 }

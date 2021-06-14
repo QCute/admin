@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use App\Admin\Controllers\SwitchServerController;
@@ -39,12 +40,12 @@ class PaymentController extends Controller
             $data = ["recharge_id" => $recharge_id, "order_id" => $order_id, "channel" => $channel, "role_id" => $role_id, "role_name" => $role_name, "money" => $money, "time" => $time];
             $recharge_no = DB::insert("INSERT INTO `{$server->server_node}`.`recharge` (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`) VALUES (:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)", $data);
             // notify server
-            SwitchServerController::send($server_id, "recharge", json_encode(["recharge_no" => $recharge_no, "role_id" => $role_id]));
+            SwitchServerController::send($server_id, "recharge", ["recharge_no" => $recharge_no, "role_id" => $role_id]);
             return json_encode(["status" => "success", "code" => 0, "msg" => ""]);
         } catch (QueryException $exception) {
             Log::error($exception->getMessage());
             return json_encode(["status" => "success", "code" => 0, "msg" => ""]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Log::error($exception->getMessage());
             return json_encode(["status" => "failure", "code" => 0, "msg" => "Duplicated OrderId"]);
         }

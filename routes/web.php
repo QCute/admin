@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Admin\Controllers\SwitchServerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +25,7 @@ Route::domain(env("API_DOMAIN", "api" . "." . env("APP_URL")))->group(function (
         header('content-type:application:json;charset=utf8');
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-        return json_encode(SwitchServerController::getPublishServerList());
+        return json_encode(App\Admin\Controllers\SwitchServerController::getPublishServerList());
     });
     // post csrf token
     Route::get("/csrf-token", function (){ return json_encode(["_token" => csrf_token()]); });

@@ -4,52 +4,100 @@ namespace App\Admin\Controllers\RechargeStatisticsControllers;
 
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Layout\Content;
-use App\Admin\Controllers\TimeTabController;
+use Encore\Admin\Widgets\Box;
+use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 
-class RechargeRankController extends TimeTabController
+class RechargeRankController extends ChartController
 {
-    public function index(Content $content)
+    public function index(Content $content): Content
     {
-        $database = SwitchServerController::getCurrentServer();
-        list($before, $now, $current, $nav) = $this->makeNav(["day", "week", "month", "all", "pick_time"], "day");
-        $data = DB::select("SELECT `recharge_total` AS `value`, `role_name` AS `name` FROM `{$database}`.`role` WHERE `register_time` BETWEEN ? AND ? ORDER BY `recharge_total` DESC LIMIT 100", [$before, $now]);
+        list($before, $now, , $tab) = $this->makeTab(["day", "week", "month", "all", "pick"], "day");
+        $data = SwitchServerController::getDB()
+            ->table("role")
+            ->whereBetween("register_time", [$before, $now])
+            ->groupBy(["name"])
+            ->orderBy("recharge_total", "DESC")
+            ->limit(100)
+            ->select([
+                DB::raw("`recharge_total` AS `value`"),
+                DB::raw("`role_name` AS `name`"),
+            ])
+            ->get()
+            ->toArray();
         // chart data
-        if (empty($data))
-        {
-            $category = "'无'";
-            $rank = "0";
+        if (empty($data)) {
+            $category = ["无"];
+            $rank = [""];
+        } else {
+            $category = array_column($data, "name");
+            $rank = array_column($data, "value");
         }
-        else 
-        {
-            $category = "'" . implode("','", array_column($data, "name")) . "'";
-            $rank = implode(",", array_column($data, "value"));
-        }
-        // draw
-        return $content->title('')->body("
-            {$nav}
-            <div id='chart' style='width: 100%; height: 100%; position: relative;'></div>
-            <script>
-            function format(value) {
-                if (value >= " . trans("admin.unit") . ") { 
-                    return (value / " . trans("admin.unit") . ").toLocalestring() + '" . trans("admin.unit_name") . "'; 
-                } else { 
-                    return value.toLocalestring(); 
-                }
-            }
-            // dataZoom: [{ type: 'inside', startValue: 0, endValue: 7, zoomLock: true }]
-            $(function () {
-                echarts.init(document.getElementById('chart'), 'shine').setOption({
-                    grid: { left: '0px', right: '0px', top: '20px', bottom: '100px', containLabel: true },
-                    xAxis: { type: 'value', splitLine: { show: true }, axisTick: { show: false }, axisLabel: { textStyle: { color: '#556677' } }, axisLine: { show: false, lineStyle: { color: '#DCE2E8' } } },
-                    yAxis: [
-                        { type: 'category', inverse: true, splitLine: { show: false }, axisTick: { show: false }, axisLabel: { textStyle: { color: '#556677' } }, axisLine: { show: false }, data: [{$category}] },
-                        { inverse: true, axisTick: 'none', axisLine: 'none', show: true, axisLabel: { textStyle: { color: '#556677' }, formatter: function(value) { return format(value); } }, data: [{$rank}] }
+        $xAxis = [
+            'type'=> 'value',
+            'splitLine'=> [
+                'show'=> true
+            ],
+            'axisTick'=> [
+                'show'=> false
+            ],
+            'axisLabel'=> [
+                'textStyle'=> [
+                    'color'=> '#556677'
+                ]
+            ],
+            'axisLine'=> [
+                'show'=> false,
+                'lineStyle'=> [
+                    'color'=> '#DCE2E8'
+                ]
+            ]
+        ];
+        $yAxis = [
+            [
+                'type'=> 'category',
+                'inverse'=> true,
+                'splitLine'=> [
+                    'show'=> false
+                ],
+                'axisTick'=> [
+                    'show'=> false
+                ],
+                'axisLabel'=> [
+                    'textStyle'=> [
+                        'color'=> '#556677'
+                    ]
+                ],
+                'axisLine'=> [
+                    'show'=> false
+                ],
+                'data'=> $category
+            ], [
+                'inverse'=> true,
+                'axisTick'=> 'none',
+                'axisLine'=> 'none',
+                'show'=> true,
+                'axisLabel'=> [
+                    'textStyle'=> [
+                        'color'=> '#556677'
                     ],
-                    series: [{ type: 'bar', barWidth: 3, itemStyle: { normal: { color: '#37a2da' } }, data: " . json_encode($data) . " }]
-                });
-            });
-            </script>
-        ");
+
+                ],
+                'data'=> $rank
+            ]
+        ];
+        $series = [
+            'type' => 'bar',
+            'barWidth' => '5',
+            'itemStyle' => [
+                'normal' => [
+                    'color' => '#37a2da'
+                ]
+            ],
+            'data' => $data
+        ];
+        $chart = $this->makeChart([], null, $xAxis, $yAxis, $series);
+        // draw
+        return $content->title("")->body(new Box("", "{$tab}{$chart}"));
     }
 }

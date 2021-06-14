@@ -38,7 +38,7 @@ class ConfigureListController extends AdminController
     }
 
     /**
-     * Index interface.
+     * Index.
      *
      * @param Content $content
      *
@@ -173,7 +173,7 @@ class ConfigureListController extends AdminController
             {
                 $file = basename(request()->input("file"), ".erl");
                 // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data", $file]);
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 if (!$process->isSuccessful()) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
@@ -181,7 +181,7 @@ class ConfigureListController extends AdminController
                 $result = $process->getOutput();
                 $content->withSuccess($result);
                 // compile
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "release", $file]);
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "release", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 if (!$process->isSuccessful()) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
@@ -189,7 +189,7 @@ class ConfigureListController extends AdminController
                 $result = $process->getOutput();
                 $content->withSuccess($result);
                 // load
-                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", "-load", $file]);
+                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", "-load", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 if (!$process->isSuccessful()) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
@@ -203,7 +203,7 @@ class ConfigureListController extends AdminController
             {
                 $file = basename(request()->input("file"), ".lua");
                 // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua", $file]);
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 // result
                 if (!$process->isSuccessful()) {
@@ -215,7 +215,7 @@ class ConfigureListController extends AdminController
             {
                 $file = basename(request()->input("file"), ".lua");
                 // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js", $file]);
+                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 // result
                 if (!$process->isSuccessful()) {

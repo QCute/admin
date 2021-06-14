@@ -26,7 +26,7 @@ class TableDataViewerController extends AdminController
      */
     protected function grid(): Grid
     {
-        $connection = SwitchServerController::changeConnection();
+        $connection = SwitchServerController::getConnection();
         $database = SwitchServerController::getCurrentServer();
         $table = request()->input("table", "");
         $grid = new Grid(new TableDataModel($connection, $table));

@@ -22,7 +22,7 @@ return [
     | `img` tag, eg '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo' => '<b><i class=\'fa fa-lg fa-tachometer\'></i></b>',
+    'logo' => '<img src="logo.png">',
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ return [
     | '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo-mini' => '<b><i class=\'fa fa-lg fa-tachometer\'></i></b>',
+    'logo-mini' => '<img src="logo.png">',
 
     /*
     |--------------------------------------------------------------------------
@@ -58,13 +58,13 @@ return [
     */
     'route' => [
 
-        'domain' => env('ADMIN_ROUTE_DOMAIN', 'admin') . "." . env('APP_URL'),
-
-        'prefix' => env('ADMIN_ROUTE_PREFIX', ''),
+        'prefix' => env('ADMIN_ROUTE_PREFIX', 'admin'),
 
         'namespace' => 'App\\Admin\\Controllers',
 
         'middleware' => ['web', 'admin'],
+
+        'domain' => env('ADMIN_ROUTE_DOMAIN', 'admin') . '.' . env('APP_URL'),
     ],
 
     /*
@@ -97,7 +97,7 @@ return [
     | If your page is going to be accessed via https, set it to `true`.
     |
     */
-    'https' => env('APP_HTTPS', true),
+    'https' => env('ADMIN_HTTPS', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -112,7 +112,7 @@ return [
     */
     'auth' => [
 
-        // 'controller' => App\Admin\Controllers\AuthController::class,
+        'controller' => Encore\Admin\Controllers\AuthController::class,
 
         'guard' => 'admin',
 
@@ -131,7 +131,7 @@ return [
         ],
 
         // Add "remember me" to login form
-        'remember' => env("APP_ENV", "dev") !== "production",
+        'remember' => true,
 
         // Redirect to the specified URI when user is not authorized.
         'redirect_to' => 'auth/login',
@@ -140,7 +140,6 @@ return [
         'excepts' => [
             'auth/login',
             'auth/logout',
-            '_handle_action_',
         ],
     ],
 
@@ -226,7 +225,7 @@ return [
          * or specific method to path like: get:admin/auth/logs.
          */
         'except' => [
-            'admin/auth/logs*',
+            env('ADMIN_ROUTE_PREFIX', 'admin').'/auth/logs*',
         ],
     ],
 
@@ -292,7 +291,7 @@ return [
     | "sidebar-mini".
     |
     */
-    'layout' => ["sidebar-mini"],
+    'layout' => ['sidebar-mini'],
 
     /*
     |--------------------------------------------------------------------------
@@ -341,7 +340,7 @@ return [
     |
     | Whether enable default breadcrumb for every page content.
     */
-    'enable_default_breadcrumb' => true,
+    'enable_default_breadcrumb' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -376,7 +375,7 @@ return [
     | The global Grid action display class.
     |--------------------------------------------------------------------------
     */
-    'grid_action_class' => Encore\Admin\Grid\Displayers\DropdownActions::class,
+    'grid_action_class' => \Encore\Admin\Grid\Displayers\DropdownActions::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -398,7 +397,6 @@ return [
     |
     */
     'extensions' => [
-        // If the value is set to false, this extension will be disabled
-        // 'pure-ui' => [ 'enable' => true ]
+
     ],
 ];

@@ -18,24 +18,12 @@
  *
  */
 
-use Encore\Admin\Form;
-use Encore\Admin\Facades\Admin;
-use App\Admin\Controllers\SwitchServerController;
-
-// remove plugin
-Form::forget(['map', 'editor']);
-// vue
-// Admin::js('https://cdn.jsdelivr.net/npm/vue@3.0.10/dist/vue.global.js');
-// element+
-// Admin::css('https://unpkg.com/element-plus/lib/theme-chalk/index.css');
-// Admin::js('https://unpkg.com/element-plus/lib/index.full.js');
-// axios
-// Admin::js('https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js');
-// echarts libs
-Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.0.1/echarts.min.js');
-// date picker
-Admin::js('https://cdn.bootcdn.net/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js');
+Encore\Admin\Form::forget(['map', 'editor']);
+// jquery cookie
+Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js');
+// echarts lib
+Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.1.1/echarts.min.js');
 // navigate bar
-Admin::navbar(function (Encore\Admin\Widgets\Navbar $navbar) {
-    $navbar->right(SwitchServerController::serverList());
+Encore\Admin\Facades\Admin::navbar(function (Encore\Admin\Widgets\Navbar $navbar) {
+    $navbar->right(App\Admin\Controllers\SwitchServerController::list());
 });
