@@ -75,11 +75,11 @@ class MaintainNoticeController extends AdminController
     protected function form(): Form
     {
         $form = new Form(new MaintainNoticeModel());
-        $form->text('platform', trans("admin.platform"))->rules('required');
-        $form->textarea('title', trans("admin.title"))->rules('required');
-        $form->textarea('content', trans("admin.content"))->rules('required');
-        $form->datetime('start_time', trans("admin.start_time"))->rules('required');
-        $form->datetime('end_time', trans("admin.end_time"))->rules('required');
+        $form->text('platform', trans("admin.platform"))->required();
+        $form->textarea('title', trans("admin.title"))->required();
+        $form->textarea('content', trans("admin.content"))->required();
+        $form->datetime('start_time', trans("admin.start_time"))->required();
+        $form->datetime('end_time', trans("admin.end_time"))->required();
         $form->saving(function (Form $form) {});
         return $form;
     }

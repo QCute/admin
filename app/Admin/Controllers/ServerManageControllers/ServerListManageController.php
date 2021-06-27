@@ -84,7 +84,10 @@ class ServerListManageController extends AdminController
                 foreach ($list as $item) {
                     $options[$item->server_node] = $item->server_name;
                 }
-                $form->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)->options($options);
+                $form
+                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                    ->options($options)
+                    ->required();
             } else if ($row->COLUMN_NAME == 'world') {
                 $options = [];
                 $list = DB::table("server_list")
@@ -93,16 +96,24 @@ class ServerListManageController extends AdminController
                 foreach ($list as $item) {
                     $options[$item->server_node] = $item->server_name;
                 }
-                $form->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)->options($options);
+                $form
+                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                    ->options($options)
+                    ->required();
             } else if ($row->COLUMN_NAME == 'recommend') {
                 $options = [
                     "new" => trans("admin.server_recommend.new"),
                     "hot" => trans("admin.server_recommend.hot"),
                     "recommend" => trans("admin.server_recommend.recommend"),
                 ];
-                $form->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)->options($options);
+                $form
+                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                    ->options($options)
+                    ->required();
             } else {
-                $form->text($row->COLUMN_NAME, $row->COLUMN_COMMENT);
+                $form
+                    ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                    ->required();
             }
         }
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
+use Symfony\Component\Process\Process;
 
 class ConfigureListModel extends Model
 {
@@ -53,45 +54,48 @@ class ConfigureListModel extends Model
         return $paginator;
     }
 
-    static private function collectData($description, $file): array
-    {
-        return [
-            "description" => $description,
-            "file" => $file,
-            "operation" => "",
-        ];
-    }
-
+    /**
+     * @throws Exception
+     */
     static private function erl(): array
     {
         // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/data_script.erl");
-        $script = substr($script, strpos($script, "data() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.erl/", $script, $file);
-        return array_map("self::collectData", $name[0], $file[0]);
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data"], null, ["PATH" => `echo \$PATH`]);
+        $process->run();
+        // result
+        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
+            throw new Exception($process->getErrorOutput());
+        }
+        return json_decode($process->getOutput());
     }
 
+    /**
+     * @throws Exception
+     */
     static private function lua(): array
     {
-        // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/lua_script.erl");
-        $script = substr($script, strpos($script, "lua() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.lua/", $script, $file);
-        return array_map("self::collectData", $name[0], $file[0]);
+        // read configure from lua script
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua"], null, ["PATH" => `echo \$PATH`]);
+        $process->run();
+        // result
+        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
+            throw new Exception($process->getErrorOutput());
+        }
+        return json_decode($process->getOutput());
     }
 
+    /**
+     * @throws Exception
+     */
     static private function js(): array
     {
-        // read configure from data script
-        $script = file_get_contents(env("SERVER_PATH") . "/script/make/script/js_script.erl");
-        $script = substr($script, strpos($script, "js() ->"), strlen($script));
-        // extract meta info
-        preg_match_all("/(?<=\%\%).*/", $script, $name);
-        preg_match_all("/\w+\.js/", $script, $file);
-        return array_map("self::collectData", $name[0], $file[0]);
+        // read configure from js script
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js"], null, ["PATH" => `echo \$PATH`]);
+        $process->run();
+        // result
+        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
+            throw new Exception($process->getErrorOutput());
+        }
+        return json_decode($process->getOutput());
     }
 }

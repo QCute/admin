@@ -22,7 +22,7 @@ return [
     | `img` tag, eg '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo' => '<img src="logo.png">',
+    'logo' => '<img src="' . env('APP_URL') .  '/logo.png">',
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ return [
     | '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo-mini' => '<img src="logo.png">',
+    'logo-mini' => '<img src="' . env('APP_URL') .  '/logo.png">',
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +97,7 @@ return [
     | If your page is going to be accessed via https, set it to `true`.
     |
     */
-    'https' => env('ADMIN_HTTPS', false),
+    'https' => env('APP_HTTPS', false),
 
     /*
     |--------------------------------------------------------------------------

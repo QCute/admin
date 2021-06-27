@@ -188,7 +188,7 @@ class ConfigureTableController extends AdminController
         // action
         if ($action == "export") {
             // ensure dir
-            $path = storage_path("app/admin/sheets/");
+            $path = storage_path("app/admin/xml/");
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
@@ -197,7 +197,7 @@ class ConfigureTableController extends AdminController
             $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path, ["PATH" => `echo \$PATH`]);
             $process->run();
             // result
-            if (!$process->isSuccessful()) {
+            if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                 return $this->displayIndex($content)->withError($process->getErrorOutput());
             }
             $result = $process->getOutput();
@@ -218,7 +218,7 @@ class ConfigureTableController extends AdminController
             }
         } else if ($action == "import") {
             // file upload
-            $path = storage_path("app/admin/sheets");
+            $path = storage_path("app/admin/xml/");
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
@@ -233,14 +233,22 @@ class ConfigureTableController extends AdminController
             $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path, ["PATH" => `echo \$PATH`]);
             $process->run();
             // result
-            if (!$process->isSuccessful()) {
+            if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                 return $this->displayIndex($content)->withError($process->getErrorOutput());
             }
             $result = $process->getOutput();
             // delete file
             unlink($path . $file_name);
+            $file_name = basename($file_name, ".xml");
             // todo fill table name
-            $data = [Auth::user()->name, basename($file_name, ".xml"), ""];
+            $data = SwitchServerController::getDB()
+                ->table("information_schema.TABLES")
+                ->select("TABLE_NAME")
+                ->where("TABLE_SCHEMA", "=", DB::raw("DATABASE()"))
+                ->where("TABLE_COMMENT", "=", $file_name)
+                ->get()
+                ->toArray();
+            $data = [Auth::user()->name, $file_name, $data[0]->TABLE_NAME];
             DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {
@@ -251,7 +259,7 @@ class ConfigureTableController extends AdminController
     public function download(): BinaryFileResponse
     {
         $file = request()->input("file", "");
-        $path = storage_path("app/admin/sheets/{$file}");
+        $path = storage_path("app/admin/xml/{$file}");
         return response()->download($path, $file, ["Content-Type: text/xml"]);
     }
 }

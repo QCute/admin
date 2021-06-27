@@ -175,7 +175,7 @@ class ConfigureListController extends AdminController
                 // generate
                 $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
-                if (!$process->isSuccessful()) {
+                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
                 }
                 $result = $process->getOutput();
@@ -183,7 +183,7 @@ class ConfigureListController extends AdminController
                 // compile
                 $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "release", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
-                if (!$process->isSuccessful()) {
+                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
                 }
                 $result = $process->getOutput();
@@ -191,7 +191,7 @@ class ConfigureListController extends AdminController
                 // load
                 $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", "-load", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
-                if (!$process->isSuccessful()) {
+                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
                 }
                 $result = $process->getOutput();
@@ -206,7 +206,7 @@ class ConfigureListController extends AdminController
                 $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 // result
-                if (!$process->isSuccessful()) {
+                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
                 }
                 return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
@@ -218,7 +218,7 @@ class ConfigureListController extends AdminController
                 $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js", $file, ["PATH" => `echo \$PATH`]]);
                 $process->run();
                 // result
-                if (!$process->isSuccessful()) {
+                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());
                 }
                 return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));

@@ -51,7 +51,7 @@ class KeyAssistantForm extends Form
         $process = new Process(['ssh-keygen', '-q', '-t', $type, '-b', '4096', '-f', $file, '-N', $passphrase, '-C', $name]);
         $process->run();
         // result
-        if (!$process->isSuccessful()) {
+        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
             admin_error($process->getErrorOutput());
             return back();
         }

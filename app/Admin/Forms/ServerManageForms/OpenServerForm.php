@@ -49,7 +49,7 @@ class OpenServerForm extends Form {
         // long time task
         $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "open_server", $name]);
         $process->run();
-        if (!$process->isSuccessful()) {
+        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
             admin_error($process->getErrorOutput());
             return back();
         }

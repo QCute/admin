@@ -55,6 +55,7 @@ class SwitchServerController extends Controller
         }
         return "
             <style>.server-select{margin: 8px 8px 0px 0px;}</style>
+            <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
             <li class='server-select'>
                 <select class='form-control server-list' style='min-width:18em;outline:none;'>
                     {$list}
