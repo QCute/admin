@@ -4,12 +4,12 @@ namespace App\Admin\Forms\AssistantForms;
 
 use App\Admin\Controllers\SwitchServerController;
 
+use Symfony\Component\HttpFoundation\Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Widgets\Form;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
-
 
 class ConfigureAssistantForm extends Form
 {
@@ -37,8 +37,10 @@ class ConfigureAssistantForm extends Form
             $text .= "{{$row['item_id']},{$row['number']}}";
         }
         $text .= "]";
-        setcookie("generated-configure", $text);
-        return back();
+        $cookies = [
+            Cookie::create("generated-configure", $text)->withHttpOnly(false)
+        ];
+        return back()->withCookies($cookies);
     }
 
     /**

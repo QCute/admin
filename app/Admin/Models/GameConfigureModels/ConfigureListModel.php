@@ -40,7 +40,7 @@ class ConfigureListModel extends Model
             if (!is_null($description) && is_bool(strpos($row["description"], $description))) {
                 return false;
             }
-            if (!is_null($file) &&is_bool(strpos($row["file"], $file))) {
+            if (!is_null($file) && is_bool(strpos($row["file"], $file))) {
                 return false;
             }
             return true;
@@ -66,7 +66,7 @@ class ConfigureListModel extends Model
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
             throw new Exception($process->getErrorOutput());
         }
-        return json_decode($process->getOutput());
+        return json_decode($process->getOutput(), true);
     }
 
     /**
@@ -81,7 +81,7 @@ class ConfigureListModel extends Model
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
             throw new Exception($process->getErrorOutput());
         }
-        return json_decode($process->getOutput());
+        return json_decode($process->getOutput(), true);
     }
 
     /**
@@ -96,6 +96,6 @@ class ConfigureListModel extends Model
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
             throw new Exception($process->getErrorOutput());
         }
-        return json_decode($process->getOutput());
+        return json_decode($process->getOutput(), true);
     }
 }

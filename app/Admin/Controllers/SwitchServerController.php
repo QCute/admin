@@ -112,7 +112,8 @@ class SwitchServerController extends Controller
     /**
      * Get current server from database
      *
-     * @return object|null
+     * @param string $server
+     * @return object
      */
     public static function getServer(string $server): object
     {

@@ -3,6 +3,7 @@
 namespace App\Admin\Forms\AssistantForms;
 
 use Exception;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Process\Process;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,11 @@ class KeyAssistantForm extends Form
             return back();
         }
         $name = $request->input('name', '');
+        // path
+        $path = storage_path("app/admin/keys/");
+        if (!file_exists($path)) {
+            mkdir($path, 0755, true);
+        }
         // file
         $file = storage_path("app/admin/keys/id_{$type}");
         $pub_file = storage_path("app/admin/keys/id_{$type}.pub");
@@ -61,9 +67,11 @@ class KeyAssistantForm extends Form
             return back();
         }
         // pass to cookie
-        setcookie("type", base64_encode($type));
-        setcookie("key", base64_encode(file_get_contents($file)));
-        setcookie("pub_key", base64_encode(file_get_contents($pub_file)));
+        $cookies = [
+            Cookie::create("key-type", base64_encode($type))->withHttpOnly(false),
+            Cookie::create("key", base64_encode(file_get_contents($file)))->withHttpOnly(false),
+            Cookie::create("pub-key", base64_encode(file_get_contents($pub_file)))->withHttpOnly(false),
+        ];
         // remove file
         try {
             unlink($file);
@@ -71,7 +79,7 @@ class KeyAssistantForm extends Form
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
         }
-        return back();
+        return back()->withCookies($cookies);
     }
 
     /**
@@ -121,16 +129,16 @@ class KeyAssistantForm extends Form
                 save_link.dispatchEvent(event);
             }
             $(document).ready(function() {
-                let type = $.cookie('type');
-                $.removeCookie('type');
+                let type = $.cookie('key-type');
+                $.removeCookie('key-type');
                 // private key
                 let key = $.cookie('key');
                 if (key) save('id_' + atob(type) + '.key', atob(key));
                 $.removeCookie('key');
                 // public key
-                let pub_key = $.cookie('pub_key');
+                let pub_key = $.cookie('pub-key');
                 if (pub_key) save('id_' + atob(type) + '.pub', atob(pub_key));
-                $.removeCookie('pub_key');
+                $.removeCookie('pub-key');
             });
         </script>
         ");
