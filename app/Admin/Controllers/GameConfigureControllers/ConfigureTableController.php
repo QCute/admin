@@ -61,10 +61,10 @@ class ConfigureTableController extends AdminController
      */
     protected function grid(): Grid
     {
-        $path = request()->path();
+        $url = request()->url();
         $database = SwitchServerController::getCurrentServer();
         $grid = new Grid(new ConfigureTableModel($database));
-        $grid->header(function ($query) use ($path) {
+        $grid->header(function ($query) use ($url) {
             return "
 <style>.action{cursor: pointer;}</style>
 <div class=input-group file-caption-main'>
@@ -73,7 +73,7 @@ class ConfigureTableController extends AdminController
         <input class='file-caption-name' onkeydown='return false;' onpaste='return false;' id='filename' placeholder='" . trans("admin.choose_file") . "'>
     </div>
     <div class='input-group-btn input-group-append'>
-        <form action='{$path}' method='POST' enctype='multipart/form-data' pjax-container>
+        <form action='{$url}' method='POST' enctype='multipart/form-data' pjax-container>
             " . csrf_field() . "
             <input type='hidden' name='action' value='import'>
             <div class='btn btn-primary btn-file'>
@@ -118,9 +118,9 @@ class ConfigureTableController extends AdminController
             $grid
                 ->column($row->NAME, $row->COMMENT)
                 ->style("min-width:8em")
-                ->display(function () use ($path, $row) {
+                ->display(function () use ($url, $row) {
                     if ($row->OPERATION) {
-                        $href = "{$path}?action=export&table={$this->TABLE_NAME}&xml={$this->TABLE_COMMENT}";
+                        $href = "{$url}?action=export&table={$this->TABLE_NAME}&xml={$this->TABLE_COMMENT}";
                         return "<a href=\"{$href}\">" . trans("admin.export"). "</a>";
                     } else {
                         return $this->{$row->NAME};
@@ -194,7 +194,7 @@ class ConfigureTableController extends AdminController
             }
             // generate xml file
             $table = request()->input("table");
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path, ["PATH" => `echo \$PATH`]);
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path);
             $process->run();
             // result
             if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
@@ -205,7 +205,7 @@ class ConfigureTableController extends AdminController
             $file = $path . request()->input("xml") . ".xml";
             if (file_exists($file)) {
                 // pjax use location.href redirection to download file or use ajax
-                $url = request()->path();
+                $url = request()->url();
                 $base_name = basename($file);
                 $content->body("
                 <a href='{$url}-download?file={$base_name}' target='_blank' style='display: none;' id='download'></a>
@@ -230,7 +230,7 @@ class ConfigureTableController extends AdminController
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
             // import table data
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path, ["PATH" => `echo \$PATH`]);
+            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path);
             $process->run();
             // result
             if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {

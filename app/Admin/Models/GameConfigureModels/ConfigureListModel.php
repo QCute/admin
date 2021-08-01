@@ -60,7 +60,7 @@ class ConfigureListModel extends Model
     static private function erl(): array
     {
         // read configure from data script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data"], null, ["PATH" => `echo \$PATH`]);
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data"]);
         $process->run();
         // result
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
@@ -75,7 +75,7 @@ class ConfigureListModel extends Model
     static private function lua(): array
     {
         // read configure from lua script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua"], null, ["PATH" => `echo \$PATH`]);
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua"]);
         $process->run();
         // result
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
@@ -90,7 +90,7 @@ class ConfigureListModel extends Model
     static private function js(): array
     {
         // read configure from js script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js"], null, ["PATH" => `echo \$PATH`]);
+        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js"]);
         $process->run();
         // result
         if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {

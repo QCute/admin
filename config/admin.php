@@ -64,7 +64,7 @@ return [
 
         'middleware' => ['web', 'admin'],
 
-        'domain' => env('ADMIN_ROUTE_DOMAIN', 'admin') . '.' . env('APP_URL'),
+        'domain' => (!empty(env('ADMIN_ROUTE_DOMAIN', 'admin')) ? env('ADMIN_ROUTE_DOMAIN') . '.' : '' ) . env('APP_URL'),
     ],
 
     /*

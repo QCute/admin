@@ -31,7 +31,7 @@ class ChartController extends Controller
 
     public function makeTab($array, $default = "day"): array
     {
-        $url = request()->path();
+        $url = request()->url();
         list($before, $now, $current) = $this->getTime($default);
         // make tab list
         $list = implode("", array_map(function ($time) use ($url, $current) {
