@@ -131,7 +131,7 @@ return [
         ],
 
         // Add "remember me" to login form
-        'remember' => true,
+        'remember' => (bool) env("APP_ENV", "production") != "production",
 
         // Redirect to the specified URI when user is not authorized.
         'redirect_to' => 'auth/login',

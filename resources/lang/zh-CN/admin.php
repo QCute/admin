@@ -204,6 +204,7 @@ return [
     'table'                 => "表名",
     'time-day'              => "日",
     'terminal'              => "终端",
+    'total'                 => "总计",
     'type'                  => "类型",
     'unit'                  => "10000",
     'unit_name'             => "万",

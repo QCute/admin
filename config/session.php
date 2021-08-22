@@ -33,7 +33,7 @@ return [
 
     'lifetime' => env('SESSION_LIFETIME', 120),
 
-    'expire_on_close' => env("APP_ENV", "production") == "production",
+    'expire_on_close' => (bool) env("APP_ENV", "production") == "production",
 
     /*
     |--------------------------------------------------------------------------

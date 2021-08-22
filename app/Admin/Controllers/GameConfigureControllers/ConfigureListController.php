@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers\GameConfigureControllers;
 
+use App\Admin\Controllers\SwitchServerController;
 use Exception;
 use Symfony\Component\Process\Process;
 use Encore\Admin\Controllers\AdminController;
@@ -190,7 +191,8 @@ class ConfigureListController extends AdminController
                 $result = $process->getOutput();
                 $content->withSuccess($result);
                 // load
-                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", "-load", $file]);
+                $name = SwitchServerController::getCurrentServer();
+                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", $name, "-load", $file]);
                 $process->run();
                 if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
                     return $this->displayIndex($content)->withError($process->getErrorOutput());

@@ -22,7 +22,7 @@ class UserOnlineController extends ChartController
                 ->whereBetween("time", [$before, $now])
                 ->groupBy(["date"])
                 ->select([
-                    DB::raw("AVG(`all`) AS `all`"),
+                    DB::raw("AVG(`total`) AS `total`"),
                     DB::raw("AVG(`online`) AS `online`"),
                     DB::raw("AVG(`hosting`) AS `hosting`"),
                     DB::raw("`hour` AS `date`"),
@@ -37,7 +37,7 @@ class UserOnlineController extends ChartController
                 ->whereBetween("time", [$before, $now])
                 ->groupBy(["date"])
                 ->select([
-                    "all",
+                    "total",
                     "online",
                     "hosting",
                     DB::raw("DATE_FORMAT(FROM_UNIXTIME(`time`), '%H:%i') AS `date`"),
@@ -48,20 +48,20 @@ class UserOnlineController extends ChartController
         // x axis data
         $category = [];
         // y axis data
-        $all = [];
+        $total = [];
         $online = [];
         $hosting = [];
         // chart data
         if (empty($data)) {
             for ($start = $before; $start <= $now; $start += $step) {
                 array_push($category, date($format, $start));
-                array_push($all, 0);
+                array_push($total, 0);
                 array_push($online, 0);
                 array_push($hosting, 0);
             }
         } else {
             $category = array_column($data, "date");
-            $all = array_column($data, "all");
+            $total = array_column($data, "total");
             $online = array_column($data, "online");
             $hosting = array_column($data, "hosting");
         }
@@ -116,7 +116,7 @@ class UserOnlineController extends ChartController
         ];
         $series = [
             [
-                'name' => trans("admin.all"),
+                'name' => trans("admin.total"),
                 'type' => 'line',
                 'smooth' => true,
                 'itemStyle' => [
@@ -131,7 +131,7 @@ class UserOnlineController extends ChartController
                         ]
                     ]
                 ],
-                'data' => $all
+                'data' => $total
             ], [
                 'name' => trans("admin.online"),
                 'type' => 'line',
@@ -148,7 +148,7 @@ class UserOnlineController extends ChartController
                         ]
                     ]
                 ],
-                'data' => $all
+                'data' => $total
             ], [
                 'name' => trans("admin.hosting"),
                 'type' => 'line',
@@ -165,7 +165,7 @@ class UserOnlineController extends ChartController
                         ]
                     ]
                 ],
-                'data' => $all
+                'data' => $total
             ],
         ];
         // chart
