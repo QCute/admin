@@ -190,7 +190,7 @@ class SwitchServerController extends Controller
         foreach ($server_list as $server) {
             try {
                 $headers = ['Command' => $command];
-                $url = "http://{$server->server_ip}:{$server->server_port}";
+                $url = "{$server->host}:{$server->server_port}";
                 if ($method == 'POST') {
                     $response = Http::withHeaders($headers)->timeout($timeout)->post($url, $data);
                 } else {
@@ -220,7 +220,7 @@ class SwitchServerController extends Controller
                 "server_ip" => $server->server_ip,
                 "server_port" => $server->server_port,
                 "tab_name" => $server->tab_name,
-                "status" => $server->status,
+                "state" => $server->state,
             ];
         }, self::getServerList("local"));
     }

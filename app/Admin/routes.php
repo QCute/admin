@@ -14,7 +14,7 @@ Route::group([
     'domain'        => config('admin.route.domain'),
 ], function (Router $router) {
 
-    $router->get('/', 'HomeController@index')->name('home');
+    $router->get('/',                                'HomeController@index')->name('home');
 
     // Switch Server Database
     $router->get('/switch-server',                   'SwitchServerController@switch')->name('admin.home');

@@ -61,7 +61,7 @@ class AdminTablesSeeder extends Seeder
                 [
                     "parent_id" => 2,
                     "order" => 6,
-                    "title" => "玩家存活",
+                    "title" => "存活统计",
                     "icon" => "fa-bar-chart",
                     "uri" => "/user-survival",
                     "permission" => NULL

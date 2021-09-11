@@ -23,6 +23,6 @@ class ClientErrorLogReportController extends Controller
         // save
         $data = ["server_id" => $server_id, "account" => $account, "role_id" => $role_id, "role_name" => $role_name, "device" => $device, "env" => $env, "title" => $title, "content" => $content, "content_kernel" => $content_kernel, "ip" => $ip, "time" => $time];
         DB::insert("INSERT INTO `client_error_log` (`server_id`, `account`, `role_id`, `role_name`, `device`, `env`, `title`, `content`, `content_kernel`, `ip`, `time`) VALUES (:server_id, :account, :role_id, :role_name, :device, :env, :title, :content, :content_kernel, :ip, :time)", $data);
-        return json_encode(["result" => "ok"]);
+        return response()->json(["result" => "ok"]);
     }
 }

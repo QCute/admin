@@ -26,7 +26,7 @@ class UserLoginController extends ChartController
                 ])
                 ->get()
                 ->toArray();
-        } else {
+        } else if ($current == "week" || $current == "month") {
             $step = 86400;
             $format = "m-d";
             $data = SwitchServerController::getDB()
@@ -35,7 +35,20 @@ class UserLoginController extends ChartController
                 ->groupBy(["date"])
                 ->select([
                     DB::raw("COUNT(DISTINCT `role_id`) AS `number`"),
-                    DB::raw("DATE_FORMAT(FROM_UNIXTIME(`time`), '%H') AS `date`")
+                    DB::raw("DATE_FORMAT(FROM_UNIXTIME(`time`), '%m-%d') AS `date`")
+                ])
+                ->get()
+                ->toArray();
+        } else {
+            $step = 86400;
+            $format = "Y-m-d";
+            $data = SwitchServerController::getDB()
+                ->table("login_log")
+                ->whereBetween("time", [$before, $now])
+                ->groupBy(["date"])
+                ->select([
+                    DB::raw("COUNT(DISTINCT `role_id`) AS `number`"),
+                    DB::raw("DATE_FORMAT(FROM_UNIXTIME(`time`), '%Y-%m-%d') AS `date`")
                 ])
                 ->get()
                 ->toArray();

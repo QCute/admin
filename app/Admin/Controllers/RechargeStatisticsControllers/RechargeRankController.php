@@ -15,6 +15,7 @@ class RechargeRankController extends ChartController
         list($before, $now, , $tab) = $this->makeTab(["day", "week", "month", "all", "pick"], "day");
         $data = SwitchServerController::getDB()
             ->table("role")
+            ->where("recharge_total", ">", 0)
             ->whereBetween("register_time", [$before, $now])
             ->groupBy(["name"])
             ->orderBy("recharge_total", "DESC")

@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Admin\Controllers\SwitchServerController;
+use App\Http\Controllers\MaintainNoticeController;
+use App\Http\Controllers\ImpeachReportController;
+use App\Http\Controllers\ClientErrorLogReportController;
+use App\Http\Controllers\PaymentController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -21,20 +27,15 @@ Route::domain(env("APP_URL"))->group(function () {
 // api
 Route::domain(env("API_DOMAIN", "api" . "." . env("APP_URL")))->group(function () {
     // server list
-    Route::get("/server-list", function () {
-        header('content-type:application:json;charset=utf8');
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-        return json_encode(App\Admin\Controllers\SwitchServerController::getPublishServerList());
-    });
+    Route::get("/server-list", function() { return response()->json(SwitchServerController::getPublishServerList()); });
     // post csrf token
-    Route::get("/csrf-token", function (){ return json_encode(["_token" => csrf_token()]); });
+    Route::get("/csrf-token", function() { return response()->json(["_token" => csrf_token()]); });
     // notice
-    Route::get("/maintain-notice", "MaintainNoticeController@get");
+    Route::get("/maintain-notice", [MaintainNoticeController::class, "get"]);
     // impeach
-    Route::get("/impeach", "ImpeachReportController@report");
+    Route::get("/impeach", [ImpeachReportController::class, "report"]);
     // client error log
-    Route::get("/client-error-log", "ClientErrorLogReportController@report");
+    Route::get("/client-error-log", [ClientErrorLogReportController::class, "report"]);
     // payment
-    Route::get("/payment", "PaymentController@pay");
+    Route::get("/payment", [PaymentController::class, "pay"]);
 });

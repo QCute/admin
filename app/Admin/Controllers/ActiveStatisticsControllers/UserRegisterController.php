@@ -26,7 +26,7 @@ class UserRegisterController extends ChartController
                 ])
                 ->get()
                 ->toArray();
-        } else {
+        } else if ($current == "week" || $current == "month") {
             $step = 86400;
             $format = "m-d";
             $data = SwitchServerController::getDB()
@@ -36,6 +36,19 @@ class UserRegisterController extends ChartController
                 ->select([
                     DB::raw("COUNT(1) AS `number`"),
                     DB::raw("DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%m-%d') AS `date`"),
+                ])
+                ->get()
+                ->toArray();
+        } else {
+            $step = 86400;
+            $format = "Y-m-d";
+            $data = SwitchServerController::getDB()
+                ->table("role")
+                ->whereBetween("register_time", [$before, $now])
+                ->groupBy(["date"])
+                ->select([
+                    DB::raw("COUNT(1) AS `number`"),
+                    DB::raw("DATE_FORMAT(FROM_UNIXTIME(`register_time`), '%Y-%m-%d') AS `date`"),
                 ])
                 ->get()
                 ->toArray();

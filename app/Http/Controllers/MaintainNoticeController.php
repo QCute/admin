@@ -10,6 +10,6 @@ class MaintainNoticeController extends Controller
     {
         $platform = request()->input("platform", "");
         $data = DB::select("SELECT `title`, `content`, `start_time`, `end_time` FROM `maintain_notice` WHERE `platform` = :platform ", ["platform" => $platform]);
-        return json_encode($data);
+        return response()->json($data);
     }
 }

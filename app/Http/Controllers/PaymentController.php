@@ -28,12 +28,12 @@ class PaymentController extends Controller
         $sign = request()->input("sign", "");
         // check sign
         if ($sign !== md5($order_id . $role_id . $money . $server_id . $mark . $coupon . self::$PRODUCT_SECRET)) {
-            return json_encode(["status" => "failure", "code" => 0, "msg" => "Sign Not Matched"]);
+            return response()->json(["status" => "failure", "code" => 0, "msg" => "Sign Not Matched"]);
         }
         // check server id
         $server = SwitchServerController::getServer($server_id);
         if (is_null($server)) {
-            return json_encode(["status" => "failure", "code" => 0, "msg" => "Server Id Invalid"]);
+            return response()->json(["status" => "failure", "code" => 0, "msg" => "Server Id Invalid"]);
         }
         // save recharge data
         try {
@@ -41,13 +41,13 @@ class PaymentController extends Controller
             $recharge_no = DB::insert("INSERT INTO `{$server->server_node}`.`recharge` (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`) VALUES (:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)", $data);
             // notify server
             SwitchServerController::send($server_id, "recharge", ["recharge_no" => $recharge_no, "role_id" => $role_id]);
-            return json_encode(["status" => "success", "code" => 0, "msg" => ""]);
+            return response()->json(["status" => "success", "code" => 0, "msg" => ""]);
         } catch (QueryException $exception) {
             Log::error($exception->getMessage());
-            return json_encode(["status" => "success", "code" => 0, "msg" => ""]);
+            return response()->json(["status" => "success", "code" => 0, "msg" => ""]);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
-            return json_encode(["status" => "failure", "code" => 0, "msg" => "Duplicated OrderId"]);
+            return response()->json(["status" => "failure", "code" => 0, "msg" => "Duplicated OrderId"]);
         }
     }
 }

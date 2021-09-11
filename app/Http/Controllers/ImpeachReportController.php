@@ -22,6 +22,6 @@ class ImpeachReportController extends Controller
         // save
         $data = ["server_id" => $server_id, "role_id" => $role_id, "role_name" => $role_name, "impeacher_server_id" => $impeacher_server_id, "impeacher_role_id" => $impeacher_role_id, "impeacher_role_name" => $impeacher_role_name, "type" => $type, "content" => $content, "ip" => $ip, "time" => $time];
         DB::insert("INSERT INTO `impeach` (`server_id`, `role_id`, `role_name`, `impeacher_server_id`, `impeacher_role_id`, `impeacher_role_name`, `type`, `content`, `ip`, `time`) VALUES (:server_id, :role_id, :role_name, :impeacher_server_id, :impeacher_role_id, :impeacher_role_name, :type, :content, :ip, :time)", $data);
-        return json_encode(["result" => "ok"]);
+        return response()->json(["result" => "ok"]);
     }
 }
