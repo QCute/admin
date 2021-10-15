@@ -116,53 +116,6 @@ class ServerListManageController extends AdminController
                     ->required();
             }
         }
-
-        //server_node
-        //server_name
-        //server_host
-        //server_ip
-        //server_port
-        //server_id
-        //server_type
-        //open_time
-        //tab_name
-        //center_node
-        //center_name
-        //center_host
-        //center_ip
-        //center_port
-        //center_id
-        //world
-        //state
-        //recommend
         return $form;
     }
-
-    /**
-     * Inner Tool
-     */
-//    public function publish(Content $content)
-//    {
-//        SwitchServerController::publishServerList();
-//        return $this->index($content->withSuccess(trans("admin.succeeded")));
-//    }
-//
-//    public function sendRequest(Content $content)
-//    {
-//        // send command
-//        $server = request()->input("server", "");
-//        if (empty($server)) return $content;
-//        // request
-//        $array = SwitchServerController::send($server, request()->input("command", ""), json_encode([]));
-//        // handle result
-//        $ok = implode("", array_map(function ($k, $v) { return "{$k}: {$v}<br/>"; }, array_keys($array["ok"]), $array["ok"]));
-//        $error = implode("", array_map(function ($k, $v) { return "{$k}: {$v}<br/>"; }, array_keys($array["error"]), $array["error"]));
-//        // toast tips
-//        if (!empty($ok))
-//            return $content->withSuccess(trans("admin.succeeded"), $ok);
-//        else if (!empty($error))
-//            return $content->withError(trans("admin.failed"), $error);
-//        else
-//            return $content;
-//    }
 }

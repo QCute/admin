@@ -32,6 +32,7 @@ class UserManageForm extends Form {
         $role_id = $request->input("role_id", "");
         $command = $request->input($request->input("command", ""), "");
         // request
+        $role_id = json_decode("[" . $role_id . "]");
         $array = SwitchServerController::send($server, $command, ["role_id" => $role_id]);
         // handle result
         $ok = implode("", array_map(function ($k, $v) {
@@ -79,10 +80,10 @@ class UserManageForm extends Form {
                 $form
                     ->radio("account", trans("admin.account"))
                     ->options([
-                        "normal" => trans("admin.set_role_normal"),
-                        "insider" => trans("admin.set_role_insider"),
-                        "master" => trans("admin.set_role_master"),
-                        "refuse" => trans("admin.set_role_refuse"),
+                        "set_role_normal" => trans("admin.set_role_normal"),
+                        "set_role_insider" => trans("admin.set_role_insider"),
+                        "set_role_master" => trans("admin.set_role_master"),
+                        "set_role_refuse" => trans("admin.set_role_refuse"),
                     ])
                     ->default("normal")
                     ->required();
@@ -91,12 +92,12 @@ class UserManageForm extends Form {
                 $form
                     ->radio("chat", trans("admin.chat"))
                     ->options([
-                        "unlimited" => trans("admin.set_unlimited"),
-                        "silent" => trans("admin.set_silent"),
-                        "silent_world" => trans("admin.set_silent_world"),
-                        "silent_guild" => trans("admin.set_silent_guild"),
-                        "silent_scene" => trans("admin.set_silent_scene"),
-                        "silent_private" => trans("admin.set_silent_private"),
+                        "set_role_chat_unlimited" => trans("admin.set_unlimited"),
+                        "set_role_chat_silent" => trans("admin.set_silent"),
+                        "set_role_chat_silent_world" => trans("admin.set_silent_world"),
+                        "set_role_chat_silent_guild" => trans("admin.set_silent_guild"),
+                        "set_role_chat_silent_scene" => trans("admin.set_silent_scene"),
+                        "set_role_chat_silent_private" => trans("admin.set_silent_private"),
                     ])
                     ->default("unlimited")
                     ->required();

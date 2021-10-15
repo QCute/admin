@@ -75,7 +75,7 @@ class GameMailForm extends Form {
             ->textarea("content", trans("admin.content"))
             ->style("resize", "vertical")
             ->required();
-        $help = "物品可使用<a href='/configure-assistant' target='_blank'>配表助手</a>生成";
+        $help = "<a href='configure-assistant' target='_blank'>" . trans("admin.configure_assistant") . "</a>";
         $this
             ->textarea("items", trans("admin.items"))
             ->style("resize", "vertical")

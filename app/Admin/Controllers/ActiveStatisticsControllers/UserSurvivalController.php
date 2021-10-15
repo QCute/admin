@@ -10,7 +10,7 @@ use App\Admin\Controllers\SwitchServerController;
 
 class UserSurvivalController extends ChartController
 {
-    private function getLogin($before, $now): int
+    private static function getLogin($before, $now): int
     {
         $login = SwitchServerController::getDB()
             ->table("login_log")
@@ -24,7 +24,7 @@ class UserSurvivalController extends ChartController
         return $login ? $login[0]->login : 0;
     }
 
-    private function getRegister($before, $now): int
+    private static function getRegister($before, $now): int
     {
         $register = SwitchServerController::getDB()
             ->table("role")

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;
 use App\Http\Controllers\Controller;
 
@@ -138,13 +139,11 @@ class SwitchServerController extends Controller
     public static function nextServerId(string $type)
     {
         return DB::table("server_list")->where("server_type", $type)->max("server_id") + 1;
-        // return intval(DB::selectOne("SELECT MAX(`server_id`) + 1 AS `server_id` FROM `server_list` WHERE `server_type` = '{$type}'")->server_id);
     }
 
     public static function nextServerPort(string $type)
     {
         return DB::table("server_list")->where("server_type", $type)->max("server_port") + 1;
-        // return intval(DB::selectOne("SELECT MAX(`server_port`) + 1 AS `server_port` FROM `server_list` WHERE `server_type` = '{$type}'")->server_port);
     }
 
     /**
@@ -183,18 +182,17 @@ class SwitchServerController extends Controller
         } else if(self::hasServer($server)) {
             $server_list = [self::getServer($server)];
         } else {
-            return [trans("unknown_server") => $server];
+            return [trans("admin.unknown_server") => $server];
         }
         // send and get result
         $result = ["ok" => [], "error" => []];
         foreach ($server_list as $server) {
             try {
-                $headers = ['Command' => $command];
-                $url = "{$server->host}:{$server->server_port}";
+                $url = "{$server->server_host}:{$server->server_port}";
                 if ($method == 'POST') {
-                    $response = Http::withHeaders($headers)->timeout($timeout)->post($url, $data);
+                    $response = Http::timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
                 } else {
-                    $response = Http::withHeaders($headers)->timeout($timeout)->get($url, $data);
+                    $response = Http::timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
                 }
                 $response->throw();
                 $result["ok"][$server->server_name] = $response->body();
@@ -252,7 +250,7 @@ class SwitchServerController extends Controller
         // get database config
         $database = app('config')->get('database');
         // chose this connection
-        $data = $database['connections'][self::connection];
+        $data = $database['connections'][self::getConnection()];
         // modify config
         $data["host"] = $server->db_host;
         $data["port"] = $server->db_port;
@@ -262,7 +260,7 @@ class SwitchServerController extends Controller
         // save database config
         app('config')->set('database', $database);
         // reconnect
-        DB::connection(self::connection)->reconnect();
+        DB::connection(self::getConnection())->reconnect();
     }
 
     /**

@@ -28,7 +28,7 @@ class RechargeRankController extends ChartController
             ->toArray();
         // chart data
         if (empty($data)) {
-            $category = ["无"];
+            $category = [trans("admin.nothing")];
             $rank = [""];
         } else {
             $category = array_column($data, "name");

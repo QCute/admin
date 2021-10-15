@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Widgets\Form;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
+use Illuminate\Support\Arr;
 
 class ConfigureAssistantForm extends Form
 {
@@ -32,13 +33,10 @@ class ConfigureAssistantForm extends Form
     public function handle(Request $request): RedirectResponse
     {
         $data = $request->input("items", []);
-        $text = "[";
-        foreach ($data as $row) {
-            $text .= "{{$row['item_id']},{$row['number']}}";
-        }
-        $text .= "]";
+        $items = array_map(function ($row) { return "{{$row['item_id']}, {$row['number']}}"; }, $data);
+        $items = "[" . implode(", ", $items) . "]";
         $cookies = [
-            Cookie::create("generated-configure", $text)->withHttpOnly(false)
+            Cookie::create("generated-configure", $items)->withHttpOnly(false)
         ];
         return back()->withCookies($cookies);
     }
