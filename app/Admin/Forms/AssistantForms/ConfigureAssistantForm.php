@@ -4,13 +4,12 @@ namespace App\Admin\Forms\AssistantForms;
 
 use App\Admin\Controllers\SwitchServerController;
 
-use Symfony\Component\HttpFoundation\Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Encore\Admin\Widgets\Form;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
-use Illuminate\Support\Arr;
 
 class ConfigureAssistantForm extends Form
 {
@@ -35,10 +34,9 @@ class ConfigureAssistantForm extends Form
         $data = $request->input("items", []);
         $items = array_map(function ($row) { return "{{$row['item_id']}, {$row['number']}}"; }, $data);
         $items = "[" . implode(", ", $items) . "]";
-        $cookies = [
-            Cookie::create("generated-configure", $items)->withHttpOnly(false)
-        ];
-        return back()->withCookies($cookies);
+        // pass to session
+        Session::put("generated-configure", $items);
+        return back();
     }
 
     /**
@@ -50,6 +48,7 @@ class ConfigureAssistantForm extends Form
         $this
             ->textarea("content", trans("admin.content"))
             ->attribute("style","resize: vertical; cursor: pointer")
+            ->setElementName('configure')
             ->help(trans("admin.click") . trans("admin.copy"))
             ->readonly();
         $this->table('items', trans("admin.items"), function ($table) {
@@ -71,15 +70,12 @@ class ConfigureAssistantForm extends Form
                 ->min(1)
                 ->required();
         });
+        // data
+        $items = Session::remove("generated-configure");
         $this->html("
         <script>
             $(document).ready(function() {
-                $('textarea').click(function() {
-                    this.select();
-                    document.execCommand('Copy');
-                });
-                $('textarea').val($.cookie('generated-configure'));
-                $.removeCookie('generated-configure');
+                document.querySelector('[name=configure]').value = '{$items}';
             });
         </script>
         ");

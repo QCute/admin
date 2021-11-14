@@ -11,12 +11,5 @@ class EncryptCookies extends Middleware
      *
      * @var array
      */
-    protected $except = [
-        // assistant
-        'generated-configure',
-        // key
-        'key-type',
-        'key',
-        'pub-key',
-    ];
+    protected $except = [];
 }

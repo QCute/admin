@@ -3,10 +3,11 @@
 namespace App\Admin\Forms\AssistantForms;
 
 use Exception;
-use Symfony\Component\HttpFoundation\Cookie;
+
 use Symfony\Component\Process\Process;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Encore\Admin\Widgets\Form;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
@@ -66,12 +67,10 @@ class KeyAssistantForm extends Form
             admin_error($process->getErrorOutput());
             return back();
         }
-        // pass to cookie
-        $cookies = [
-            Cookie::create("key-type", base64_encode($type))->withHttpOnly(false),
-            Cookie::create("key", base64_encode(file_get_contents($file)))->withHttpOnly(false),
-            Cookie::create("pub-key", base64_encode(file_get_contents($pub_file)))->withHttpOnly(false),
-        ];
+        // pass to session
+        Session::put("key-type", base64_encode($type));
+        Session::put("key", base64_encode(file_get_contents($file)));
+        Session::put("pub-key", base64_encode(file_get_contents($pub_file)));
         // remove file
         try {
             unlink($file);
@@ -79,7 +78,7 @@ class KeyAssistantForm extends Form
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
         }
-        return back()->withCookies($cookies);
+        return back();
     }
 
     /**
@@ -116,30 +115,30 @@ class KeyAssistantForm extends Form
         $this
             ->text("name", trans("admin.name"))
             ->rules("required");
+        // data
+        $type = Session::remove("key-type");
+        $key = Session::remove("key");
+        $pub_key = Session::remove("pub-key");
         $this->html("
         <script>
-            function save(name, data) {
-                let urlObject = window.URL || window.webkitURL || window;
-                let export_blob = new Blob([data]);
-                let save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a')
-                save_link.href = urlObject.createObjectURL(export_blob);
-                save_link.download = name;
-                let event = document.createEvent('MouseEvents');
-                event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-                save_link.dispatchEvent(event);
-            }
             $(document).ready(function() {
-                let type = $.cookie('key-type');
-                $.removeCookie('key-type');
+                // key type
+                const type = '{$type}'
                 // private key
-                let key = $.cookie('key');
-                if (key) save('id_' + atob(type) + '.key', atob(key));
-                $.removeCookie('key');
+                const key = '{$key}';
+                if (key) save('id_' + atob(type), atob(key));
                 // public key
-                let pub_key = $.cookie('pub-key');
+                const pub_key = '{$pub_key}'
                 if (pub_key) save('id_' + atob(type) + '.pub', atob(pub_key));
-                $.removeCookie('pub-key');
             });
+            function save(name, data) {
+                const aTag = document.createElement('a');
+                aTag.setAttribute('download', name);
+                const blob = new Blob([data], { 'type': 'application/octet-stream' });
+                aTag.setAttribute('href', URL.createObjectURL(blob));
+                aTag.click();
+                URL.revokeObjectURL(blob);
+            }
         </script>
         ");
     }

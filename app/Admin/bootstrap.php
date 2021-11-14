@@ -19,8 +19,8 @@
  */
 
 Encore\Admin\Form::forget(['map', 'editor']);
-// jquery cookie
-Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js');
+// scookie
+Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/js-cookie/latest/js.cookie.min.js');
 // echarts lib
 Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.1.1/echarts.min.js');
 // navigate bar
