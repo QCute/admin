@@ -3,13 +3,12 @@
 namespace App\Admin\Forms\AssistantForms;
 
 use App\Admin\Controllers\SwitchServerController;
-
+use Encore\Admin\Traits\DefaultDatetimeFormat;
+use Encore\Admin\Widgets\Form;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Widgets\Form;
-use Encore\Admin\Traits\DefaultDatetimeFormat;
+use Illuminate\Support\Facades\Session;
 
 class ConfigureAssistantForm extends Form
 {
@@ -26,7 +25,6 @@ class ConfigureAssistantForm extends Form
      * Handle the form request.
      *
      * @param Request $request
-     *
      * @return  RedirectResponse
      */
     public function handle(Request $request): RedirectResponse
@@ -75,7 +73,7 @@ class ConfigureAssistantForm extends Form
         $this->html("
         <script>
             $(document).ready(function() {
-                document.querySelector('[name=configure]').value = '{$items}';
+                document.querySelector('[name=configure]').value = '$items';
             });
         </script>
         ");

@@ -2,13 +2,13 @@
 
 namespace App\Admin\Controllers\ServerManageControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Models\ServerManageModels\ServerListModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\ServerManageModels\ServerListModel;
+use Illuminate\Support\Facades\DB;
 
-class ServerListManageController extends AdminController
+class ServerListController extends AdminController
 {
     /**
      * Title for current resource.
@@ -25,6 +25,7 @@ class ServerListManageController extends AdminController
     protected function grid(): Grid
     {
         $grid = new Grid(new ServerListModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $data = DB::table("information_schema.COLUMNS")
             ->where("TABLE_SCHEMA", env("DB_DATABASE"))
             ->where("TABLE_NAME", "server_list")

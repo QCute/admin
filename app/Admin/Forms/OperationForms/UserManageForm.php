@@ -2,11 +2,11 @@
 
 namespace App\Admin\Forms\OperationForms;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
+use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
-use App\Admin\Controllers\SwitchServerController;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class UserManageForm extends Form {
     use DefaultDatetimeFormat;
@@ -22,7 +22,6 @@ class UserManageForm extends Form {
      * Handle the form request.
      *
      * @param  Request $request
-     *
      * @return  RedirectResponse
      */
     public function handle(Request $request): RedirectResponse
@@ -36,10 +35,10 @@ class UserManageForm extends Form {
         $array = SwitchServerController::send($server, $command, ["role_id" => $role_id]);
         // handle result
         $ok = implode("", array_map(function ($k, $v) {
-            return "{$k}: {$v}<br/>";
+            return "$k: $v<br/>";
         }, array_keys($array["ok"]), $array["ok"]));
         $error = implode("", array_map(function ($k, $v) {
-            return "{$k}: {$v}<br/>";
+            return "$k: $v<br/>";
         }, array_keys($array["error"]), $array["error"]));
         // tips
         if (!empty($ok)){

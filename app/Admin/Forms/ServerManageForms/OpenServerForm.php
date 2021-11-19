@@ -2,13 +2,13 @@
 
 namespace App\Admin\Forms\ServerManageForms;
 
-use Symfony\Component\Process\Process;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
+use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
-use App\Admin\Controllers\SwitchServerController;
+use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OpenServerForm extends Form {
     use DefaultDatetimeFormat;
@@ -23,9 +23,9 @@ class OpenServerForm extends Form {
     /**
      * Handle the form request.
      *
-     * @param  Request $request
-     *
+     * @param Request $request
      * @return  RedirectResponse
+     * @throws Exception
      */
     public function handle(Request $request): RedirectResponse
     {
@@ -47,12 +47,7 @@ class OpenServerForm extends Form {
         $port = SwitchServerController::nextServerPort("local");
         $node = basename(env("SERVER_PATH", "server")) . "_" . $server_id;
         // long time task
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "open_server", $name]);
-        $process->run();
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            admin_error($process->getErrorOutput());
-            return back();
-        }
+        SwitchServerController::executeMakerScript(["open_server", $name]);
         // todo fill server list data
         DB::insert("INSERT INTO `server_list` (`server_node`, `server_name`, `server_port`, `server_id`, `server_type`, `open_time`, `tab_name`, `state`, `recommend`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [$node, $name, $port, $server_id, 'local', time(), $tab,  1, $recommend]);
         // update server list

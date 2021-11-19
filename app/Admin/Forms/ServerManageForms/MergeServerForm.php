@@ -2,13 +2,13 @@
 
 namespace App\Admin\Forms\ServerManageForms;
 
-use Symfony\Component\Process\Process;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
+use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
-use App\Admin\Controllers\SwitchServerController;
+use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MergeServerForm extends Form {
     use DefaultDatetimeFormat;
@@ -23,9 +23,9 @@ class MergeServerForm extends Form {
     /**
      * Handle the form request.
      *
-     * @param  Request $request
-     *
+     * @param Request $request
      * @return  RedirectResponse
+     * @throws Exception
      */
     public function handle(Request $request): RedirectResponse
     {
@@ -45,13 +45,8 @@ class MergeServerForm extends Form {
             admin_error(trans("admin.no_dst_server"));
             return back();
         }
-        // long time task
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "merge_server", $src, $dst]);
-        $process->run();
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            admin_error($process->getErrorOutput());
-            return back();
-        }
+        // @todo long time task
+        SwitchServerController::executeMakerScript(["merge_server", $src, $dst]);
         // default
         if ($mode == "merge") {
             // delete entrance

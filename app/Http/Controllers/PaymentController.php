@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\QueryException;
 use App\Admin\Controllers\SwitchServerController;
+use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    private static $PRODUCT_SECRET = "88c19f4cc4fb440f8996d771d34c3a3c";
-    public function pay()
+    private static string $PRODUCT_SECRET = "88c19f4cc4fb440f8996d771d34c3a3c";
+    public function pay(): JsonResponse
     {
         // api.fake.me/payment?order_id=order_id&recharge_id=1&channel=channel&role_id=1&role_name=role_name&server_id=1001&account_name=account_name&money=0&mark=mark&coupon=coupon&sign=a5a5af8edc03300e44aa8ba9ff96dcb3
         $time = time();

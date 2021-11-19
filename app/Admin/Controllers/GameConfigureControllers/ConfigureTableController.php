@@ -2,16 +2,16 @@
 
 namespace App\Admin\Controllers\GameConfigureControllers;
 
-use Symfony\Component\Process\Process;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Models\GameConfigureModels\ConfigureTableModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
-use App\Admin\Controllers\SwitchServerController;
-use App\Admin\Models\GameConfigureModels\ConfigureTableModel;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ConfigureTableController extends AdminController
 {
@@ -27,8 +27,8 @@ class ConfigureTableController extends AdminController
      * Index interface.
      *
      * @param Content $content
-     *
      * @return Content
+     * @throws Exception
      */
     public function index(Content $content): Content
     {
@@ -43,7 +43,6 @@ class ConfigureTableController extends AdminController
      * Index.
      *
      * @param Content $content
-     *
      * @return Content
      */
     public function displayIndex(Content $content): Content
@@ -62,9 +61,9 @@ class ConfigureTableController extends AdminController
     protected function grid(): Grid
     {
         $url = request()->url();
-        $database = SwitchServerController::getCurrentServer();
-        $grid = new Grid(new ConfigureTableModel($database));
-        $grid->header(function ($query) use ($url) {
+        $grid = new Grid(new ConfigureTableModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
+        $grid->header(function () use ($url) {
             return "
 <style>.action{cursor: pointer;}</style>
 <div class=input-group file-caption-main'>
@@ -73,7 +72,7 @@ class ConfigureTableController extends AdminController
         <input class='file-caption-name' onkeydown='return false;' onpaste='return false;' id='filename' placeholder='" . trans("admin.choose_file") . "'>
     </div>
     <div class='input-group-btn input-group-append'>
-        <form action='{$url}' method='POST' enctype='multipart/form-data' pjax-container>
+        <form action='$url' method='POST' enctype='multipart/form-data' pjax-container>
             " . csrf_field() . "
             <input type='hidden' name='action' value='import'>
             <div class='btn btn-primary btn-file'>
@@ -120,8 +119,8 @@ class ConfigureTableController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($url, $row) {
                     if ($row->OPERATION) {
-                        $href = "{$url}?action=export&table={$this->TABLE_NAME}&xml={$this->TABLE_COMMENT}";
-                        return "<a href=\"{$href}\">" . trans("admin.export"). "</a>";
+                        $href = "$url?action=export&table=$this->TABLE_NAME&xml=$this->TABLE_COMMENT";
+                        return "<a href=\"$href\">" . trans("admin.export"). "</a>";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -168,20 +167,19 @@ class ConfigureTableController extends AdminController
      */
     protected function form(): Form
     {
-        $database = SwitchServerController::getCurrentServer();
-        $form = new Form(new ConfigureTableModel($database));
+        $form = new Form(new ConfigureTableModel());
         $form->ignore(['updated_at', 'created_at']);
 
         return $form;
     }
 
     /**
-     * Make a form builder.
+     * Action interface.
      *
      * @param Content $content
      * @param  string $action
-     *
      * @return Content
+     * @throws Exception
      */
     public function action(Content $content, string $action): Content
     {
@@ -194,28 +192,19 @@ class ConfigureTableController extends AdminController
             }
             // generate xml file
             $table = request()->input("table");
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "xml", $table], $path);
-            $process->run();
-            // result
-            if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                return $this->displayIndex($content)->withError($process->getErrorOutput());
-            }
-            $result = $process->getOutput();
+            $basename = request()->input("xml");
+            $filename = $basename . ".xml";
+            SwitchServerController::executeMakerScript(["xml", $table, "xml/"]);
+            SwitchServerController::pullFile("xml/$filename", $path . $filename);
             // download xml file
-            $file = $path . request()->input("xml") . ".xml";
-            if (file_exists($file)) {
-                // pjax use location.href redirection to download file or use ajax
-                $url = request()->url();
-                $base_name = basename($file);
-                $content->body("
-                <a href='{$url}-download?file={$base_name}' target='_blank' style='display: none;' id='download'></a>
+            // pjax use location.href redirection to download file or use ajax
+            $url = request()->url();
+            $content->body("
+                <a href='$url-download?file=$filename' target='_blank' style='display: none;' id='download'></a>
                 <script>document.getElementById('download').click();</script>
-                ");
-                return $this->displayIndex($content);
-            } else {
-                // return file not found
-                return $this->displayIndex($content)->withError($result);
-            }
+            ");
+            return $this->displayIndex($content);
+            
         } else if ($action == "import") {
             // file upload
             $path = storage_path("app/admin/xml/");
@@ -223,43 +212,37 @@ class ConfigureTableController extends AdminController
                 mkdir($path, 0755, true);
             }
             $file = request()->file("xml");
-            $file_name = $file->getClientOriginalName();
-            $result = $file->storeAs("xml", $file_name, ["disk" => "admin"]);
+            $filename = $file->getClientOriginalName();
+            $basename = basename($filename, ".xml");
+            $pathname = $path . $filename;
+            $result = $file->storeAs("xml", $filename, ["disk" => "admin"]);
             // handle store result
             if(!$result) {
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
             // import table data
-            $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "table", $file_name], $path);
-            $process->run();
-            // result
-            if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                return $this->displayIndex($content)->withError($process->getErrorOutput());
-            }
-            $result = $process->getOutput();
-            // delete file
-            unlink($path . $file_name);
-            $file_name = basename($file_name, ".xml");
+            SwitchServerController::pushFile($pathname, "xml/$filename");
+            $result = SwitchServerController::executeMakerScript(["table", "xml/$filename"]);
             // todo fill table name
             $data = SwitchServerController::getDB()
                 ->table("information_schema.TABLES")
                 ->select("TABLE_NAME")
                 ->where("TABLE_SCHEMA", "=", DB::raw("DATABASE()"))
-                ->where("TABLE_COMMENT", "=", $file_name)
+                ->where("TABLE_COMMENT", "=", $basename)
                 ->get()
                 ->toArray();
-            $data = [Auth::user()->name, $file_name, $data[0]->TABLE_NAME];
+            $data = [Auth::user()->name, $basename, $data[0]->TABLE_NAME];
             DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {
-            return $this->displayIndex($content)->withError("Unknown Action: {$action}");
+            return $this->displayIndex($content)->withError("Unknown Action: $action");
         }
     }
 
     public function download(): BinaryFileResponse
     {
         $file = request()->input("file", "");
-        $path = storage_path("app/admin/xml/{$file}");
+        $path = storage_path("app/admin/xml/$file");
         return response()->download($path, $file, ["Content-Type: text/xml"]);
     }
 }

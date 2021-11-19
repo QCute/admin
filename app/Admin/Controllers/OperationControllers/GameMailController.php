@@ -2,14 +2,18 @@
 
 namespace App\Admin\Controllers\OperationControllers;
 
-use Encore\Admin\Form;
-use Encore\Admin\Layout\Content;
-use App\Http\Controllers\Controller;
 use App\Admin\Forms\OperationForms\GameMailForm;
-use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Layout\Content;
 
-class GameMailController extends Controller
+class GameMailController extends AdminController
 {
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         return $content->title("")->body(new GameMailForm());

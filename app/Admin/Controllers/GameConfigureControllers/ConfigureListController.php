@@ -3,13 +3,12 @@
 namespace App\Admin\Controllers\GameConfigureControllers;
 
 use App\Admin\Controllers\SwitchServerController;
-use Exception;
-use Symfony\Component\Process\Process;
+use App\Admin\Models\GameConfigureModels\ConfigureListModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
-use App\Admin\Models\GameConfigureModels\ConfigureListModel;
+use Exception;
 
 class ConfigureListController extends AdminController
 {
@@ -25,7 +24,6 @@ class ConfigureListController extends AdminController
      * Index interface.
      *
      * @param Content $content
-     *
      * @return Content
      * @throws Exception
      */
@@ -42,7 +40,6 @@ class ConfigureListController extends AdminController
      * Index.
      *
      * @param Content $content
-     *
      * @return Content
      * @throws Exception
      */
@@ -64,8 +61,8 @@ class ConfigureListController extends AdminController
     {
         $url = request()->url();
         $path = request()->path();
-        $route = $this->getRoute($path);
-        $grid = new Grid(new ConfigureListModel($route));
+        $grid = new Grid(new ConfigureListModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $data = [
             (object)[
                 "OPERATION" => false,
@@ -87,10 +84,10 @@ class ConfigureListController extends AdminController
             $grid
                 ->column($row->NAME, $row->COMMENT)
                 ->style("min-width:8em")
-                ->display(function () use ($url, $path, $route, $row) {
+                ->display(function () use ($url, $path, $row) {
                     if ($row->OPERATION) {
-                        $href = "{$url}?action={$route}&file={$this->file}";
-                        return "<a href='{$href}'>" . trans("admin.generate"). "</a>";
+                        $href = "$url?action=$path&file=$this->file";
+                        return "<a href='$href'>" . trans("admin.generate"). "</a>";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -139,97 +136,39 @@ class ConfigureListController extends AdminController
     }
 
     /**
-     * Make a form builder.
+     * Action interface.
      *
-     * @param string $path
-     *
-     * @return string
-     * @throws Exception
-     */
-    private function getRoute(string $path): string
-    {
-        if (is_int(strpos($path, "erl"))) {
-            return "erl";
-        } else if (is_int(strpos($path, "lua"))) {
-            return "lua";
-        } else if (is_int(strpos($path, "js"))) {
-            return "js";
-        } else {
-            throw new Exception("Unknown Path: $path");
-        }
-    }
-
-    /**
      * @param Content $content
      * @param string $action
-     *
      * @return Content
      * @throws Exception
      */
     public function action(Content $content, string $action): Content
     {
         // act action
-        switch ($action)
-        {
-            case "erl":
-            {
-                $file = basename(request()->input("file"), ".erl");
-                // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data", $file]);
-                $process->run();
-                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                    return $this->displayIndex($content)->withError($process->getErrorOutput());
-                }
-                $result = $process->getOutput();
-                $content->withSuccess($result);
-                // compile
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "release", $file]);
-                $process->run();
-                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                    return $this->displayIndex($content)->withError($process->getErrorOutput());
-                }
-                $result = $process->getOutput();
-                $content->withSuccess($result);
-                // load
-                $name = SwitchServerController::getCurrentServer();
-                $process = new Process([env("SERVER_PATH") . "/script/shell/run.sh", $name, "-load", $file]);
-                $process->run();
-                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                    return $this->displayIndex($content)->withError($process->getErrorOutput());
-                }
-                $result = $process->getOutput();
-                $content->withSuccess($result);
-                // index page
-                return $this->displayIndex($content);
-            }
-            case "lua":
-            {
-                $file = basename(request()->input("file"), ".lua");
-                // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua", $file]);
-                $process->run();
-                // result
-                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                    return $this->displayIndex($content)->withError($process->getErrorOutput());
-                }
-                return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
-            }
-            case "js":
-            {
-                $file = basename(request()->input("file"), ".lua");
-                // generate
-                $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js", $file]);
-                $process->run();
-                // result
-                if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-                    return $this->displayIndex($content)->withError($process->getErrorOutput());
-                }
-                return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
-            }
-            default:
-            {
-                return $this->displayIndex($content)->withError("Unknown Action: {$action}");
-            }
+        if (is_int(strpos($action, "erl"))) {
+            $file = basename(request()->input("file"), ".erl");
+            // generate
+            SwitchServerController::executeMakerScript(["data"]);
+            // compile
+            SwitchServerController::executeMakerScript(["release", $file]);
+            // load
+            $name = SwitchServerController::getCurrentServer();
+            $result = SwitchServerController::executeRunScript([$name, "-load", $file]);
+            // index page
+            return $this->displayIndex($content)->withSuccess($result);
+        } else if (is_int(strpos($action, "lua"))) {
+            $file = basename(request()->input("file"), ".lua");
+            // generate
+            SwitchServerController::executeMakerScript(["lua", $file]);
+            return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
+        } else if (is_int(strpos($action, "js"))) {
+            $file = basename(request()->input("file"), ".js");
+            // generate
+            SwitchServerController::executeMakerScript(["js", $file]);
+            return $this->displayIndex($content)->withSuccess(trans("admin.generate") . trans("admin.succeeded"));
+        } else {
+            return $this->displayIndex($content)->withError("Unknown Action: $action");
         }
     }
 

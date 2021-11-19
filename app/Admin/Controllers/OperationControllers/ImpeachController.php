@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\OperationControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Models\OperationModels\ImpeachModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\OperationModels\ImpeachModel;
+use Illuminate\Support\Facades\DB;
 
 class ImpeachController extends AdminController
 {
@@ -26,6 +26,7 @@ class ImpeachController extends AdminController
     protected function grid(): Grid
     {
         $grid = new Grid(new ImpeachModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $table = $grid->model()->getTable();
         // data
         $array = DB::table("information_schema.COLUMNS")

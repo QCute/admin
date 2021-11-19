@@ -58,9 +58,9 @@ Route::group([
     $router->resource('/js-configure',               'GameConfigureControllers\\ConfigureListController');
 
     // Game Server Manage
-    $router->resource('/server-list-manage',         'ServerManageControllers\\ServerListManageController');
-    $router->post('/server-list-manage',             'ServerManageControllers\\ServerListManageController@index')->name('admin.home');
-    $router->get('/server-list-manage-publish',      'ServerManageControllers\\ServerListManageController@publish')->name('admin.home');
+    $router->resource('/server-list-manage',         'ServerManageControllers\\ServerListController');
+    $router->post('/server-list-manage',             'ServerManageControllers\\ServerListController@index')->name('admin.home');
+    $router->get('/server-list-manage-publish',      'ServerManageControllers\\ServerListController@publish')->name('admin.home');
 
     $router->get('/open-server',                     'ServerManageControllers\\OpenServerController@index')->name('admin.home');
     $router->post('/open-server',                    'ServerManageControllers\\OpenServerController@index')->name('admin.home');

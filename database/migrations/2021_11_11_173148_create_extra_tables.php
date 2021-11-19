@@ -18,6 +18,9 @@ class CreateExtraTables extends Migration
             $table->string('channel')->default('')->comment('渠道');
             $table->string('server_node')->default('')->index('server_node')->comment('游戏服节点名');
             $table->string('server_name')->default('')->index('server_name')->comment('游戏服名');
+            $table->string('ssh_alias')->default('')->comment('SSH别名');
+            $table->string('ssh_pass')->default('')->comment('SSH密码');
+            $table->string('server_root')->default('')->comment('服务器根目录');
             $table->string('server_host')->default('')->comment('游戏服域名');
             $table->string('server_ip')->default('')->comment('游戏服IP');
             $table->unsignedInteger('server_port')->default(0)->comment('游戏服端口');
@@ -100,6 +103,16 @@ class CreateExtraTables extends Migration
             $table->index(['impeacher_role_id', 'impeacher_server_id'], 'impeach_role_server');
             $table->index(['role_id', 'server_id'], 'role_server');
         });
+
+        Schema::create('ssh_key', function (Blueprint $table) {
+            $table->increments('id')->comment('ID');
+            $table->string('username')->default('')->comment('用户名');
+            $table->string('type')->default('')->comment('类型');
+            $table->string('passphrase')->default('')->comment('密码');
+            $table->string('name')->default('')->comment('名字');
+            $table->string('key', 4096)->default('')->comment('私钥');
+            $table->string('pub_key', 4096)->default('')->comment('公钥');
+        });
     }
 
     /**
@@ -114,6 +127,7 @@ class CreateExtraTables extends Migration
         Schema::dropIfExists('sensitive_word_data');
         Schema::dropIfExists('maintain_notice');
         Schema::dropIfExists('client_error_log');
+        Schema::dropIfExists('impeach');
         Schema::dropIfExists('impeach');
     }
 }

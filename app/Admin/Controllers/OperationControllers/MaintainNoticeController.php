@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\OperationControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Models\OperationModels\MaintainNoticeModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\OperationModels\MaintainNoticeModel;
+use Illuminate\Support\Facades\DB;
 
 class MaintainNoticeController extends AdminController
 {
@@ -26,6 +26,7 @@ class MaintainNoticeController extends AdminController
     protected function grid(): Grid
     {
         $grid = new Grid(new MaintainNoticeModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $table = $grid->model()->getTable();
         // data
         $array = DB::table("information_schema.COLUMNS")

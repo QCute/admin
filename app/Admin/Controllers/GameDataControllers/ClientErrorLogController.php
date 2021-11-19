@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\GameDataControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Models\GameDataModels\ClientErrorLogModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\GameDataModels\ClientErrorLogModel;
+use Illuminate\Support\Facades\DB;
 
 class ClientErrorLogController extends AdminController
 {
@@ -26,6 +26,7 @@ class ClientErrorLogController extends AdminController
     protected function grid(): Grid
     {
         $grid = new Grid(new ClientErrorLogModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $table = $grid->model()->getTable();
         // data
         $data = DB::table("information_schema.COLUMNS")

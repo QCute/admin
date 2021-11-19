@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use Encore\Admin\Widgets\Box;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Layout\Content;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Widgets\Box;
 
 class DailyOnlineTimeController extends ChartController
 {
@@ -56,6 +56,12 @@ class DailyOnlineTimeController extends ChartController
         return $result;
     }
 
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         list($before, $now, , $tab) = $this->makeTab(["week", "month", "all", "pick"], "week");

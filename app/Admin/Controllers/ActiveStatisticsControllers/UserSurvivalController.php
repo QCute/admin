@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use Encore\Admin\Widgets\Box;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Layout\Content;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Widgets\Box;
 
 class UserSurvivalController extends ChartController
 {
@@ -38,6 +38,12 @@ class UserSurvivalController extends ChartController
         return $register ? $register[0]->register : 0;
     }
 
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         list(, , , $tab) = $this->makeTab(["all"], "all");

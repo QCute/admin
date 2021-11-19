@@ -2,11 +2,11 @@
 
 namespace App\Admin\Controllers\OperationControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Models\OperationModels\SensitiveWordModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\OperationModels\SensitiveWordModel;
+use Illuminate\Support\Facades\DB;
 
 class SensitiveWordController extends AdminController
 {
@@ -25,6 +25,7 @@ class SensitiveWordController extends AdminController
     protected function grid(): Grid
     {
         $grid = new Grid(new SensitiveWordModel());
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $table = $grid->model()->getTable();
         // data
         $array = DB::table("information_schema.COLUMNS")

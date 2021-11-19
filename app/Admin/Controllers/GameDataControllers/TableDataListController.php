@@ -2,12 +2,12 @@
 
 namespace App\Admin\Controllers\GameDataControllers;
 
+use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Models\GameDataModels\TableDataModel;
 use Exception;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\GameDataModels\TableDataModel;
-use App\Admin\Controllers\SwitchServerController;
 
 class TableDataListController extends AdminController
 {
@@ -31,6 +31,7 @@ class TableDataListController extends AdminController
         $connection = SwitchServerController::getConnection();
         $database = SwitchServerController::getCurrentServer();
         $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES"));
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $grid->model()->where("TABLE_SCHEMA", "=", $database);
         if (is_int(strpos($path, "user"))) {
             $grid
@@ -71,8 +72,8 @@ class TableDataListController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($row) {
                     if ($row->OPERATION) {
-                        $href = "table-data-viewer?table={$this->TABLE_NAME}";
-                        return "<a href='{$href}'>" . trans("admin.view"). "</a>";
+                        $href = "table-data-viewer?table=$this->TABLE_NAME";
+                        return "<a href='$href'>" . trans("admin.view"). "</a>";
                     } else {
                         return $this->{$row->NAME};
                     }

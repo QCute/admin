@@ -36,7 +36,7 @@ class MenuSorter extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $data = [];
         $parent = DB::table("admin_menu")

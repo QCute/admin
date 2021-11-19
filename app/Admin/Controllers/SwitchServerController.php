@@ -2,14 +2,16 @@
 
 namespace App\Admin\Controllers;
 
+use App\Http\Controllers\Controller;
 use Exception;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Connection;
-use Illuminate\Database\ConnectionInterface;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Throwable;
 
 class SwitchServerController extends Controller
 {
@@ -18,6 +20,7 @@ class SwitchServerController extends Controller
     /** Switch server
      *
      * @return  RedirectResponse
+     * @throws Throwable
      */
     public function switch(): RedirectResponse
     {
@@ -30,6 +33,7 @@ class SwitchServerController extends Controller
     /** Nav bar server list
      *
      * @return string
+     * @throws Throwable
      */
     public static function list(): string
     {
@@ -48,9 +52,9 @@ class SwitchServerController extends Controller
                     $current = $row;
                     continue;
                 }
-                $list .= "<option value='{$row->server_node}'>{$row->server_name}</option>";
+                $list .= "<option value='$row->server_node'>$row->server_name</option>";
             }
-            $list = "<option value='{$current->server_node}'>{$current->server_name}</option>" . $list;
+            $list = "<option value='$current->server_node'>$current->server_name</option>" . $list;
         } else {
             $list = "";
         }
@@ -59,7 +63,7 @@ class SwitchServerController extends Controller
             <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
             <li class='server-select'>
                 <select class='form-control server-list' style='min-width:18em;outline:none;'>
-                    {$list}
+                    $list
                 </select>
             </li>
             <script>
@@ -76,7 +80,6 @@ class SwitchServerController extends Controller
      * Get current cookie server
      *
      * @param string $default
-     *
      * @return string
      */
     static function getCookieServer(string $default = ''): string
@@ -88,7 +91,6 @@ class SwitchServerController extends Controller
 
     /**
      * Get current cookie server
-     *
      * @return string
      */
     public static function getCurrentServer(): string
@@ -96,13 +98,21 @@ class SwitchServerController extends Controller
         return Cookie::get('current_server');
     }
 
-    public static function getCurrentServerOpenTime()
+    /**
+     * Get current server open time
+     * @return int
+     */
+    public static function getCurrentServerOpenTime():int
     {
         $server = self::getCurrentServer();
         $server = self::getServer($server);
         return $server->open_time;
     }
 
+    /**
+     * Get current server open days
+     * @return int
+     */
     public static function getCurrentServerOpenDays(): int
     {
         $server = self::getCurrentServer();
@@ -128,7 +138,6 @@ class SwitchServerController extends Controller
      * Check server exists from database
      *
      * @param string $node
-     *
      * @return bool
      */
     public static function hasServer(string $node): bool
@@ -136,12 +145,24 @@ class SwitchServerController extends Controller
         return !is_null(self::getServer($node));
     }
 
-    public static function nextServerId(string $type)
+    /**
+     * Next server id
+     *
+     * @param string $type
+     * @return int
+     */
+    public static function nextServerId(string $type): int
     {
         return DB::table("server_list")->where("server_type", $type)->max("server_id") + 1;
     }
 
-    public static function nextServerPort(string $type)
+    /**
+     * Next server port
+     *
+     * @param string $type
+     * @return int
+     */
+    public static function nextServerPort(string $type): int
     {
         return DB::table("server_list")->where("server_type", $type)->max("server_port") + 1;
     }
@@ -150,12 +171,11 @@ class SwitchServerController extends Controller
      * Get server list from database
      *
      * @param string|null $type
-     *
      * @return array
      */
     public static function getServerList(string $type = null): array
     {
-        if (!is_null($type) && !empty($type)) {
+        if (!empty($type)) {
             return DB::table("server_list")
                 ->where("server_type", $type)
                 ->orderBy("id")
@@ -169,7 +189,16 @@ class SwitchServerController extends Controller
         }
     }
 
-    // send request
+    /**
+     * Send request
+     * 
+     * @param string $server
+     * @param string $command
+     * @param array $data
+     * @param string $method
+     * @param int $timeout
+     * @return array
+     */
     public static function send(string $server = "this", string $command = "", array $data = [], string $method = "POST", int $timeout = 5): array
     {
         if ($server == "all") {
@@ -188,7 +217,7 @@ class SwitchServerController extends Controller
         $result = ["ok" => [], "error" => []];
         foreach ($server_list as $server) {
             try {
-                $url = "{$server->server_host}:{$server->server_port}";
+                $url = "$server->server_host:$server->server_port";
                 if ($method == 'POST') {
                     $response = Http::timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
                 } else {
@@ -201,6 +230,154 @@ class SwitchServerController extends Controller
             }
         }
         return $result;
+    }
+
+    /**
+     * execute maker command
+     * 
+     * @param string $local
+     * @param string $remote
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function pushFile(string $local, string $remote, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        if (empty($server->ssh_alias)) {
+            // local machine
+            $process = new Process(["cp", $local, "$server->server_root/$remote"], $server->server_root);
+        } else {
+            // remote machine
+            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
+            $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
+            $file = [$local, "$server->ssh_alias:$server->server_root/$remote"];
+            $process = new Process(array_merge($pass, $scp, $file));
+        }
+        $process->run();
+        // result
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+        if ($output == "stdout") {
+            return $process->getOutput();
+        } else if ($output == "stderr") {
+            return $process->getErrorOutput();
+        } else {
+            throw new Exception("Unknown output: $output", 1);
+        }
+    }
+
+    /**
+     * execute maker command
+     * 
+     * @param string $remote
+     * @param string $local
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function pullFile(string $remote, string $local, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        if (empty($server->ssh_alias)) {
+            // local machine
+            $process = new Process(["cp", "$server->server_root/$remote", $local], $server->server_root);
+        } else {
+            // remote machine
+            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
+            $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
+            $file = ["$server->ssh_alias:$server->server_root/$remote", $local];
+            $process = new Process(array_merge($pass, $scp, $file));
+        }
+        $process->run();
+        // result
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+        if ($output == "stdout") {
+            return $process->getOutput();
+        } else if ($output == "stderr") {
+            return $process->getErrorOutput();
+        } else {
+            throw new Exception("Unknown output: $output", 1);
+        }
+    }
+
+    /**
+     * execute maker command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeMakerScript(array $command, string $path = null, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        $path = empty($path) ? $server->server_root : $path;
+        if (empty($server->ssh_alias)) {
+            // local machine
+            $script = ["$server->server_root/script/shell/maker.sh"];
+            $process = new Process(array_merge($script, $command), $path);
+        } else {
+            // remote machine
+            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
+            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $server->ssh_alias];
+            $script = ["cd", $path, "&&", "$server->server_root/script/shell/maker.sh"];
+            $process = new Process(array_merge($pass, $ssh, $script, $command));
+        }
+        $process->run();
+        // result
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+        if ($output == "stdout") {
+            return $process->getOutput();
+        } else if ($output == "stderr") {
+            return $process->getErrorOutput();
+        } else {
+            throw new Exception("Unknown output: $output", 1);
+        }
+    }
+
+    /**
+     * execute run command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeRunScript(array $command, string $path = null, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        $path = empty($path) ? $server->server_root : $path;
+        if (empty($server->ssh_alias)) {
+            // local machine
+            $script = ["$server->server_root/script/shell/run.sh"];
+            $process = new Process(array_merge($script, $command), $path);
+        } else {
+            // remote machine
+            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
+            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $server->ssh_alias];
+            $script = ["cd", $path, "&&", "$server->server_root/script/shell/run.sh"];
+            $process = new Process(array_merge($pass, $ssh, $script, $command));
+        }
+        $process->run();
+        // result
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+        if ($output == "stdout") {
+            return $process->getOutput();
+        } else if ($output == "stderr") {
+            return $process->getErrorOutput();
+        } else {
+            throw new Exception("Unknown output: $output", 1);
+        }
     }
 
     /**
@@ -234,7 +411,7 @@ class SwitchServerController extends Controller
             header('content-type:application:json;charset=utf8');
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-            echo '{$list}'
+            echo '$list'
         ?>";
         file_put_contents($path, $data);
     }
@@ -243,6 +420,7 @@ class SwitchServerController extends Controller
      * Change game data connection
      *
      * @param string $server
+     * @throws Throwable
      */
     public static function changeConnection(string $server)
     {

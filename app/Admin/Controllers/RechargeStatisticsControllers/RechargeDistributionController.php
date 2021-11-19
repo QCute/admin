@@ -2,14 +2,20 @@
 
 namespace App\Admin\Controllers\RechargeStatisticsControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use Encore\Admin\Widgets\Box;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Layout\Content;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Widgets\Box;
 
 class RechargeDistributionController extends ChartController
 {
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         list($before, $now, , $tab) = $this->makeTab(["day", "week", "month", "all", "pick"], "day");

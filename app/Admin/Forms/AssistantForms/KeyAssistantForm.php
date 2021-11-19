@@ -2,15 +2,17 @@
 
 namespace App\Admin\Forms\AssistantForms;
 
-use Exception;
-
-use Symfony\Component\Process\Process;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Log;
-use Encore\Admin\Widgets\Form;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
+use Encore\Admin\Widgets\Form;
+use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class KeyAssistantForm extends Form
 {
@@ -27,7 +29,6 @@ class KeyAssistantForm extends Form
      * Handle the form request.
      *
      * @param Request $request
-     *
      * @return  RedirectResponse
      */
     public function handle(Request $request): RedirectResponse
@@ -46,31 +47,53 @@ class KeyAssistantForm extends Form
             mkdir($path, 0755, true);
         }
         // file
-        $file = storage_path("app/admin/keys/id_{$type}");
-        $pub_file = storage_path("app/admin/keys/id_{$type}.pub");
-        try {
+        $file = storage_path("app/admin/keys/id_$type");
+        $pub_file = storage_path("app/admin/keys/id_$type.pub");
+        // remove old key
+        if (file_exists($file)) {
             unlink($file);
+        }
+        // remove old pub key
+        if (file_exists($pub_file)) {
             unlink($pub_file);
-        } catch (Exception $exception) {
-            Log::error($exception->getMessage());
         }
         // generate
-        $process = new Process(['ssh-keygen', '-q', '-t', $type, '-b', '4096', '-f', $file, '-N', $passphrase, '-C', $name]);
+        switch ($type) {
+            case "rsa":
+            case "ed25519":
+                $process = new Process(['ssh-keygen', '-q', '-t', $type, '-b', '4096', '-f', $file, '-N', $passphrase, '-C', $name]);
+                break;
+            case "ecdsa":
+                $process = new Process(['ssh-keygen', '-q', '-t', $type, '-b', '384', '-f', $file, '-N', $passphrase, '-C', $name]);
+                break;
+            case "dsa":
+                $process = new Process(['ssh-keygen', '-q', '-t', $type, '-b', '1024', '-f', $file, '-N', $passphrase, '-C', $name]);
+                break;
+            default:
+                admin_error("Unknown Key Type: $type");
+                return back();
+        }
         $process->run();
         // result
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            admin_error($process->getErrorOutput());
-            return back();
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
         }
         $result = $process->getOutput();
         if (!empty($result)) {
-            admin_error($process->getErrorOutput());
-            return back();
+            throw new ProcessFailedException($process);
         }
+        $key = file_get_contents($file);
+        $pub_key = file_get_contents($pub_file);
+        $id = DB::table("ssh_key")->insertGetId([
+            "username" => Auth::user()->name, 
+            "type" => $type, 
+            "passphrase" => $passphrase, 
+            "name" => $name,
+            "key" => $key,
+            "pub_key" => $pub_key
+        ]);
         // pass to session
-        Session::put("key-type", base64_encode($type));
-        Session::put("key", base64_encode(file_get_contents($file)));
-        Session::put("pub-key", base64_encode(file_get_contents($pub_file)));
+        Session::put("id", $id);
         // remove file
         try {
             unlink($file);
@@ -88,9 +111,7 @@ class KeyAssistantForm extends Form
     {
         $options = [
             "ed25519" => "ed25519",
-            "ed25519-sk" => "ed25519-sk",
             "ecdsa" => "ecdsa",
-            "ecdsa-sk" => "ecdsa-sk",
             "dsa" => "dsa",
             "rsa" => "rsa",
         ];
@@ -116,20 +137,24 @@ class KeyAssistantForm extends Form
             ->text("name", trans("admin.name"))
             ->rules("required");
         // data
-        $type = Session::remove("key-type");
-        $key = Session::remove("key");
-        $pub_key = Session::remove("pub-key");
+        $list = DB::table("ssh_key")
+            ->where("id", "=", Session::remove("id"))
+            ->get(["type", "key", "pub_key"]);
+        $data = isset($list[0]) ? (array)$list[0] : ["type" => "", "key" => "", "pub_key" => ""];
+        $type = str_replace("\n", "\\n", $data['type']);
+        $key = str_replace("\n", "\\n", $data['key']);
+        $pub_key = str_replace("\n", "\\n", $data['pub_key']);
         $this->html("
         <script>
             $(document).ready(function() {
                 // key type
-                const type = '{$type}'
+                const type = '$type'
                 // private key
-                const key = '{$key}';
-                if (key) save('id_' + atob(type), atob(key));
+                const key = '$key';
+                if (key) save('id_' + type, key);
                 // public key
-                const pub_key = '{$pub_key}'
-                if (pub_key) save('id_' + atob(type) + '.pub', atob(pub_key));
+                const pub_key = '$pub_key'
+                if (pub_key) save('id_' + type + '.pub', pub_key);
             });
             function save(name, data) {
                 const aTag = document.createElement('a');

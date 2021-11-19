@@ -2,21 +2,18 @@
 
 namespace App\Admin\Models\GameConfigureModels;
 
+use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Encore\Admin\Traits\DefaultDatetimeFormat;
-use Symfony\Component\Process\Process;
 
 class ConfigureListModel extends Model
 {
     use DefaultDatetimeFormat;
     protected $table = '';
-    protected $data = '';
-    public function __construct($data = '')
+    public function __construct()
     {
-        $this->data = $data;
         parent::__construct();
     }
 
@@ -27,12 +24,8 @@ class ConfigureListModel extends Model
      */
     public function paginate(): LengthAwarePaginator
     {
-        switch ($this->data) {
-            case "erl": $data = self::erl(); break;
-            case "lua": $data = self::lua(); break;
-            case "js": $data = self::js(); break;
-            default: throw new Exception("Unknown Route {$this->data}");
-        }
+        $data = $this->getData();
+        $total = count($data);
         // filter
         $description = request()->input("description");
         $file = request()->input("file");
@@ -45,57 +38,74 @@ class ConfigureListModel extends Model
             }
             return true;
         });
-        $perPage = Request::get('per_page', 20);
-        $page = Request::get('page', 1);
+        // slice
+        $perPage = request()->input("per_page", env("ADMIN_PER_PAGE", 20));
+        $page = request()->input("page", 1);
         $start = ($page - 1) * $perPage;
-        $data = static::hydrate(array_slice($data, $start, $perPage));
-        $paginator = new LengthAwarePaginator($data, count($data), $perPage);
+        $data = array_slice($data, $start, $perPage);
+        // show
+        $data = static::hydrate($data);
+        $paginator = new LengthAwarePaginator($data, $total, $perPage);
         $paginator->setPath(url()->current());
         return $paginator;
     }
 
     /**
+     * Get Data
+     *
+     * @return array
+     * @throws Exception
+     */
+    private function getData(): array
+    {
+        $path = request()->path();
+        if (is_int(strpos($path, "erl"))) {
+            return self::erl();
+        } else if (is_int(strpos($path, "lua"))) {
+            return self::lua();
+        } else if (is_int(strpos($path, "js"))) {
+            return self::js();
+        } else {
+            throw new Exception("Unknown Path: $path");
+        }
+    }
+
+    /**
+     * Erl Data
+     *
+     * @return array
      * @throws Exception
      */
     static private function erl(): array
     {
         // read configure from data script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "data"]);
-        $process->run();
-        // result
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            throw new Exception($process->getErrorOutput());
-        }
-        return json_decode($process->getOutput(), true);
+        $data = SwitchServerController::executeMakerScript(["data"]);
+        return json_decode($data, true);
     }
 
     /**
+     * Lua Data
+     *
+     * @return array
      * @throws Exception
      */
     static private function lua(): array
     {
         // read configure from lua script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "lua"]);
-        $process->run();
-        // result
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            throw new Exception($process->getErrorOutput());
-        }
-        return json_decode($process->getOutput(), true);
+        $data = SwitchServerController::executeMakerScript(["lua"]);
+        return json_decode($data, true);
     }
 
     /**
+     * Js Data
+     *
+     * @return array
      * @throws Exception
      */
     static private function js(): array
     {
         // read configure from js script
-        $process = new Process([env("SERVER_PATH") . "/script/shell/maker.sh", "js"]);
-        $process->run();
-        // result
-        if (!$process->isSuccessful() || !empty($process->getErrorOutput())) {
-            throw new Exception($process->getErrorOutput());
-        }
-        return json_decode($process->getOutput(), true);
+        $data = SwitchServerController::executeMakerScript(["js"]);
+        return json_decode($data, true);
     }
 }

@@ -2,15 +2,20 @@
 
 namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use Encore\Admin\Widgets\Box;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Layout\Content;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Widgets\Box;
 
 class UserOnlineController extends ChartController
 {
-
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         list($before, $now, $current, $tab) = $this->makeTab(["hour", "day", "pick"], "hour");
@@ -45,14 +50,14 @@ class UserOnlineController extends ChartController
                 ->get()
                 ->toArray();
         }
-        // x axis data
-        $category = [];
-        // y axis data
-        $total = [];
-        $online = [];
-        $hosting = [];
         // chart data
         if (empty($data)) {
+            // x axis data
+            $category = [];
+            // y axis data
+            $total = [];
+            $online = [];
+            $hosting = [];
             for ($start = $before; $start <= $now; $start += $step) {
                 array_push($category, date($format, $start));
                 array_push($total, 0);
@@ -148,7 +153,7 @@ class UserOnlineController extends ChartController
                         ]
                     ]
                 ],
-                'data' => $total
+                'data' => $online
             ], [
                 'name' => trans("admin.hosting"),
                 'type' => 'line',
@@ -165,7 +170,7 @@ class UserOnlineController extends ChartController
                         ]
                     ]
                 ],
-                'data' => $total
+                'data' => $hosting
             ],
         ];
         // chart

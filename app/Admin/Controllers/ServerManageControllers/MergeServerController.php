@@ -2,12 +2,18 @@
 
 namespace App\Admin\Controllers\ServerManageControllers;
 
-use App\Http\Controllers\Controller;
-use Encore\Admin\Layout\Content;
 use App\Admin\Forms\ServerManageForms\MergeServerForm;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Layout\Content;
 
-class MergeServerController extends Controller
+class MergeServerController extends AdminController
 {
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         return $content->title("")->body(new MergeServerForm());

@@ -2,12 +2,12 @@
 
 namespace App\Admin\Controllers\GameDataControllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Admin\Controllers\SwitchServerController;
+use App\Admin\Models\GameDataModels\TableDataModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
-use App\Admin\Models\GameDataModels\TableDataModel;
-use App\Admin\Controllers\SwitchServerController;
+use Illuminate\Support\Facades\DB;
 
 class TableDataViewerController extends AdminController
 {
@@ -30,6 +30,7 @@ class TableDataViewerController extends AdminController
         $database = SwitchServerController::getCurrentServer();
         $table = request()->input("table", "");
         $grid = new Grid(new TableDataModel($connection, $table));
+        $grid->paginate(env("ADMIN_PER_PAGE", 20));
         // data
         $data = DB::connection($connection)
             ->table("information_schema.COLUMNS")

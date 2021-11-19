@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 
 class ChartController extends Controller
 {
-    private function getTime($default = "day"): array
+    /**
+     * Get Time.
+     *
+     * @param string $default
+     * @return array
+     */
+    private function getTime(string $default = "day"): array
     {
         $current = request()->input("time", $default);
         switch ($current) {
@@ -29,7 +35,14 @@ class ChartController extends Controller
         return [];
     }
 
-    public function makeTab($array, $default = "day"): array
+    /**
+     * Make Tab.
+     *
+     * @param array $array
+     * @param string $default
+     * @return array
+     */
+    public function makeTab(array $array, string $default = "day"): array
     {
         $url = request()->url();
         list($before, $now, $current) = $this->getTime($default);
@@ -38,7 +51,7 @@ class ChartController extends Controller
             if ($time == $current)
                 return "<li role='presentation' class='active' ><a>" . trans("admin." . $time) . "</a></li>";
             else
-                return "<li role='presentation' ><a href='{$url}?time={$time}'>" . trans("admin." . $time) . "</a></li>";
+                return "<li role='presentation' ><a href='$url?time=$time'>" . trans("admin." . $time) . "</a></li>";
         }, $array));
         // the tab
         $tab = "
@@ -46,7 +59,7 @@ class ChartController extends Controller
             <style>.date-picker-group{ float: right; " . ($current == "pick" ? "" : "display: none;") . "}</style>
             <div class='col-sm-1 date-picker-group'>
                 <div class='input-group'>
-                    <a id='picker-ok' onclick=\"this.href += '&start-date=' + $('#start-date').val() + '&end-date=' + $('#end-date').val()\" href='{$url}?time=pick'>
+                    <a id='picker-ok' onclick=\"this.href += '&start-date=' + $('#start-date').val() + '&end-date=' + $('#end-date').val()\" href='$url?time=pick'>
                         <input type='submit' class='form-control btn-primary' value='" . trans("admin.confirm") . "' />
                     </a>
                 </div>
@@ -65,7 +78,7 @@ class ChartController extends Controller
                     <input type='text' id='start-date' class='form-control' />
                 </div>
             </div>
-            <ul class='nav nav-tabs' style=''>{$list}</ul>
+            <ul class='nav nav-tabs' style=''>$list</ul>
             <script type='text/javascript'>
                 $(function () { $('.date-picker').datetimepicker({ format: 'YYYY-MM-DD', defaultDate: 'now', locale: moment.locale('" . config("locale") . "') }); });
             </script>
@@ -74,7 +87,17 @@ class ChartController extends Controller
         return [$before, $now, $current, $tab];
     }
 
-    public function makeChart($grid = [], $legend = [], $xAxis = [], $yAxis = [], $series = []): string
+    /**
+     * Make Chart.
+     *
+     * @param array $grid
+     * @param array $legend
+     * @param array $xAxis
+     * @param array $yAxis
+     * @param array $series
+     * @return string
+     */
+    public function makeChart(array $grid = [], array $legend = [], array $xAxis = [], array $yAxis = [], array $series = []): string
     {
         if (empty($grid)) {
             $grid = json_encode([
@@ -95,11 +118,11 @@ class ChartController extends Controller
             $(function () {
                 let chart = echarts.init(document.getElementById('chart'), 'shine');
                 chart.setOption({
-                    grid: {$grid},
-                    legend: {$legend},
-                    xAxis: {$xAxis},
-                    yAxis: {$yAxis},
-                    series: {$series}
+                    grid: $grid,
+                    legend: $legend,
+                    xAxis: $xAxis,
+                    yAxis: $yAxis,
+                    series: $series
                 });
                 window.onresize = () => chart.resize();
             });

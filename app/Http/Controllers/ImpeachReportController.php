@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class ImpeachReportController extends Controller
 {
-    public function report()
+    public function report(): JsonResponse
     {
         // post must be carriage csrf field or remove VerifyCsrfToken
         $server_id = request()->query("server_id", 0);

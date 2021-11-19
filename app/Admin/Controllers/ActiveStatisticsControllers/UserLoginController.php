@@ -2,14 +2,20 @@
 
 namespace App\Admin\Controllers\ActiveStatisticsControllers;
 
-use Illuminate\Support\Facades\DB;
-use Encore\Admin\Layout\Content;
-use Encore\Admin\Widgets\Box;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
+use Encore\Admin\Layout\Content;
+use Illuminate\Support\Facades\DB;
+use Encore\Admin\Widgets\Box;
 
 class UserLoginController extends ChartController
 {
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     * @return Content
+     */
     public function index(Content $content): Content
     {
         list($before, $now, $current, $tab) = $this->makeTab(["day", "week", "month", "all", "pick"], "day");
@@ -53,12 +59,12 @@ class UserLoginController extends ChartController
                 ->get()
                 ->toArray();
         }
-        // x axis data
-        $category = [];
-        // y axis data
-        $login = [];
         // chart data
         if (empty($data)) {
+            // x axis data
+            $category = [];
+            // y axis data
+            $login = [];
             for ($start = $before; $start <= $now; $start += $step) {
                 array_push($category, date($format, $start));
                 array_push($login, 0);
