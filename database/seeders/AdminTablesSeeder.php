@@ -215,7 +215,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 25,
                     "title" => "服务器列表",
                     "icon" => "fa-list-ul",
-                    "uri" => "/server-list-manage",
+                    "uri" => "/server-list",
                     "permission" => NULL
                 ],
                 [

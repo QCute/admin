@@ -39,10 +39,6 @@ Route::group([
     $router->get('/first-recharge-time-distribution','RechargeStatisticsControllers\\FirstRechargeTimeDistributionController@index')->name('admin.home');
 
     // Game Data(user/configure/log)
-    // $router->get('/user-data',                       'GameDataControllers\\TableDataListController@showRole')->name('admin.home');
-    // $router->get('/configure-data',                  'GameDataControllers\\TableDataListController@showConfigure')->name('admin.home');
-    // $router->get('/log-data',                        'GameDataControllers\\TableDataListController@showLog')->name('admin.home');
-
     $router->resource('/user-data',                  'GameDataControllers\\TableDataListController');
     $router->resource('/configure-data',             'GameDataControllers\\TableDataListController');
     $router->resource('/log-data',                   'GameDataControllers\\TableDataListController');
@@ -58,9 +54,7 @@ Route::group([
     $router->resource('/js-configure',               'GameConfigureControllers\\ConfigureListController');
 
     // Game Server Manage
-    $router->resource('/server-list-manage',         'ServerManageControllers\\ServerListController');
-    $router->post('/server-list-manage',             'ServerManageControllers\\ServerListController@index')->name('admin.home');
-    $router->get('/server-list-manage-publish',      'ServerManageControllers\\ServerListController@publish')->name('admin.home');
+    $router->resource('/server-list',                'ServerManageControllers\\ServerListController');
 
     $router->get('/open-server',                     'ServerManageControllers\\OpenServerController@index')->name('admin.home');
     $router->post('/open-server',                    'ServerManageControllers\\OpenServerController@index')->name('admin.home');
@@ -71,7 +65,6 @@ Route::group([
     // Operation
     $router->get('/user-manage',                     'OperationControllers\\UserManageController@index')->name('admin.home');
     $router->post('/user-manage',                    'OperationControllers\\UserManageController@index')->name('admin.home');
-    // $router->get('/user-manage-search',              'ServerManageControllers\\UserManageController@search')->name('admin.home');
 
     $router->get('/game-mail',                       'OperationControllers\\GameMailController@index')->name('admin.home');
     $router->post('/game-mail',                      'OperationControllers\\GameMailController@index')->name('admin.home');

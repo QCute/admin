@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers\ServerManageControllers;
 
+use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Models\ServerManageModels\ServerListModel;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
@@ -77,46 +78,105 @@ class ServerListController extends AdminController
             ->get();
         foreach ($data as $row) {
 
-            if ($row->COLUMN_NAME == "center_name") {
-                $options = [];
-                $list = DB::table("server_list")
-                    ->where("server_type", "center")
-                    ->get();
-                foreach ($list as $item) {
-                    $options[$item->server_node] = $item->server_name;
+            switch ($row->COLUMN_NAME) {
+                case "server_id": {
+                    $server_id = SwitchServerController::nextServerId("local");
+                    $form
+                        ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->value($server_id)
+                        ->required();
+                    break;
                 }
-                $form
-                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
-                    ->options($options)
-                    ->required();
-            } else if ($row->COLUMN_NAME == 'world') {
-                $options = [];
-                $list = DB::table("server_list")
-                    ->where("server_type", "world")
-                    ->get();
-                foreach ($list as $item) {
-                    $options[$item->server_node] = $item->server_name;
+                case "server_type": {
+                    $options = [
+                        "local" => trans("admin.server_type.local"),
+                        "center" => trans("admin.server_type.center"),
+                        "world" => trans("admin.server_type.world"),
+                    ];
+                    $form
+                        ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->options($options)
+                        ->required();
+                    break;
                 }
-                $form
-                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
-                    ->options($options)
-                    ->required();
-            } else if ($row->COLUMN_NAME == 'recommend') {
-                $options = [
-                    "new" => trans("admin.server_recommend.new"),
-                    "hot" => trans("admin.server_recommend.hot"),
-                    "recommend" => trans("admin.server_recommend.recommend"),
-                ];
-                $form
-                    ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
-                    ->options($options)
-                    ->required();
-            } else {
-                $form
-                    ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
-                    ->required();
+                case "center": {
+                    $options = [0 => trans("admin.nothing")];
+                    $list = DB::table("server_list")
+                        ->where("server_type", "center")
+                        ->get();
+                    foreach ($list as $item) {
+                        $options[$item->server_id] = $item->server_name;
+                    }
+                    $form
+                        ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->options($options)
+                        ->value(0);
+                    break;
+                }
+                case "world": {
+                    $options = [0 => trans("admin.nothing")];
+                    $list = DB::table("server_list")
+                        ->where("server_type", "world")
+                        ->get();
+                    foreach ($list as $item) {
+                        $options[$item->server_id] = $item->server_name;
+                    }
+                    $form
+                        ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->options($options)
+                        ->value(0);
+                    break;
+                }
+                case "open_time": {
+                    $form
+                        ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->value(strtotime(date("Y-m-d"), time()))
+                        ->required();
+                    break;
+                }
+                case "recommend": {
+                    $options = [
+                        "new" => trans("admin.server_recommend.new"),
+                        "hot" => trans("admin.server_recommend.hot"),
+                        "recommend" => trans("admin.server_recommend.recommend"),
+                    ];
+                    $form
+                        ->select($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->options($options)
+                        ->required();
+                    break;
+                }
+                case "state": {
+                    $form
+                        ->hidden($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->value("");
+                    break;
+                }
+                case "ssh_pass":
+                case "ssh_alias":
+                case "tab_name": {
+                    $form
+                        ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->value("");
+                    break;
+                }
+                case "created_at":
+                case "updated_at": break;
+                default: {
+                    $form
+                        ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                        ->value("")
+                        ->required();
+                    break;
+                }
             }
         }
+        $form->saving(function ($form) {
+            $form->state = empty($form->ssh_pass) ? "" : $form->state;
+            $form->ssh_pass = empty($form->ssh_pass) ? "" : $form->ssh_pass;
+            $form->ssh_alias = empty($form->ssh_alias) ? "" : $form->ssh_alias;
+            $form->tab_name = empty($form->tab_name) ? "" : $form->tab_name;
+        });
         return $form;
     }
 }

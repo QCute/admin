@@ -182,6 +182,11 @@ return [
     'sensitive_word'        => "敏感词",
     'server'                => "服务器",
     'server_id'             => "服务器ID",
+    'server_type'           => [
+        'local'             => '本地服',
+        'center'            => '中央服',
+        'world'             => '大世界',
+    ],
     'server_recommend'      => [
         'hot'               => '火爆',
         'new'               => '新开',

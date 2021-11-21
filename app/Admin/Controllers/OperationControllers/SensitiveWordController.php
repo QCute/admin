@@ -75,7 +75,6 @@ class SensitiveWordController extends AdminController
     {
         $form = new Form(new SensitiveWordModel());
         $form->text('word', trans('admin.sensitive_word'))->required();
-        $form->saving(function (Form $form) {});
         return $form;
     }
 }

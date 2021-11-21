@@ -16,32 +16,28 @@ class CreateExtraTables extends Migration
         Schema::create('server_list', function (Blueprint $table) {
             $table->increments('id')->comment('ID');
             $table->string('channel')->default('')->comment('渠道');
+            $table->unsignedInteger('server_id')->default(0)->comment('游戏服编号');
             $table->string('server_node')->default('')->index('server_node')->comment('游戏服节点名');
             $table->string('server_name')->default('')->index('server_name')->comment('游戏服名');
             $table->string('ssh_alias')->default('')->comment('SSH别名');
             $table->string('ssh_pass')->default('')->comment('SSH密码');
             $table->string('server_root')->default('')->comment('服务器根目录');
-            $table->string('server_host')->default('')->comment('游戏服域名');
-            $table->string('server_ip')->default('')->comment('游戏服IP');
+            $table->string('server_host')->default('')->comment('游戏服地址');
             $table->unsignedInteger('server_port')->default(0)->comment('游戏服端口');
-            $table->string('db_host')->default('')->comment('游戏服数据库域名');
+            $table->string('db_host')->default('')->comment('游戏服数据库地址');
             $table->string('db_port')->default('')->comment('游戏服数据库端口');
             $table->string('db_name')->default('')->comment('游戏服数据库名');
             $table->string('db_username')->default('')->comment('游戏服数据库用户名');
             $table->string('db_password')->default('')->comment('游戏服数据库密码');
-            $table->unsignedInteger('server_id')->default(0)->comment('游戏服编号');
             $table->string('server_type')->default('')->comment('服务器类型');
             $table->unsignedInteger('open_time')->default(0)->comment('开服时间');
             $table->string('tab_name')->default('')->comment('分页名字');
-            $table->string('center_node')->default('')->comment('中央服节点');
-            $table->string('center_name')->default('')->comment('中央服名');
-            $table->string('center_host')->default('')->comment('中央服域名');
-            $table->string('center_ip')->default('')->comment('中央服IP');
-            $table->unsignedInteger('center_port')->default(0)->comment('中央服端口');
-            $table->unsignedInteger('center_id')->default(0)->comment('中央服编号');
-            $table->string('world')->default('')->comment('连接大世界');
+            $table->string('center')->default('')->comment('中央服');
+            $table->string('world')->default('')->comment('大世界');
             $table->string('state')->default('')->comment('当前状态');
             $table->string('recommend')->default('')->comment('推荐');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
 
         Schema::create('table_import_log', function (Blueprint $table) {
@@ -86,6 +82,8 @@ class CreateExtraTables extends Migration
             $table->string('content_kernel')->default('')->comment('内核内容');
             $table->string('ip', 16)->default('')->comment('IP地址');
             $table->dateTime('time')->default('0000-00-00 00:00:00')->comment('时间');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
 
         Schema::create('impeach', function (Blueprint $table) {
@@ -102,6 +100,8 @@ class CreateExtraTables extends Migration
             $table->dateTime('time')->default('0000-00-00 00:00:00')->comment('时间');
             $table->index(['impeacher_role_id', 'impeacher_server_id'], 'impeach_role_server');
             $table->index(['role_id', 'server_id'], 'role_server');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
 
         Schema::create('ssh_key', function (Blueprint $table) {
@@ -112,6 +112,8 @@ class CreateExtraTables extends Migration
             $table->string('name')->default('')->comment('名字');
             $table->string('key', 4096)->default('')->comment('私钥');
             $table->string('pub_key', 4096)->default('')->comment('公钥');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
     }
 

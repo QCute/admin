@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use stdClass;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Throwable;
@@ -38,34 +39,28 @@ class SwitchServerController extends Controller
     public static function list(): string
     {
         $data = self::getServerList();
-        if (!empty($data)) {
+        if(empty($data)) {
+            $list = "";
+        } else {
             // first as default
-            $current = $data[0];
-            // get and set current cookie server with default
-            $current_server_node = self::getCookieServer($current->server_node);
+            $current = self::getCookieServer($data[0]->server_node);
             // change connection
-            self::changeConnection($current_server_node);
+            self::changeConnection($current);
             // build select list
             $list = "";
             foreach($data as $row) {
-                if ($row->server_node === $current_server_node) {
+                if ($row->server_node === $current) {
                     $current = $row;
-                    continue;
+                } else {
+                    $list = "$list<option value='$row->server_node'>$row->server_name</option>";
                 }
-                $list .= "<option value='$row->server_node'>$row->server_name</option>";
             }
-            $list = "<option value='$current->server_node'>$current->server_name</option>" . $list;
-        } else {
-            $list = "";
+            $list = "<option value='$current->server_node'>$current->server_name</option>$list";
         }
         return "
             <style>.server-select{margin: 8px 8px 0px 0px;}</style>
             <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
-            <li class='server-select'>
-                <select class='form-control server-list' style='min-width:18em;outline:none;'>
-                    $list
-                </select>
-            </li>
+            <li class='server-select'><select class='form-control server-list' style='min-width:18em;outline:none;'>$list</select></li>
             <script>
                 $(document).ready(function() { 
                     $('.server-list').select2({placeholder: ''}).on('change', function(){
@@ -123,15 +118,20 @@ class SwitchServerController extends Controller
     /**
      * Get current server from database
      *
-     * @param string $server
+     * @param int|string $server
      * @return object
      */
-    public static function getServer(string $server): object
+    public static function getServer(mixed $server): object
     {
-        return DB::table("server_list")
-            ->where("server_node", $server)
-            ->orWhere("server_id", "LIKE", $server)
-            ->first();
+        if (is_int($server)) {
+            return DB::table("server_list")
+                ->orWhere("server_id", $server)
+                ->first();
+        } else {
+            return DB::table("server_list")
+                ->where("server_node", $server)
+                ->first();
+        }
     }
 
     /**
@@ -175,14 +175,14 @@ class SwitchServerController extends Controller
      */
     public static function getServerList(string $type = null): array
     {
-        if (!empty($type)) {
+        if (empty($type)) {
             return DB::table("server_list")
-                ->where("server_type", $type)
                 ->orderBy("id")
                 ->get()
                 ->toArray();
         } else {
             return DB::table("server_list")
+                ->where("server_type", $type)
                 ->orderBy("id")
                 ->get()
                 ->toArray();
@@ -309,22 +309,24 @@ class SwitchServerController extends Controller
      *
      * @param array $command
      * @param string|null $path
+     * @param object|null $config
      * @param string $output
      * @return string
      * @throws Exception
      */
-    public static function executeMakerScript(array $command, string $path = null, string $output = "stdout"): string
+    public static function executeMakerScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
         $path = empty($path) ? $server->server_root : $path;
         if (empty($server->ssh_alias)) {
             // local machine
             $script = ["$server->server_root/script/shell/maker.sh"];
-            $process = new Process(array_merge($script, $command), $path);
+            $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
         } else {
-            // remote machine
-            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
-            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $server->ssh_alias];
+            $alias = empty($config) ? $server->ssh_alias : $config->Host;
+            $pass = empty($config) ? $server->ssh_pass : $config->Password;
+            $pass = [base_path("vendor/bin/sshpass"), $pass];
+            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
             $script = ["cd", $path, "&&", "$server->server_root/script/shell/maker.sh"];
             $process = new Process(array_merge($pass, $ssh, $script, $command));
         }
@@ -347,22 +349,25 @@ class SwitchServerController extends Controller
      *
      * @param array $command
      * @param string|null $path
+     * @param object|null $config
      * @param string $output
      * @return string
      * @throws Exception
      */
-    public static function executeRunScript(array $command, string $path = null, string $output = "stdout"): string
+    public static function executeRunScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
         $path = empty($path) ? $server->server_root : $path;
         if (empty($server->ssh_alias)) {
             // local machine
             $script = ["$server->server_root/script/shell/run.sh"];
-            $process = new Process(array_merge($script, $command), $path);
+            $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
         } else {
             // remote machine
-            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
-            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $server->ssh_alias];
+            $alias = empty($config) ? $server->ssh_alias : $config->Host;
+            $pass = empty($config) ? $server->ssh_pass : $config->Password;
+            $pass = [base_path("vendor/bin/sshpass"), $pass];
+            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
             $script = ["cd", $path, "&&", "$server->server_root/script/shell/run.sh"];
             $process = new Process(array_merge($pass, $ssh, $script, $command));
         }
@@ -381,6 +386,47 @@ class SwitchServerController extends Controller
     }
 
     /**
+     * Get SSH Configure
+     *
+     * @return array
+     * @throws Exception
+     */
+    public static function getSSHConfig(): array
+    {
+        $host = "";
+        $config = [];
+        $data = file_get_contents(getenv('HOME') ."/.ssh/config");
+        $data = explode("\n", $data);
+        foreach ($data as $line) {
+            // empty
+            if (empty($line)) continue;
+            // comment
+            if (str_starts_with(trim($line), "#")) continue;
+            // config
+            if (!preg_match("/(\w+)(?:\s*=\s*|\s+)(.+)/", trim($line), $matches)) {
+                throw new Exception("Invalid Config File Syntax");
+            }
+            [, $key, $value] = $matches;
+            if ($key === "Host") {
+                // save
+                $host = $value;
+                // check duplicate
+                if (isset($config[$host])) {
+                    throw new Exception("Duplicate Host: $value");
+                }
+                // save
+                $object = new stdClass();
+                $object->{$key} = $value;
+                $config[$host] = $object;
+            } else {
+                $object = $config[$host];
+                $object->{$key} = $value;
+            }
+        }
+        return $config;
+    }
+
+    /**
      * Publish server list
      *
      * @return array
@@ -392,7 +438,6 @@ class SwitchServerController extends Controller
                 "server_name" => $server->server_name,
                 "server_id" => $server->server_id,
                 "server_host" => $server->server_host,
-                "server_ip" => $server->server_ip,
                 "server_port" => $server->server_port,
                 "tab_name" => $server->tab_name,
                 "state" => $server->state,

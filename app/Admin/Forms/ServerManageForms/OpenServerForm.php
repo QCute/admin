@@ -29,6 +29,8 @@ class OpenServerForm extends Form {
      */
     public function handle(Request $request): RedirectResponse
     {
+        $server = $request->input("server", "");
+        $password = $request->input("password", "");
         $name = $request->input("name", "");
         $tab = $request->input("tab", "");
         $center = trim($request->input("center", ""));
@@ -46,8 +48,11 @@ class OpenServerForm extends Form {
         $server_id = SwitchServerController::nextServerId("local");
         $port = SwitchServerController::nextServerPort("local");
         $node = basename(env("SERVER_PATH", "server")) . "_" . $server_id;
+        // machine
+        $config = SwitchServerController::getSSHConfig()[$server];
+        $config->Password = $password;
         // long time task
-        SwitchServerController::executeMakerScript(["open_server", $name]);
+        SwitchServerController::executeMakerScript(["open_server", $name], null, $config);
         // todo fill server list data
         DB::insert("INSERT INTO `server_list` (`server_node`, `server_name`, `server_port`, `server_id`, `server_type`, `open_time`, `tab_name`, `state`, `recommend`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [$node, $name, $port, $server_id, 'local', time(), $tab,  1, $recommend]);
         // update server list
@@ -59,16 +64,30 @@ class OpenServerForm extends Form {
 
     /**
      * Build a form here.
+     *
+     * @throws Exception
      */
     public function form()
     {
         $this->title = trans("admin.open_server");
+        $options = [];
+        $data = SwitchServerController::getSSHConfig();
+        foreach ($data as $item) {
+            $options[$item->Host] = $item->Host;
+        }
+        $this
+            ->select("server", trans("admin.server"))
+            ->options($options)
+            ->required();
+        $this
+            ->password("password", trans("admin.password"))
+            ->required();
         $this
             ->text("name", trans("admin.name"))
             ->required();
         $this
             ->text("tab", trans("admin.tab"))
-            ->required();
+            ->value("");
         // center
         $options = [];
         $list = DB::table("server_list")
@@ -80,7 +99,7 @@ class OpenServerForm extends Form {
         $this
             ->select("center", trans("admin.center_name"))
             ->options($options)
-            ->required();
+            ->value("");
         // world
         $options = [];
         $list = DB::table("server_list")
@@ -92,7 +111,7 @@ class OpenServerForm extends Form {
         $this
             ->select("world", trans("admin.world_name"))
             ->options($options)
-            ->required();
+            ->value("");
         // status
         $options = [
             "new" => trans("admin.server_recommend.new"),

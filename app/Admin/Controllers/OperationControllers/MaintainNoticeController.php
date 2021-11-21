@@ -81,7 +81,6 @@ class MaintainNoticeController extends AdminController
         $form->textarea('content', trans("admin.content"))->required();
         $form->datetime('start_time', trans("admin.start_time"))->required();
         $form->datetime('end_time', trans("admin.end_time"))->required();
-        $form->saving(function (Form $form) {});
         return $form;
     }
 }
