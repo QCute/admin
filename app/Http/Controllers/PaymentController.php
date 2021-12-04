@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Admin\Controllers\SwitchServerController;
 use Exception;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
@@ -38,17 +36,29 @@ class PaymentController extends Controller
         }
         // save recharge data
         try {
-            $data = ["recharge_id" => $recharge_id, "order_id" => $order_id, "channel" => $channel, "role_id" => $role_id, "role_name" => $role_name, "money" => $money, "time" => $time];
-            $recharge_no = DB::insert("INSERT INTO `{$server->server_node}`.`recharge` (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`) VALUES (:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)", $data);
+            $connection = SwitchServerController::changeConnection($server);
+            $column = " (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`)";
+            $value = "(:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)";
+            $data = [
+                "recharge_id" => $recharge_id,
+                "order_id" => $order_id,
+                "channel" => $channel,
+                "role_id" => $role_id,
+                "role_name" => $role_name,
+                "money" => $money,
+                "time" => $time
+            ];
+            $connection->insert("INSERT INTO `recharge` $column VALUES $value", $data);
+            $recharge_no = $connection->getPdo()->lastInsertId();
             // notify server
-            SwitchServerController::send($server_id, "recharge", ["recharge_no" => $recharge_no, "role_id" => $role_id]);
-            return response()->json(["status" => "success", "code" => 0, "msg" => ""]);
-        } catch (QueryException $exception) {
-            Log::error($exception->getMessage());
+            $result = SwitchServerController::send($server, "recharge", ["recharge_no" => intval($recharge_no), "role_id" => intval($role_id)]);
+            if (!empty($result["error"])) {
+                Log::error("NOTIFY SERVER ERROR:", $result["error"]);
+            }
             return response()->json(["status" => "success", "code" => 0, "msg" => ""]);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
-            return response()->json(["status" => "failure", "code" => 0, "msg" => "Duplicated OrderId"]);
+            return response()->json(["status" => "failure", "code" => $exception->getCode(), "msg" => $exception->getMessage()]);
         }
     }
 }

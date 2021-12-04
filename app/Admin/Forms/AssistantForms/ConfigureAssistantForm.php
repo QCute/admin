@@ -50,7 +50,7 @@ class ConfigureAssistantForm extends Form
             ->help(trans("admin.click") . trans("admin.copy"))
             ->readonly();
         $this->table('items', trans("admin.items"), function ($table) {
-            $data = DB::connection(SwitchServerController::getConnection())
+            $data = SwitchServerController::getDB()
                 ->table("item_data")
                 ->get(["item_id", "name"])
                 ->toArray();

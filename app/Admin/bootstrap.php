@@ -19,7 +19,7 @@
  */
 
 Encore\Admin\Form::forget(['map', 'editor']);
-// scookie
+// cookie
 Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/js-cookie/latest/js.cookie.min.js');
 // echarts lib
 Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.1.1/echarts.min.js');

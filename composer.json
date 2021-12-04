@@ -13,6 +13,7 @@
     "require": {
         "php": "^8.0",
         "ext-json": "*",
+        "ext-pdo": "*",
         "encore/laravel-admin": "1.*",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",

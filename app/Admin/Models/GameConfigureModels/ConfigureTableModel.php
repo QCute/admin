@@ -40,7 +40,7 @@ class ConfigureTableModel extends Model
             ->toArray();
         $map = array_reduce($log, function ($acc, $row) { $acc[$row->comment] = $row; return $acc; }, []);
         // data
-        $data = DB::connection(SwitchServerController::getConnection())
+        $data = SwitchServerController::getDB()
             ->table("information_schema.TABLES")
             ->where("TABLE_SCHEMA", "=", SwitchServerController::getCurrentServer())
             ->where("TABLE_NAME", "LIKE", "%_data")

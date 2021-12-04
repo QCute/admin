@@ -60,7 +60,7 @@ class GameMailForm extends Form {
     {
         $this->title = trans("admin.mail");
         $options = [
-            "this" => trans("admin.current_server"),
+            "current" => trans("admin.current_server"),
             "all" => trans("admin.all_server"),
         ];
         $this

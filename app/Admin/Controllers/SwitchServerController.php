@@ -6,22 +6,20 @@ use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use PDO;
 use stdClass;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use Throwable;
 
 class SwitchServerController extends Controller
 {
-    private const connection = "GameDataMySQL";
-
     /** Switch server
      *
      * @return  RedirectResponse
-     * @throws Throwable
      */
     public function switch(): RedirectResponse
     {
@@ -34,12 +32,11 @@ class SwitchServerController extends Controller
     /** Nav bar server list
      *
      * @return string
-     * @throws Throwable
      */
     public static function list(): string
     {
         $data = self::getServerList();
-        if(empty($data)) {
+        if (empty($data)) {
             $list = "";
         } else {
             // first as default
@@ -48,7 +45,7 @@ class SwitchServerController extends Controller
             self::changeConnection($current);
             // build select list
             $list = "";
-            foreach($data as $row) {
+            foreach ($data as $row) {
                 if ($row->server_node === $current) {
                     $current = $row;
                 } else {
@@ -97,7 +94,7 @@ class SwitchServerController extends Controller
      * Get current server open time
      * @return int
      */
-    public static function getCurrentServerOpenTime():int
+    public static function getCurrentServerOpenTime(): int
     {
         $server = self::getCurrentServer();
         $server = self::getServer($server);
@@ -119,30 +116,26 @@ class SwitchServerController extends Controller
      * Get current server from database
      *
      * @param int|string $server
-     * @return object
+     * @return object|null
      */
-    public static function getServer(mixed $server): object
+    public static function getServer(mixed $server): object|null
     {
-        if (is_int($server)) {
-            return DB::table("server_list")
-                ->orWhere("server_id", $server)
-                ->first();
-        } else {
-            return DB::table("server_list")
-                ->where("server_node", $server)
-                ->first();
-        }
+        return DB::table("server_list")
+            ->where("server_node", $server)
+            ->orWhere("server_id", $server)
+            ->limit(1)
+            ->first();
     }
 
     /**
      * Check server exists from database
      *
-     * @param string $node
+     * @param int|string $server
      * @return bool
      */
-    public static function hasServer(string $node): bool
+    public static function hasServer(mixed $server): bool
     {
-        return !is_null(self::getServer($node));
+        return !is_null(self::getServer($server));
     }
 
     /**
@@ -191,24 +184,28 @@ class SwitchServerController extends Controller
 
     /**
      * Send request
-     * 
-     * @param string $server
+     *
+     * @param object|string $server
      * @param string $command
      * @param array $data
      * @param string $method
      * @param int $timeout
      * @return array
      */
-    public static function send(string $server = "this", string $command = "", array $data = [], string $method = "POST", int $timeout = 5): array
+    public static function send(mixed $server = "current", string $command = "", array $data = [], string $method = "POST", int $timeout = 60): array
     {
-        if ($server == "all") {
+        if (is_object($server)) {
+            // server
+            $server_list = [$server];
+        } else if ($server == "all") {
             // get all current node-type's node
-            $current_node = self::getServer(self::getCurrentServer());
-            $server_list = self::getServerList($current_node->server_type);
-        } else if ($server == "this") {
-            // get current node
+            $current = self::getServer(self::getCurrentServer());
+            $server_list = self::getServerList($current->server_type);
+        } else if ($server == "current") {
+            // get current server
             $server_list = [self::getServer(self::getCurrentServer())];
-        } else if(self::hasServer($server)) {
+        } else if (self::hasServer($server)) {
+            // this server
             $server_list = [self::getServer($server)];
         } else {
             return [trans("admin.unknown_server") => $server];
@@ -218,13 +215,12 @@ class SwitchServerController extends Controller
         foreach ($server_list as $server) {
             try {
                 $url = "$server->server_host:$server->server_port";
-                if ($method == 'POST') {
+                if ($method == "POST") {
                     $response = Http::timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
                 } else {
                     $response = Http::timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
                 }
-                $response->throw();
-                $result["ok"][$server->server_name] = $response->body();
+                $result["ok"][$server->server_name] = $response->throw()->body();
             } catch (Exception $exception) {
                 $result["error"][$server->server_name] = $exception->getMessage();
             }
@@ -234,7 +230,7 @@ class SwitchServerController extends Controller
 
     /**
      * execute maker command
-     * 
+     *
      * @param string $local
      * @param string $remote
      * @param string $output
@@ -270,7 +266,7 @@ class SwitchServerController extends Controller
 
     /**
      * execute maker command
-     * 
+     *
      * @param string $remote
      * @param string $local
      * @param string $output
@@ -395,7 +391,7 @@ class SwitchServerController extends Controller
     {
         $host = "";
         $config = [];
-        $data = file_get_contents(getenv('HOME') ."/.ssh/config");
+        $data = file_get_contents(getenv('HOME') . "/.ssh/config");
         $data = explode("\n", $data);
         foreach ($data as $line) {
             // empty
@@ -433,7 +429,7 @@ class SwitchServerController extends Controller
      */
     public static function getPublishServerList(): array
     {
-        return array_map(function($server) {
+        return array_map(function ($server) {
             return [
                 "server_name" => $server->server_name,
                 "server_id" => $server->server_id,
@@ -452,7 +448,7 @@ class SwitchServerController extends Controller
             $path = public_path("server-list.php");
         }
         $list = json_encode(self::getPublishServerList());
-        $data =  "<?php 
+        $data = "<?php 
             header('content-type:application:json;charset=utf8');
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
@@ -462,38 +458,13 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * Change game data connection
-     *
-     * @param string $server
-     * @throws Throwable
-     */
-    public static function changeConnection(string $server)
-    {
-        $server = self::getServer($server);
-        // get database config
-        $database = app('config')->get('database');
-        // chose this connection
-        $data = $database['connections'][self::getConnection()];
-        // modify config
-        $data["host"] = $server->db_host;
-        $data["port"] = $server->db_port;
-        $data["database"] = $server->db_name;
-        // store connection
-        $database['connections']['GameDataMySQL'] = $data;
-        // save database config
-        app('config')->set('database', $database);
-        // reconnect
-        DB::connection(self::getConnection())->reconnect();
-    }
-
-    /**
      * Get game data connection
      *
      * @return string
      */
     public static function getConnection(): string
     {
-        return self::connection;
+        return "game";
     }
 
     /**
@@ -503,6 +474,24 @@ class SwitchServerController extends Controller
      */
     public static function getDB(): ConnectionInterface
     {
-        return DB::connection(self::connection);
+        return DB::connection(self::getConnection());
+    }
+
+    /**
+     * Change game data connection
+     *
+     * @param int|string|object $server
+     * @return ConnectionInterface
+     */
+    public static function changeConnection(mixed $server): ConnectionInterface
+    {
+        $server = is_object($server) ? $server : self::getServer($server);
+        $name = self::getConnection();
+        $config = Config::get("database.connections.$name");
+        // replace with pdo
+        $pdo = new PDO("{$config["driver"]}:host=$server->db_host;port=$server->db_port;dbname=$server->db_name;charset={$config["charset"]}", $server->db_username, $server->db_password, [PDO::ATTR_PERSISTENT => true]);
+        $connection = DB::connection($name);
+        $connection->setPdo($pdo);
+        return $connection;
     }
 }

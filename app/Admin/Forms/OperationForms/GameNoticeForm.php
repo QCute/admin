@@ -60,7 +60,7 @@ class GameNoticeForm extends Form {
     {
         $this->title = trans("admin.notice");
         $options = [
-            "this" => trans("admin.current_server"),
+            "current" => trans("admin.current_server"),
             "all" => trans("admin.all_server"),
         ];
         $this
