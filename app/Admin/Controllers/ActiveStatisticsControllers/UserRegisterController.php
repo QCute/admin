@@ -6,7 +6,6 @@ use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Widgets\Box;
 
 class UserRegisterController extends ChartController
 {
@@ -18,8 +17,8 @@ class UserRegisterController extends ChartController
      */
     public function index(Content $content): Content
     {
-        list($before, $now, $current, $tab) = $this->makeTab(["day", "week", "month", "all", "pick"], "day");
-        if ($current == "day") {
+        list($before, $now, $active) = $this->getTime("day");
+        if ($active == "day") {
             $step = 3600;
             $format = "H";
             $data = SwitchServerController::getDB()
@@ -32,7 +31,7 @@ class UserRegisterController extends ChartController
                 ])
                 ->get()
                 ->toArray();
-        } else if ($current == "week" || $current == "month") {
+        } else if ($active == "week" || $active == "month") {
             $step = 86400;
             $format = "m-d";
             $data = SwitchServerController::getDB()
@@ -143,7 +142,8 @@ class UserRegisterController extends ChartController
             ]
         ];
         $chart = $this->makeChart([], $legend, $xAxis, $yAxis, $series);
+        $tab = $this->makeTab(["day", "week", "month", "all", "pick"], $active, $chart);
         // draw
-        return $content->title("")->body(new Box("", "{$tab}{$chart}"));
+        return $content->title("")->body($tab);
     }
 }

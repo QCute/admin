@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ConfigureTableController extends AdminController
 {
-
     /**
      * Title for current resource.
      *
@@ -80,7 +79,7 @@ class ConfigureTableController extends AdminController
                 <span>" . trans("admin.browse") . "</span>
                 <input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='xml'>
             </div>
-            <input class='btn btn-primary btn-file' type='submit' value='" . trans("admin.import") . "'/>
+            <input class='btn btn-primary' type='submit' value='" . trans("admin.import") . "'/>
         </form>
     </div>
 </div>
@@ -99,7 +98,7 @@ class ConfigureTableController extends AdminController
             ],
             (object)[
                 "OPERATION" => false,
-                "NAME" => "username",
+                "NAME" => "user_name",
                 "COMMENT" => trans("admin.username"),
             ],
             (object)[
@@ -108,8 +107,13 @@ class ConfigureTableController extends AdminController
                 "COMMENT" => trans("admin.time"),
             ],
             (object)[
+                "OPERATION" => false,
+                "NAME" => "state",
+                "COMMENT" => trans("admin.state"),
+            ],
+            (object)[
                 "OPERATION" => true,
-                "NAME" => "comment",
+                "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
         ];
@@ -136,6 +140,7 @@ class ConfigureTableController extends AdminController
             foreach ($data as $row) {
                 if ($row->NAME == "username") continue;
                 if ($row->NAME == "time") continue;
+                if ($row->NAME == "state") continue;
                 if ($row->OPERATION) continue;
                 $filter->like($row->NAME, $row->COMMENT);
             }
@@ -157,6 +162,11 @@ class ConfigureTableController extends AdminController
         $grid->disableCreateButton(true);
         // no batch
         $grid->disableBatchActions(true);
+        // export
+        $grid->export(function ($export) {
+            $export->filename("configure_table");
+            $export->except(["OPERATION"]);
+        });
         return $grid;
     }
 
@@ -169,7 +179,6 @@ class ConfigureTableController extends AdminController
     {
         $form = new Form(new ConfigureTableModel());
         $form->ignore(['updated_at', 'created_at']);
-
         return $form;
     }
 
@@ -204,7 +213,6 @@ class ConfigureTableController extends AdminController
                 <script>document.getElementById('download').click();</script>
             ");
             return $this->displayIndex($content);
-            
         } else if ($action == "import") {
             // file upload
             $path = storage_path("app/admin/xml/");
@@ -223,7 +231,8 @@ class ConfigureTableController extends AdminController
             // import table data
             SwitchServerController::pushFile($pathname, "xml/$filename");
             $result = SwitchServerController::executeMakerScript(["table", "xml/$filename"]);
-            // todo fill table name
+            // import log
+            $schema = SwitchServerController::getCurrentServer();
             $data = SwitchServerController::getDB()
                 ->table("information_schema.TABLES")
                 ->select("TABLE_NAME")
@@ -231,8 +240,8 @@ class ConfigureTableController extends AdminController
                 ->where("TABLE_COMMENT", "=", $basename)
                 ->get()
                 ->toArray();
-            $data = [Auth::user()->name, $basename, $data[0]->TABLE_NAME];
-            DB::insert("INSERT INTO `table_import_log` (`username`, `comment`, `name`) VALUES (?, ?, ?)", $data);
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $data[0]->TABLE_NAME, "table_comment" => $basename];
+            DB::table("table_import_log")->insert($data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {
             return $this->displayIndex($content)->withError("Unknown Action: $action");

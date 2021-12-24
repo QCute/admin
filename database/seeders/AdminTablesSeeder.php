@@ -221,6 +221,14 @@ class AdminTablesSeeder extends Seeder
                 [
                     "parent_id" => 24,
                     "order" => 26,
+                    "title" => "服务器调整",
+                    "icon" => "fa-cog",
+                    "uri" => "server-tuning",
+                    "permission" => NULL
+                ],
+                [
+                    "parent_id" => 24,
+                    "order" => 27,
                     "title" => "开服",
                     "icon" => "fa-clone",
                     "uri" => "/open-server",
@@ -228,7 +236,7 @@ class AdminTablesSeeder extends Seeder
                 ],
                 [
                     "parent_id" => 24,
-                    "order" => 27,
+                    "order" => 28,
                     "title" => "合服",
                     "icon" => "fa-copy",
                     "uri" => "/merge-server",
@@ -236,55 +244,55 @@ class AdminTablesSeeder extends Seeder
                 ],
                 [
                     "parent_id" => 0,
-                    "order" => 28,
+                    "order" => 29,
                     "title" => "运营管理",
                     "icon" => "fa-user-plus",
                     "uri" => NULL,
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 29,
+                    "parent_id" => 29,
+                    "order" => 30,
                     "title" => "封号/禁言",
                     "icon" => "fa-sliders",
                     "uri" => "/user-manage",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 30,
+                    "parent_id" => 29,
+                    "order" => 31,
                     "title" => "邮件",
                     "icon" => "fa-envelope-o",
                     "uri" => "/game-mail",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 31,
+                    "parent_id" => 29,
+                    "order" => 32,
                     "title" => "公告",
                     "icon" => "fa-edit",
                     "uri" => "/game-notice",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 32,
+                    "parent_id" => 29,
+                    "order" => 33,
                     "title" => "维护公告",
                     "icon" => "fa-bullhorn",
                     "uri" => "/maintain-notice",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 33,
+                    "parent_id" => 29,
+                    "order" => 34,
                     "title" => "举报信息",
                     "icon" => "fa-info-circle",
                     "uri" => "/impeach",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 28,
-                    "order" => 34,
+                    "parent_id" => 29,
+                    "order" => 35,
                     "title" => "敏感词",
                     "icon" => "fa-filter",
                     "uri" => "/sensitive-word",
@@ -292,23 +300,23 @@ class AdminTablesSeeder extends Seeder
                 ],
                 [
                     "parent_id" => 0,
-                    "order" => 35,
+                    "order" => 36,
                     "title" => "工具",
                     "icon" => "fa-wrench",
                     "uri" => NULL,
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 35,
-                    "order" => 36,
+                    "parent_id" => 36,
+                    "order" => 37,
                     "title" => "配表助手",
                     "icon" => "fa-magic",
                     "uri" => "/configure-assistant",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 35,
-                    "order" => 37,
+                    "parent_id" => 36,
+                    "order" => 38,
                     "title" => "SSH Key生成",
                     "icon" => "fa-key",
                     "uri" => "/key-assistant",
@@ -316,47 +324,47 @@ class AdminTablesSeeder extends Seeder
                 ],
                 [
                     "parent_id" => 0,
-                    "order" => 38,
+                    "order" => 39,
                     "title" => "管理员",
                     "icon" => "fa-tasks",
                     "uri" => NULL,
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 38,
-                    "order" => 39,
+                    "parent_id" => 39,
+                    "order" => 40,
                     "title" => "用户",
                     "icon" => "fa-users",
                     "uri" => "auth/users",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 38,
-                    "order" => 40,
+                    "parent_id" => 39,
+                    "order" => 41,
                     "title" => "角色",
                     "icon" => "fa-user",
                     "uri" => "auth/roles",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 38,
-                    "order" => 41,
+                    "parent_id" => 39,
+                    "order" => 42,
                     "title" => "权限",
                     "icon" => "fa-ban",
                     "uri" => "auth/permissions",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 38,
-                    "order" => 42,
+                    "parent_id" => 39,
+                    "order" => 43,
                     "title" => "菜单",
                     "icon" => "fa-bars",
                     "uri" => "auth/menu",
                     "permission" => NULL
                 ],
                 [
-                    "parent_id" => 38,
-                    "order" => 43,
+                    "parent_id" => 39,
+                    "order" => 44,
                     "title" => "操作日志",
                     "icon" => "fa-history",
                     "uri" => "auth/logs",

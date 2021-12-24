@@ -17,7 +17,8 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class SwitchServerController extends Controller
 {
-    /** Switch server
+    /**
+     * Switch server
      *
      * @return  RedirectResponse
      */
@@ -29,7 +30,8 @@ class SwitchServerController extends Controller
         return back();
     }
 
-    /** Nav bar server list
+    /**
+     * Nav bar server list
      *
      * @return string
      */
@@ -83,6 +85,7 @@ class SwitchServerController extends Controller
 
     /**
      * Get current cookie server
+     *
      * @return string
      */
     public static function getCurrentServer(): string
@@ -92,6 +95,7 @@ class SwitchServerController extends Controller
 
     /**
      * Get current server open time
+     *
      * @return int
      */
     public static function getCurrentServerOpenTime(): int
@@ -103,6 +107,7 @@ class SwitchServerController extends Controller
 
     /**
      * Get current server open days
+     *
      * @return int
      */
     public static function getCurrentServerOpenDays(): int
@@ -229,7 +234,47 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * execute maker command
+     * Execute command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param object|null $config
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function execute(array $command, string $path = null, object $config = null, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        $path = empty($path) ? $server->server_root : $path;
+        if (empty($server->ssh_host)) {
+            // local machine
+            $process = new Process($command, $path, ["PATH" => getenv("PATH")]);
+        } else {
+            // remote machine
+            $alias = empty($config) ? $server->ssh_host : $config->Host;
+            $pass = empty($config) ? $server->ssh_pass : $config->Password;
+            $pass = [base_path("vendor/bin/sshpass"), $pass];
+            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
+            $script = ["cd", $path, "&&"];
+            $process = new Process(array_merge($pass, $ssh, $script, $command));
+        }
+        $process->run();
+        // result
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+        if ($output == "stdout") {
+            return $process->getOutput();
+        } else if ($output == "stderr") {
+            return $process->getErrorOutput();
+        } else {
+            throw new Exception("Unknown output: $output", 1);
+        }
+    }
+
+    /**
+     * Push file to remote
      *
      * @param string $local
      * @param string $remote
@@ -240,14 +285,14 @@ class SwitchServerController extends Controller
     public static function pushFile(string $local, string $remote, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
-        if (empty($server->ssh_alias)) {
+        if (empty($server->ssh_host)) {
             // local machine
             $process = new Process(["cp", $local, "$server->server_root/$remote"], $server->server_root);
         } else {
             // remote machine
             $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
             $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
-            $file = [$local, "$server->ssh_alias:$server->server_root/$remote"];
+            $file = [$local, "$server->ssh_host:$server->server_root/$remote"];
             $process = new Process(array_merge($pass, $scp, $file));
         }
         $process->run();
@@ -265,7 +310,7 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * execute maker command
+     * Pull file from remote
      *
      * @param string $remote
      * @param string $local
@@ -276,14 +321,14 @@ class SwitchServerController extends Controller
     public static function pullFile(string $remote, string $local, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
-        if (empty($server->ssh_alias)) {
+        if (empty($server->ssh_host)) {
             // local machine
             $process = new Process(["cp", "$server->server_root/$remote", $local], $server->server_root);
         } else {
             // remote machine
             $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
             $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
-            $file = ["$server->ssh_alias:$server->server_root/$remote", $local];
+            $file = ["$server->ssh_host:$server->server_root/$remote", $local];
             $process = new Process(array_merge($pass, $scp, $file));
         }
         $process->run();
@@ -301,7 +346,7 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * execute maker command
+     * Execute maker command
      *
      * @param array $command
      * @param string|null $path
@@ -314,12 +359,12 @@ class SwitchServerController extends Controller
     {
         $server = self::getServer(self::getCurrentServer());
         $path = empty($path) ? $server->server_root : $path;
-        if (empty($server->ssh_alias)) {
+        if (empty($server->ssh_host)) {
             // local machine
             $script = ["$server->server_root/script/shell/maker.sh"];
             $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
         } else {
-            $alias = empty($config) ? $server->ssh_alias : $config->Host;
+            $alias = empty($config) ? $server->ssh_host : $config->Host;
             $pass = empty($config) ? $server->ssh_pass : $config->Password;
             $pass = [base_path("vendor/bin/sshpass"), $pass];
             $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
@@ -341,7 +386,7 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * execute run command
+     * Execute run command
      *
      * @param array $command
      * @param string|null $path
@@ -354,13 +399,13 @@ class SwitchServerController extends Controller
     {
         $server = self::getServer(self::getCurrentServer());
         $path = empty($path) ? $server->server_root : $path;
-        if (empty($server->ssh_alias)) {
+        if (empty($server->ssh_host)) {
             // local machine
             $script = ["$server->server_root/script/shell/run.sh"];
             $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
         } else {
             // remote machine
-            $alias = empty($config) ? $server->ssh_alias : $config->Host;
+            $alias = empty($config) ? $server->ssh_host : $config->Host;
             $pass = empty($config) ? $server->ssh_pass : $config->Password;
             $pass = [base_path("vendor/bin/sshpass"), $pass];
             $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];

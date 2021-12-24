@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class MaintainNoticeController extends AdminController
 {
-
     /**
      * Title for current resource.
      *

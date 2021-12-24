@@ -19,6 +19,8 @@
  */
 
 Encore\Admin\Form::forget(['map', 'editor']);
+// axios
+Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js');
 // cookie
 Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/js-cookie/latest/js.cookie.min.js');
 // echarts lib

@@ -37,8 +37,6 @@ class PaymentController extends Controller
         // save recharge data
         try {
             $connection = SwitchServerController::changeConnection($server);
-            $column = " (`recharge_id`, `order_id`, `channel`, `role_id`, `role_name`, `money`, `time`)";
-            $value = "(:recharge_id, :order_id, :channel, :role_id, :role_name, :money, :time)";
             $data = [
                 "recharge_id" => $recharge_id,
                 "order_id" => $order_id,
@@ -48,10 +46,9 @@ class PaymentController extends Controller
                 "money" => $money,
                 "time" => $time
             ];
-            $connection->insert("INSERT INTO `recharge` $column VALUES $value", $data);
-            $recharge_no = $connection->getPdo()->lastInsertId();
+            $recharge_no = $connection->table("`recharge`")->insertGetId($data);
             // notify server
-            $result = SwitchServerController::send($server, "recharge", ["recharge_no" => intval($recharge_no), "role_id" => intval($role_id)]);
+            $result = SwitchServerController::send($server, "recharge", ["recharge_no" => $recharge_no, "role_id" => intval($role_id)]);
             if (!empty($result["error"])) {
                 Log::error("NOTIFY SERVER ERROR:", $result["error"]);
             }

@@ -9,10 +9,12 @@ class TableDataModel extends Model {
     use DefaultDatetimeFormat;
     protected $connection = '';
     protected $table = '';
-    public function __construct($connection = '', $table = '')
+    protected $primaryKey = '';
+    public function __construct($connection = '', $table = '', $primaryKey = '')
     {
         $this->connection = $connection;
         $this->table = $table;
+        $this->primaryKey = $primaryKey;
         parent::__construct();
     }
 }

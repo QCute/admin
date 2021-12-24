@@ -6,7 +6,6 @@ use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Widgets\Box;
 
 class UserSurvivalController extends ChartController
 {
@@ -46,7 +45,7 @@ class UserSurvivalController extends ChartController
      */
     public function index(Content $content): Content
     {
-        list(, , , $tab) = $this->makeTab(["all"], "all");
+        list(, , $active) = $this->getTime("all");
         // 当日存活 = (当日登录总数 - 当日注册总数) / 开服到昨日注册总数
         $before = SwitchServerController::getCurrentServerOpenTime();
         $category = [2, 3, 4, 5, 6, 7, 15, 30];
@@ -133,7 +132,8 @@ class UserSurvivalController extends ChartController
         ];
         // chart
         $chart = $this->makeChart([], $legend, $xAxis, $yAxis, $series);
+        $tab = $this->makeTab(["all"], $active, $chart);
         // draw
-        return $content->title("")->body(new Box("", "{$tab}{$chart}"));
+        return $content->title("")->body($tab);
     }
 }

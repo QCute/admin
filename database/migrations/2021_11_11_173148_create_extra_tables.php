@@ -19,7 +19,7 @@ class CreateExtraTables extends Migration
             $table->unsignedInteger('server_id')->default(0)->comment('游戏服编号');
             $table->string('server_node')->default('')->index('server_node')->comment('游戏服节点名');
             $table->string('server_name')->default('')->index('server_name')->comment('游戏服名');
-            $table->string('ssh_alias')->default('')->comment('SSH别名');
+            $table->string('ssh_host')->default('')->comment('SSH地址');
             $table->string('ssh_pass')->default('')->comment('SSH密码');
             $table->string('server_root')->default('')->comment('服务器根目录');
             $table->string('server_host')->default('')->comment('游戏服地址');
@@ -42,11 +42,12 @@ class CreateExtraTables extends Migration
 
         Schema::create('table_import_log', function (Blueprint $table) {
             $table->bigIncrements('id')->comment('ID');
-            $table->string('username')->default('')->comment('用户名');
-            $table->string('name')->default('')->comment('表名');
-            $table->string('comment')->default('')->comment('名称');
+            $table->string('user_name')->default('')->comment('用户名');
+            $table->string('table_schema')->default('')->comment('数据库');
+            $table->string('table_name')->default('')->comment('表名');
+            $table->string('table_comment')->default('')->comment('名称');
             $table->dateTime('time')->useCurrent()->comment('时间');
-            $table->unsignedTinyInteger('status')->default(0)->comment('状态');
+            $table->unsignedTinyInteger('state')->default(0)->comment('状态');
             $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });

@@ -7,7 +7,6 @@ use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class ConfigureAssistantForm extends Form
@@ -46,7 +45,7 @@ class ConfigureAssistantForm extends Form
         $this
             ->textarea("content", trans("admin.content"))
             ->attribute("style","resize: vertical; cursor: pointer")
-            ->setElementName('configure')
+            ->default(Session::remove("generated-configure"))
             ->help(trans("admin.click") . trans("admin.copy"))
             ->readonly();
         $this->table('items', trans("admin.items"), function ($table) {
@@ -68,15 +67,6 @@ class ConfigureAssistantForm extends Form
                 ->min(1)
                 ->required();
         });
-        // data
-        $items = Session::remove("generated-configure");
-        $this->html("
-        <script>
-            $(document).ready(function() {
-                document.querySelector('[name=configure]').value = '$items';
-            });
-        </script>
-        ");
     }
 
     /**

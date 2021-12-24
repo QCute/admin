@@ -11,7 +11,6 @@ use Encore\Admin\Grid;
 
 class TableDataListController extends AdminController
 {
-
     /**
      * Title for current resource.
      *
@@ -30,7 +29,7 @@ class TableDataListController extends AdminController
         $path = request()->path();
         $connection = SwitchServerController::getConnection();
         $database = SwitchServerController::getCurrentServer();
-        $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES"));
+        $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES", "TABLE_NAME"));
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
         $grid->model()->where("TABLE_SCHEMA", "=", $database);
         if (is_int(strpos($path, "user"))) {
@@ -62,7 +61,7 @@ class TableDataListController extends AdminController
             ],
             (object)[
                 "OPERATION" => true,
-                "NAME" => "TABLE_SCHEMA",
+                "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
         ];
@@ -108,6 +107,11 @@ class TableDataListController extends AdminController
         $grid->disableCreateButton(true);
         // no batch
         $grid->disableBatchActions(true);
+        // export
+        $grid->export(function ($export) use ($path) {
+            $export->filename(str_replace("-", "_", $path));
+            $export->except(["OPERATION"]);
+        });
         return $grid;
     }
 

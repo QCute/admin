@@ -2,9 +2,10 @@
 
 namespace App\Admin\Controllers;
 
-use App\Http\Controllers\Controller;
+use Encore\Admin\Controllers\AdminController;
+use Encore\Admin\Widgets\Tab;
 
-class ChartController extends Controller
+class ChartController extends AdminController
 {
     /**
      * Get Time.
@@ -12,79 +13,27 @@ class ChartController extends Controller
      * @param string $default
      * @return array
      */
-    private function getTime(string $default = "day"): array
+    public function getTime(string $default = "day"): array
     {
-        $current = request()->input("time", $default);
-        switch ($current) {
+        $active = request()->input("time", $default);
+        switch ($active) {
             case "hour":
-                return [time() - (60 * 60), time(), $current];
+                return [time() - (60 * 60), time(), $active];
             case "day":
-                return [strtotime(date('Y-m-d', time())), time(), $current];
+                return [strtotime(date('Y-m-d', time())), time(), $active];
             case "week":
-                return [strtotime("-1 monday"), time(), $current];
+                return [strtotime("-1 monday"), time(), $active];
             case "month":
-                return [strtotime(date('Y-m-01', time())), time(), $current];
+                return [strtotime(date('Y-m-01', time())), time(), $active];
             case "all":
                 $start = SwitchServerController::getCurrentServerOpenTime();
-                return [$start, time(), $current];
+                return [$start, time(), $active];
             case "pick":
                 $start = request()->input("start-date", date('Y-m-d', time()));
                 $end = request()->input("end-date", date('Y-m-d', time()));
-                return [strtotime($start), strtotime($end), $current];
+                return [strtotime($start), strtotime($end), $active];
         }
         return [];
-    }
-
-    /**
-     * Make Tab.
-     *
-     * @param array $array
-     * @param string $default
-     * @return array
-     */
-    public function makeTab(array $array, string $default = "day"): array
-    {
-        $url = request()->url();
-        list($before, $now, $current) = $this->getTime($default);
-        // make tab list
-        $list = implode("", array_map(function ($time) use ($url, $current) {
-            if ($time == $current)
-                return "<li role='presentation' class='active' ><a>" . trans("admin." . $time) . "</a></li>";
-            else
-                return "<li role='presentation' ><a href='$url?time=$time'>" . trans("admin." . $time) . "</a></li>";
-        }, $array));
-        // the tab
-        $tab = "
-            <style>.nav-tabs > li > a { border-radius: unset; } </style>
-            <style>.date-picker-group{ float: right; " . ($current == "pick" ? "" : "display: none;") . "}</style>
-            <div class='col-sm-1 date-picker-group'>
-                <div class='input-group'>
-                    <a id='picker-ok' onclick=\"this.href += '&start-date=' + $('#start-date').val() + '&end-date=' + $('#end-date').val()\" href='$url?time=pick'>
-                        <input type='submit' class='form-control btn-primary' value='" . trans("admin.confirm") . "' />
-                    </a>
-                </div>
-            </div> 
-            <div class='col-sm-3 date-picker-group'>
-                <div class='input-group'>
-                    <div class='input-group date date-picker'>
-                        <span class='input-group-addon'>" . trans("admin.end") . " " . trans("admin.time") . "：<span class='glyphicon glyphicon-calendar'></span></span>
-                        <input type='text'  id='end-date' class='form-control' />
-                    </div>
-                </div>
-            </div>
-            <div class='col-sm-3 date-picker-group'>
-                <div class='input-group date date-picker' >
-                    <span class='input-group-addon'>" . trans("admin.start") . " " . trans("admin.time") . "：<span class='glyphicon glyphicon-calendar'></span></span>
-                    <input type='text' id='start-date' class='form-control' />
-                </div>
-            </div>
-            <ul class='nav nav-tabs' style=''>$list</ul>
-            <script type='text/javascript'>
-                $(function () { $('.date-picker').datetimepicker({ format: 'YYYY-MM-DD', defaultDate: 'now', locale: moment.locale('" . config("locale") . "') }); });
-            </script>
-        ";
-        // view
-        return [$before, $now, $current, $tab];
     }
 
     /**
@@ -115,18 +64,75 @@ class ChartController extends Controller
         return "
             <div id='chart' style='width: 100%; height: calc(100vh - 165px); position: relative;'></div>
             <script>
-            $(function () {
-                let chart = echarts.init(document.getElementById('chart'), 'shine');
-                chart.setOption({
-                    grid: $grid,
-                    legend: $legend,
-                    xAxis: $xAxis,
-                    yAxis: $yAxis,
-                    series: $series
+                $(function () {
+                    let chart = echarts.init(document.getElementById('chart'), 'shine');
+                    chart.setOption({
+                        grid: $grid,
+                        legend: $legend,
+                        xAxis: $xAxis,
+                        yAxis: $yAxis,
+                        series: $series
+                    });
+                    window.onresize = () => chart.resize();
                 });
-                window.onresize = () => chart.resize();
-            });
             </script>
         ";
+    }
+
+    /**
+     * Make Tab.
+     *
+     * @param array $array
+     * @param string $active
+     * @param string $chart
+     * @return string
+     */
+    public function makeTab(array $array, string $active, string $chart): string
+    {
+        $url = request()->url();
+        // date picker
+        if ($active == "pick") {
+            $datePicker = "
+                <div name='date-picker' style='width:274px; float: left; margin-top: -50px; margin-left: 20em;'>
+                    <div class='col-sm-6'>
+                        <div class='input-group'>
+                            <span class='input-group-addon'><i class='fa fa-calendar'></i></span>
+                            <input type='text' name='start-date' class='form-control date' style='width: 100px'>
+                        </div>
+                    </div>
+                    <div class='col-sm-6'>
+                        <div class='input-group'>
+                            <span class='input-group-addon'><i class='fa fa-arrows-h'></i></span>
+                            <input type='text' name='end-date' class='form-control date' style='width: 100px'>
+                            <span class='input-group-btn'>
+                                <a id='picker-ok' onclick=\"this.href += '&start-date=' + document.querySelector('[name=start-date]').value + '&end-date=' + document.querySelector('[name=end-date]').value\" href='$url?time=pick'>
+                                    <button class='form-control btn-info' type='button'>" . trans("admin.confirm") . "</button>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <script type='text/javascript'>
+                    $(function () { 
+                        $('.date').datetimepicker({ 'format': 'YYYY-MM-DD', defaultDate: 'now', 'locale' : moment.locale('" . config("locale") . "'), 'allowInputToggle' : true});
+                        const width = Array.from(document.querySelector('.nav-tabs').children).reduce((a, e) => a + e.clientWidth, 0);
+                        document.querySelector('[name=date-picker]').style.marginLeft = width + 'px';
+                    });
+                </script>
+            ";
+        } else {
+            $datePicker = "";
+        }
+        // tab
+        $tab = new Tab();
+        foreach ($array as $time) {
+            if ($time == $active) {
+                $tab->add(trans("admin." . $time), "$datePicker$chart", "$url?time=$time", true);
+            } else {
+                $tab->addLink(trans("admin." . $time), "$url?time=$time", false);
+            }
+        }
+        // view
+        return $tab->render();
     }
 }

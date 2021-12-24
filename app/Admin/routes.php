@@ -7,73 +7,80 @@ use Encore\Admin\Facades\Admin;
 Admin::routes();
 
 Route::group([
-    'prefix'        => config('admin.route.prefix'),
-    'namespace'     => config('admin.route.namespace'),
-    'middleware'    => config('admin.route.middleware'),
-    'as'            => config('admin.route.prefix') . '.',
-    'domain'        => config('admin.route.domain'),
+    'prefix' => config('admin.route.prefix'),
+    'namespace' => config('admin.route.namespace'),
+    'middleware' => config('admin.route.middleware'),
+    'as' => config('admin.route.prefix') . '.',
+    'domain' => config('admin.route.domain'),
 ], function (Router $router) {
 
-    $router->get('/',                                'HomeController@index')->name('home');
+    $router->get('/', 'HomeController@index')->name('home');
+    $router->post('/', 'HomeController@index')->name('home');
 
     // Switch Server Database
-    $router->get('/switch-server',                   'SwitchServerController@switch')->name('admin.home');
-
-    // assistant
-    $router->get('/key-assistant',                   'AssistantControllers\\KeyAssistantController@index')->name('admin.home');
-    $router->post('/key-assistant',                  'AssistantControllers\\KeyAssistantController@index')->name('admin.home');
-    $router->get('/configure-assistant',             'AssistantControllers\\ConfigureAssistantController@index')->name('admin.home');
+    $router->get('/switch-server', 'SwitchServerController@switch');
 
     // User Active Statistics
-    $router->get('/user-online',                     'ActiveStatisticsControllers\\UserOnlineController@index')->name('admin.home');
-    $router->get('/user-register',                   'ActiveStatisticsControllers\\UserRegisterController@index')->name('admin.home');
-    $router->get('/user-login',                      'ActiveStatisticsControllers\\UserLoginController@index')->name('admin.home');
-    $router->get('/user-survival',                   'ActiveStatisticsControllers\\UserSurvivalController@index')->name('admin.home');
-    $router->get('/daily-online-time',               'ActiveStatisticsControllers\\DailyOnlineTimeController@index')->name('admin.home');
+    $router->get('/user-online', 'ActiveStatisticsControllers\\UserOnlineController@index');
+    $router->get('/user-register', 'ActiveStatisticsControllers\\UserRegisterController@index');
+    $router->get('/user-login', 'ActiveStatisticsControllers\\UserLoginController@index');
+    $router->get('/user-survival', 'ActiveStatisticsControllers\\UserSurvivalController@index');
+    $router->get('/daily-online-time', 'ActiveStatisticsControllers\\DailyOnlineTimeController@index');
 
     // User Recharge Statistics
-    $router->get('/daily-recharge',                  'RechargeStatisticsControllers\\DailyRechargeController@index')->name('admin.home');
-    $router->get('/recharge-rank',                   'RechargeStatisticsControllers\\RechargeRankController@index')->name('admin.home');
-    $router->get('/recharge-ratio',                  'RechargeStatisticsControllers\\RechargeRatioController@index')->name('admin.home');
-    $router->get('/recharge-distribution',           'RechargeStatisticsControllers\\RechargeDistributionController@index')->name('admin.home');
-    $router->get('/first-recharge-time-distribution','RechargeStatisticsControllers\\FirstRechargeTimeDistributionController@index')->name('admin.home');
+    $router->get('/daily-recharge', 'RechargeStatisticsControllers\\DailyRechargeController@index');
+    $router->get('/recharge-rank', 'RechargeStatisticsControllers\\RechargeRankController@index');
+    $router->get('/recharge-ratio', 'RechargeStatisticsControllers\\RechargeRatioController@index');
+    $router->get('/recharge-distribution', 'RechargeStatisticsControllers\\RechargeDistributionController@index');
+    $router->get('/first-recharge-time-distribution', 'RechargeStatisticsControllers\\FirstRechargeTimeDistributionController@index');
 
     // Game Data(user/configure/log)
-    $router->resource('/user-data',                  'GameDataControllers\\TableDataListController');
-    $router->resource('/configure-data',             'GameDataControllers\\TableDataListController');
-    $router->resource('/log-data',                   'GameDataControllers\\TableDataListController');
-    $router->resource('/table-data-viewer',          'GameDataControllers\\TableDataViewerController');
-    $router->resource('client-error-log',            'GameDataControllers\\ClientErrorLogController');
+    $router->get('/user-data', 'GameDataControllers\\TableDataListController@index');
+    $router->get('/configure-data', 'GameDataControllers\\TableDataListController@index');
+    $router->get('/log-data', 'GameDataControllers\\TableDataListController@index');
+    $router->get('/table-data-viewer', 'GameDataControllers\\TableDataViewerController@index');
+    $router->get('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
+    $router->post('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
+    $router->delete('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
 
-    // Game Configure Data
-    $router->resource('/configure-table',            'GameConfigureControllers\\ConfigureTableController');
-    $router->get('/configure-table-download',        'GameConfigureControllers\\ConfigureTableController@download');
-    $router->post('/configure-table',                'GameConfigureControllers\\ConfigureTableController@index');
-    $router->resource('/erl-configure',              'GameConfigureControllers\\ConfigureListController');
-    $router->resource('/lua-configure',              'GameConfigureControllers\\ConfigureListController');
-    $router->resource('/js-configure',               'GameConfigureControllers\\ConfigureListController');
+    // Configure Data
+    $router->get('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
+    $router->post('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
+    $router->get('/configure-table-download', 'GameConfigureControllers\\ConfigureTableController@download');
+    $router->get('/erl-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->get('/lua-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->get('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
 
-    // Game Server Manage
-    $router->resource('/server-list',                'ServerManageControllers\\ServerListController');
-
-    $router->get('/open-server',                     'ServerManageControllers\\OpenServerController@index')->name('admin.home');
-    $router->post('/open-server',                    'ServerManageControllers\\OpenServerController@index')->name('admin.home');
-
-    $router->get('/merge-server',                    'ServerManageControllers\\MergeServerController@index')->name('admin.home');
-    $router->post('/merge-server',                   'ServerManageControllers\\MergeServerController@index')->name('admin.home');
+    // Server Manage
+    $router->get('/server-list', 'ServerManageControllers\\ServerListController@index');
+    $router->get('/server-tuning', 'ServerManageControllers\\ServerTuningController@index');
+    $router->get('/server-tuning-get-server-time', 'ServerManageControllers\\ServerTuningController@getServerTime');
+    $router->get('/server-tuning-get-server-state', 'ServerManageControllers\\ServerTuningController@getServerState');
+    $router->get('/open-server', 'ServerManageControllers\\OpenServerController@index');
+    $router->post('/open-server', 'ServerManageControllers\\OpenServerController@index');
+    $router->get('/merge-server', 'ServerManageControllers\\MergeServerController@index');
+    $router->post('/merge-server', 'ServerManageControllers\\MergeServerController@index');
 
     // Operation
-    $router->get('/user-manage',                     'OperationControllers\\UserManageController@index')->name('admin.home');
-    $router->post('/user-manage',                    'OperationControllers\\UserManageController@index')->name('admin.home');
+    $router->get('/user-manage', 'OperationControllers\\UserManageController@index');
+    $router->post('/user-manage', 'OperationControllers\\UserManageController@index');
+    $router->get('/game-mail', 'OperationControllers\\GameMailController@index');
+    $router->post('/game-mail', 'OperationControllers\\GameMailController@index');
+    $router->get('/game-notice', 'OperationControllers\\GameNoticeController@index');
+    $router->post('/game-notice', 'OperationControllers\\GameNoticeController@index');
+    $router->get('impeach', 'OperationControllers\\ImpeachController@index');
+    $router->delete('impeach', 'OperationControllers\\ImpeachController@index');
+    $router->get('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
+    $router->post('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
+    $router->delete('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
+    $router->get('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
+    $router->post('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
+    $router->delete('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
 
-    $router->get('/game-mail',                       'OperationControllers\\GameMailController@index')->name('admin.home');
-    $router->post('/game-mail',                      'OperationControllers\\GameMailController@index')->name('admin.home');
-
-    $router->get('/game-notice',                     'OperationControllers\\GameNoticeController@index')->name('admin.home');
-    $router->post('/game-notice',                    'OperationControllers\\GameNoticeController@index')->name('admin.home');
-
-    $router->resource('impeach',                     'OperationControllers\\ImpeachController');
-    $router->resource('maintain-notice',             'OperationControllers\\MaintainNoticeController');
-    $router->resource('sensitive-word',              'OperationControllers\\SensitiveWordController');
+    // Assistant
+    $router->get('/key-assistant', 'AssistantControllers\\KeyAssistantController@index');
+    $router->post('/key-assistant', 'AssistantControllers\\KeyAssistantController@index');
+    $router->get('/configure-assistant', 'AssistantControllers\\ConfigureAssistantController@index');
+    $router->post('/configure-assistant', 'AssistantControllers\\ConfigureAssistantController@index');
 
 });

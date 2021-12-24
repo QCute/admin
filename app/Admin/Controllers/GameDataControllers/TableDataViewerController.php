@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class TableDataViewerController extends AdminController
 {
-
     /**
      * Title for current resource.
      *
@@ -29,11 +28,21 @@ class TableDataViewerController extends AdminController
         $connection = SwitchServerController::getConnection();
         $database = SwitchServerController::getCurrentServer();
         $table = request()->input("table", "");
-        $grid = new Grid(new TableDataModel($connection, $table));
+        $key = DB::connection($connection)
+            ->table("information_schema.COLUMNS")
+            ->select(["COLUMN_NAME"])
+            ->where("TABLE_SCHEMA", $database)
+            ->where("TABLE_NAME", $table)
+            ->where("COLUMN_KEY", "PRI")
+            ->get()
+            ->first()
+            ->COLUMN_NAME;
+        $grid = new Grid(new TableDataModel($connection, $table, $key));
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
         // data
         $data = DB::connection($connection)
             ->table("information_schema.COLUMNS")
+            ->select(["COLUMN_NAME", "COLUMN_COMMENT"])
             ->where("TABLE_SCHEMA", $database)
             ->where("TABLE_NAME", $table)
             ->get();
@@ -49,6 +58,7 @@ class TableDataViewerController extends AdminController
             // filter
             $data = DB::connection($connection)
                 ->table("information_schema.COLUMNS")
+                ->select(["COLUMN_NAME", "COLUMN_COMMENT"])
                 ->where("TABLE_SCHEMA", $database)
                 ->where("TABLE_NAME", $table)
                 ->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])
@@ -74,6 +84,10 @@ class TableDataViewerController extends AdminController
         $grid->disableCreateButton(true);
         // no batch
         $grid->disableBatchActions(true);
+        // export
+        $grid->export(function ($export) use ($table) {
+            $export->filename($table);
+        });
         return $grid;
     }
 

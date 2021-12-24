@@ -6,7 +6,6 @@ use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Widgets\Box;
 
 class RechargeRatioController extends ChartController
 {
@@ -18,7 +17,7 @@ class RechargeRatioController extends ChartController
      */
     public function index(Content $content): Content
     {
-        list($before, $now, , $tab) = $this->makeTab(["all", "pick"], "all");
+        list($before, $now, $active) = $this->getTime("all");
         $total = SwitchServerController::getDB()
             ->table("role")
             ->whereBetween("register_time", [$before, $now])
@@ -69,7 +68,8 @@ class RechargeRatioController extends ChartController
             'data' => $data
         ];
         $chart = $this->makeChart([], $legend, [], [], $series);
+        $tab = $this->makeTab(["all", "pick"], $active, $chart);
         // draw
-        return $content->title("")->body(new Box("", "{$tab}{$chart}"));
+        return $content->title("")->body($tab);
     }
 }

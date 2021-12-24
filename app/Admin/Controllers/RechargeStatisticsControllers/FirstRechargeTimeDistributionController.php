@@ -6,7 +6,6 @@ use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
-use Encore\Admin\Widgets\Box;
 
 class FirstRechargeTimeDistributionController extends ChartController
 {
@@ -60,7 +59,7 @@ class FirstRechargeTimeDistributionController extends ChartController
      */
     public function index(Content $content): Content
     {
-        list(, , , $tab) = $this->makeTab(["all"], "all");
+        list(, , $active) = $this->getTime("all");
         $data = SwitchServerController::getDB()
             ->table("role")
             ->where("first_recharge_time", ">", "0")
@@ -98,7 +97,8 @@ class FirstRechargeTimeDistributionController extends ChartController
             'data' => $data
         ];
         $chart = $this->makeChart([], $legend, [], [], $series);
+        $tab = $this->makeTab(["all"], $active, $chart);
         // draw
-        return $content->title("")->body(new Box("", "{$tab}{$chart}"));
+        return $content->title("")->body($tab);
     }
 }

@@ -12,7 +12,6 @@ use Exception;
 
 class ConfigureListController extends AdminController
 {
-
     /**
      * Title for current resource.
      *
@@ -76,7 +75,7 @@ class ConfigureListController extends AdminController
             ],
             (object)[
                 "OPERATION" => true,
-                "NAME" => "TABLE_SCHEMA",
+                "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
         ];
@@ -122,6 +121,11 @@ class ConfigureListController extends AdminController
         $grid->disableCreateButton(true);
         // no batch
         $grid->disableBatchActions(true);
+        // export
+        $grid->export(function ($export) {
+            $export->filename("configure_list");
+            $export->except(["OPERATION"]);
+        });
         return $grid;
     }
 

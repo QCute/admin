@@ -153,7 +153,7 @@ class ServerListController extends AdminController
                     break;
                 }
                 case "ssh_pass":
-                case "ssh_alias":
+                case "ssh_host":
                 case "tab_name": {
                     $form
                         ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
@@ -174,7 +174,7 @@ class ServerListController extends AdminController
         $form->saving(function ($form) {
             $form->state = empty($form->ssh_pass) ? "" : $form->state;
             $form->ssh_pass = empty($form->ssh_pass) ? "" : $form->ssh_pass;
-            $form->ssh_alias = empty($form->ssh_alias) ? "" : $form->ssh_alias;
+            $form->ssh_host = empty($form->ssh_host) ? "" : $form->ssh_host;
             $form->tab_name = empty($form->tab_name) ? "" : $form->tab_name;
         });
         return $form;

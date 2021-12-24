@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class ClientErrorLogController extends AdminController
 {
-
     /**
      * Title for current resource.
      *
