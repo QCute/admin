@@ -50,7 +50,7 @@ class ServerTuningController extends AdminController
         return $content
             ->title($this->title())
             ->description($this->description['index'] ?? trans('admin.list'))
-            ->body(new ServerTuningForm($running == "ping", $owner));
+            ->body(new ServerTuningForm(json_decode($running), $owner));
     }
 
     /**
@@ -75,7 +75,7 @@ class ServerTuningController extends AdminController
     {
         $server = SwitchServerController::getCurrentServer();
         $running = SwitchServerController::executeRunScript([$server, "state"]);
-        return str_contains($running, "pong") ? trans("admin.server_active") : trans("admin.server_down");
+        return json_decode($running) ? trans("admin.server_active") : trans("admin.server_down");
     }
 
     /**

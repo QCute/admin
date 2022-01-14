@@ -2,11 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Admin\Controllers\SwitchServerController;
-use App\Http\Controllers\MaintainNoticeController;
-use App\Http\Controllers\ImpeachReportController;
 use App\Http\Controllers\ClientErrorLogReportController;
+use App\Http\Controllers\ImpeachReportController;
+use App\Http\Controllers\MaintainNoticeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ServerListController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +27,7 @@ Route::domain(env("APP_URL"))->group(function () {
 // api
 Route::domain(env("API_DOMAIN", "api" . "." . env("APP_URL")))->group(function () {
     // server list
-    Route::get("/server-list", function() { return response()->json(SwitchServerController::getPublishServerList()); });
+    Route::get("/server-list", [ServerListController::class, "get"]);
     // post csrf token
     Route::get("/csrf-token", function() { return response()->json(["_token" => csrf_token()]); });
     // notice
