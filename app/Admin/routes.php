@@ -15,7 +15,6 @@ Route::group([
 ], function (Router $router) {
 
     $router->get('/', 'HomeController@index')->name('home');
-    $router->post('/', 'HomeController@index')->name('home');
 
     // Switch Server Database
     $router->get('/switch-server', 'SwitchServerController@switch');
@@ -39,9 +38,7 @@ Route::group([
     $router->get('/configure-data', 'GameDataControllers\\TableDataListController@index');
     $router->get('/log-data', 'GameDataControllers\\TableDataListController@index');
     $router->get('/table-data-viewer', 'GameDataControllers\\TableDataViewerController@index');
-    $router->get('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
-    $router->post('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
-    $router->delete('client-error-log', 'GameDataControllers\\ClientErrorLogController@index');
+    $router->resource('/client-error-log', 'GameDataControllers\\ClientErrorLogController');
 
     // Configure Data
     $router->get('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
@@ -52,7 +49,7 @@ Route::group([
     $router->get('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
 
     // Server Manage
-    $router->get('/server-list', 'ServerManageControllers\\ServerListController@index');
+    $router->resource('/server-list', 'ServerManageControllers\\ServerListController');
     $router->get('/server-tuning', 'ServerManageControllers\\ServerTuningController@index');
     $router->get('/server-tuning-get-server-time', 'ServerManageControllers\\ServerTuningController@getServerTime');
     $router->get('/server-tuning-get-server-state', 'ServerManageControllers\\ServerTuningController@getServerState');
@@ -68,14 +65,9 @@ Route::group([
     $router->post('/game-mail', 'OperationControllers\\GameMailController@index');
     $router->get('/game-notice', 'OperationControllers\\GameNoticeController@index');
     $router->post('/game-notice', 'OperationControllers\\GameNoticeController@index');
-    $router->get('impeach', 'OperationControllers\\ImpeachController@index');
-    $router->delete('impeach', 'OperationControllers\\ImpeachController@index');
-    $router->get('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
-    $router->post('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
-    $router->delete('maintain-notice', 'OperationControllers\\MaintainNoticeController@index');
-    $router->get('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
-    $router->post('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
-    $router->delete('sensitive-word', 'OperationControllers\\SensitiveWordController@index');
+    $router->resource('/maintain-notice', 'OperationControllers\\MaintainNoticeController');
+    $router->resource('/impeach', 'OperationControllers\\ImpeachController');
+    $router->resource('/sensitive-word', 'OperationControllers\\SensitiveWordController');
 
     // Assistant
     $router->get('/key-assistant', 'AssistantControllers\\KeyAssistantController@index');

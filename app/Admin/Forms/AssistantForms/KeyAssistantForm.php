@@ -146,7 +146,7 @@ class KeyAssistantForm extends Form
         $pub_key = str_replace("\n", "\\n", $data['pub_key']);
         $this->html("
         <script>
-            $(document).ready(function() {
+            (function() {
                 // key type
                 const type = '$type'
                 // private key
@@ -155,7 +155,7 @@ class KeyAssistantForm extends Form
                 // public key
                 const pub_key = '$pub_key'
                 if (pub_key) save('id_' + type + '.pub', pub_key);
-            });
+            })();
             function save(name, data) {
                 const aTag = document.createElement('a');
                 aTag.setAttribute('download', name);

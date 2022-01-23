@@ -59,6 +59,14 @@ class FirstRechargeTimeDistributionController extends ChartController
      */
     public function index(Content $content): Content
     {
+        // check
+        $server = SwitchServerController::getCurrentServer();
+        if (empty($server)) {
+            return $content
+                ->title($this->title())
+                ->withWarning("Could not found current server");
+        }
+        // view
         list(, , $active) = $this->getTime("all");
         $data = SwitchServerController::getDB()
             ->table("role")

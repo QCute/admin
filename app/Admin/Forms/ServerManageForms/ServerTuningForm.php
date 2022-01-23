@@ -172,12 +172,12 @@ class ServerTuningForm extends Form
                     }
                 })
             }
-            $(function() {
-                // time and state loop
-                getLocalTime();
-                getServerTime();
-                getServerState();
-            });
+            
+            // time and state loop
+            getLocalTime();
+            getServerTime();
+            getServerState();
+            
         </script>");
 
         $this->disableReset();

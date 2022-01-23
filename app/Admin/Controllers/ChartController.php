@@ -93,14 +93,14 @@ class ChartController extends AdminController
         // date picker
         if ($active == "pick") {
             $datePicker = "
-                <div name='date-picker' style='width:274px; float: left; margin-top: -50px; margin-left: 20em;'>
-                    <div class='col-sm-6'>
+                <div name='date-picker' class='col-lg-12 col-md-12 col-xs-12 col-sm-12' style='width:300px; float: left; margin-top: -50px;'>
+                    <div class='col-lg-6 col-md-6 col-xs-6 col-sm-6 center'>
                         <div class='input-group'>
                             <span class='input-group-addon'><i class='fa fa-calendar'></i></span>
                             <input type='text' name='start-date' class='form-control date' style='width: 100px'>
                         </div>
                     </div>
-                    <div class='col-sm-6'>
+                    <div class='col-lg-6 col-md-6 col-xs-6 col-sm-6 center'>
                         <div class='input-group'>
                             <span class='input-group-addon'><i class='fa fa-arrows-h'></i></span>
                             <input type='text' name='end-date' class='form-control date' style='width: 100px'>
@@ -114,8 +114,8 @@ class ChartController extends AdminController
                 </div>
                 <script type='text/javascript'>
                     $(function () { 
-                        $('.date').datetimepicker({ 'format': 'YYYY-MM-DD', defaultDate: 'now', 'locale' : moment.locale('" . config("locale") . "'), 'allowInputToggle' : true});
-                        const width = Array.from(document.querySelector('.nav-tabs').children).reduce((a, e) => a + e.clientWidth, 0);
+                        $('.date').datetimepicker({ 'format': 'YYYY-MM-DD', defaultDate: 'now', 'locale' : moment.locale('" . config("app.locale") . "'), 'allowInputToggle' : true});
+                        const width = Array.from(document.querySelector('.nav-tabs').children).reduce((a, e) => a + e.clientWidth, -30);
                         document.querySelector('[name=date-picker]').style.marginLeft = width + 'px';
                     });
                 </script>

@@ -28,6 +28,14 @@ class ConfigureListController extends AdminController
      */
     public function index(Content $content): Content
     {
+        // check
+        $server = SwitchServerController::getCurrentServer();
+        if (empty($server)) {
+            return $content
+                ->title($this->title())
+                ->withWarning("Could not found current server");
+        }
+        // view
         $action = request()->input("action", "");
         if (!empty($action)) {
             return $this->action($content, $action);

@@ -45,6 +45,14 @@ class UserSurvivalController extends ChartController
      */
     public function index(Content $content): Content
     {
+        // check
+        $server = SwitchServerController::getCurrentServer();
+        if (empty($server)) {
+            return $content
+                ->title($this->title())
+                ->withWarning("Could not found current server");
+        }
+        // view
         list(, , $active) = $this->getTime("all");
         // 当日存活 = (当日登录总数 - 当日注册总数) / 开服到昨日注册总数
         $before = SwitchServerController::getCurrentServerOpenTime();

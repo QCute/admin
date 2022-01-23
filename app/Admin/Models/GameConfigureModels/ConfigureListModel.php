@@ -128,7 +128,8 @@ class ConfigureListModel extends Model
     {
         // read configure from data script
         $data = SwitchServerController::executeMakerScript(["data"]);
-        return json_decode($data, true);
+        return json_decode($data, true) ? : [];
+
     }
 
     /**
@@ -141,7 +142,7 @@ class ConfigureListModel extends Model
     {
         // read configure from lua script
         $data = SwitchServerController::executeMakerScript(["lua"]);
-        return json_decode($data, true);
+        return json_decode($data, true) ? : [];
     }
 
     /**
@@ -154,6 +155,6 @@ class ConfigureListModel extends Model
     {
         // read configure from js script
         $data = SwitchServerController::executeMakerScript(["js"]);
-        return json_decode($data, true);
+        return json_decode($data, true) ? : [];
     }
 }

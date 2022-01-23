@@ -86,9 +86,9 @@ class SwitchServerController extends Controller
     /**
      * Get current cookie server
      *
-     * @return string
+     * @return string|null
      */
-    public static function getCurrentServer(): string
+    public static function getCurrentServer(): string|null
     {
         return Cookie::get('current_server');
     }
@@ -171,7 +171,7 @@ class SwitchServerController extends Controller
      * @param string|null $type
      * @return array
      */
-    public static function getServerList(string $type = null): array
+    private static function getServerList(string $type = null): array
     {
         if (empty($type)) {
             return DB::table("server_list")
@@ -246,7 +246,9 @@ class SwitchServerController extends Controller
     public static function execute(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
+        // path
         $path = empty($path) ? $server->server_root : $path;
+        // remote or local
         if (empty($server->ssh_host)) {
             // local machine
             $process = new Process($command, $path, ["PATH" => getenv("PATH")]);
@@ -285,6 +287,7 @@ class SwitchServerController extends Controller
     public static function pushFile(string $local, string $remote, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
+        // remote or local
         if (empty($server->ssh_host)) {
             // local machine
             $process = new Process(["cp", $local, "$server->server_root/$remote"], $server->server_root);
@@ -321,6 +324,7 @@ class SwitchServerController extends Controller
     public static function pullFile(string $remote, string $local, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
+        // remote or local
         if (empty($server->ssh_host)) {
             // local machine
             $process = new Process(["cp", "$server->server_root/$remote", $local], $server->server_root);
@@ -358,7 +362,9 @@ class SwitchServerController extends Controller
     public static function executeMakerScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
+        // server path
         $path = empty($path) ? $server->server_root : $path;
+        // remote or local
         if (empty($server->ssh_host)) {
             // local machine
             $script = ["$server->server_root/script/shell/maker.sh"];
@@ -398,7 +404,9 @@ class SwitchServerController extends Controller
     public static function executeRunScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
         $server = self::getServer(self::getCurrentServer());
+        // server path
         $path = empty($path) ? $server->server_root : $path;
+        // remote or local
         if (empty($server->ssh_host)) {
             // local machine
             $script = ["$server->server_root/script/shell/run.sh"];

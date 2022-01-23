@@ -56,8 +56,6 @@ class ServerListController extends AdminController
         $grid->actions(function ($actions) {
             // remove view
             $actions->disableView();
-            // remove delete
-            $actions->disableDelete();
         });
         // not batch
         $grid->disableBatchActions(true);
