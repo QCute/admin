@@ -1,0 +1,235 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API 列表",
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/client-error-log": {
+            "post": {
+                "summary": "客户端错误日志上报",
+                "operationId": "4871987a4e706592c853d86c933507c1",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "server_id": {
+                                        "description": "服务器ID",
+                                        "type": "integer"
+                                    },
+                                    "account": {
+                                        "description": "账户名",
+                                        "type": "string"
+                                    },
+                                    "role_id": {
+                                        "description": "角色ID",
+                                        "type": "integer"
+                                    },
+                                    "role_name": {
+                                        "description": "角色名",
+                                        "type": "string"
+                                    },
+                                    "device": {
+                                        "description": "设备",
+                                        "type": "string"
+                                    },
+                                    "env": {
+                                        "description": "环境",
+                                        "type": "string"
+                                    },
+                                    "title": {
+                                        "description": "标题",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "内容",
+                                        "type": "string"
+                                    },
+                                    "content_kernel": {
+                                        "description": "内容核心",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "examples": {
+                                    "result": {
+                                        "summary": "结果",
+                                        "value": {
+                                            "result": "ok"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/impeach": {
+            "post": {
+                "summary": "举报",
+                "operationId": "e86f35cd3f436afd90b2c9fe85114ad9",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "server_id": {
+                                        "description": "服务器ID",
+                                        "type": "integer"
+                                    },
+                                    "role_id": {
+                                        "description": "角色ID",
+                                        "type": "integer"
+                                    },
+                                    "role_name": {
+                                        "description": "角色名",
+                                        "type": "string"
+                                    },
+                                    "impeacher_server_id": {
+                                        "description": "举报者服务器ID",
+                                        "type": "integer"
+                                    },
+                                    "impeacher_role_id": {
+                                        "description": "举报者角色ID",
+                                        "type": "integer"
+                                    },
+                                    "impeacher_role_name": {
+                                        "description": "举报者角色名",
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "description": "类型",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "内容",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "examples": {
+                                    "result": {
+                                        "summary": "结果",
+                                        "value": {
+                                            "result": "ok"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maintain-notice": {
+            "get": {
+                "summary": "维护公告",
+                "operationId": "0b76bff5cbb26a52084afd0e9a8790ca",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "platform": {
+                                        "description": "平台",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "examples": {
+                                    "result": {
+                                        "summary": "维护公告",
+                                        "value": {
+                                            "title": "this is title",
+                                            "content": "this is content",
+                                            "start_time": 1649308407,
+                                            "end_time": 1649394797
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/server-list": {
+            "get": {
+                "summary": "获取服务器列表",
+                "operationId": "fe98946e43fc2ede428ffdf4fe21fb3a",
+                "parameters": [
+                    {
+                        "name": "unionId",
+                        "in": "path",
+                        "description": "微信UnionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "int": {
+                                "summary": "Union Id.",
+                                "value": "oic_x5YDSA3gzvOFmf5E76"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "examples": {
+                                    "result": {
+                                        "summary": "服务器列表",
+                                        "value": [
+                                            {
+                                                "server_name": "服务器名",
+                                                "server_id": 1,
+                                                "server_host": "127.0.0.1",
+                                                "server_port": 8974
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

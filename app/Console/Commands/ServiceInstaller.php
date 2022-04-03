@@ -62,6 +62,10 @@ ExecStop=/usr/bin/php artisan octane:stop
 Restart=on-failure
 # restart time
 RestartSec=5s
+# The limits of max open file
+LimitNOFILE=262144
+# The limits of max core dump size
+LimitCORE=infinity
 ";
         $file = "/usr/lib/systemd/system/laravel-admin.service";
         // system unit

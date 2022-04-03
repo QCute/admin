@@ -41,7 +41,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('table_import_log', function (Blueprint $table) {
-            $table->bigIncrements('id')->comment('ID');
+            $table->increments('id')->comment('ID');
             $table->string('user_name')->default('')->comment('用户名');
             $table->string('table_schema')->default('')->comment('数据库');
             $table->string('table_name')->default('')->comment('表名');
@@ -53,7 +53,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('sensitive_word_data', function (Blueprint $table) {
-            $table->bigIncrements('id')->comment('ID');
+            $table->increments('id')->comment('ID');
             $table->string('word')->default('')->comment('敏感词');
             $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
@@ -71,7 +71,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('client_error_log', function (Blueprint $table) {
-            $table->bigIncrements('id')->comment('编号');
+            $table->increments('id')->comment('编号');
             $table->unsignedSmallInteger('server_id')->default(0)->comment('服务器ID');
             $table->char('account', 16)->default('')->comment('账号');
             $table->unsignedBigInteger('role_id')->default(0)->index('role_id')->comment('玩家ID');
@@ -88,7 +88,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('impeach', function (Blueprint $table) {
-            $table->bigIncrements('id')->comment('编号');
+            $table->increments('id')->comment('编号');
             $table->unsignedSmallInteger('server_id')->default(0)->comment('举报方玩家服号');
             $table->unsignedBigInteger('role_id')->default(0)->comment('举报方玩家ID');
             $table->char('role_name', 16)->default('')->comment('举报方玩家名字');
@@ -116,6 +116,17 @@ class CreateExtraTables extends Migration
             $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
+
+        Schema::create('server_role', function (Blueprint $table) {
+            $table->increments('id')->comment('ID');
+            $table->string('account_name')->default('')->comment('账户名');
+            $table->string('role_id')->default(0)->comment('角色ID');
+            $table->string('server_id')->default(0)->comment('服务器ID');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
+            $table->index(['account_name', 'server_id'], 'account', 'BTREE');
+            $table->engine = 'MEMORY';
+        });
     }
 
     /**
@@ -131,6 +142,7 @@ class CreateExtraTables extends Migration
         Schema::dropIfExists('maintain_notice');
         Schema::dropIfExists('client_error_log');
         Schema::dropIfExists('impeach');
-        Schema::dropIfExists('impeach');
+        Schema::dropIfExists('ssh_key');
+        Schema::dropIfExists('server_role');
     }
 }

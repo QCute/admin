@@ -56,6 +56,11 @@ class SwitchServerController extends Controller
             }
             $list = "<option value='$current->server_node'>$current->server_name</option>$list";
         }
+        $url = "switch-server?server=";
+        $prefix = env('ADMIN_ROUTE_PREFIX');
+        if(!empty($prefix)) {
+            $url = "/{$prefix}/${url}";
+        }
         return "
             <style>.server-select{margin: 8px 8px 0px 0px;}</style>
             <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
@@ -63,7 +68,7 @@ class SwitchServerController extends Controller
             <script>
                 $(document).ready(function() { 
                     $('.server-list').select2({placeholder: ''}).on('change', function(){
-                        $.pjax({container: '#pjax-container', url: 'switch-server?server=' + this.value});
+                        $.pjax({container: '#pjax-container', url: '{$url}' + this.value});
                     });
                 });
             </script>
@@ -169,20 +174,21 @@ class SwitchServerController extends Controller
      * Get server list from database
      *
      * @param string|null $type
+     * @param array $columns
      * @return array
      */
-    private static function getServerList(string $type = null): array
+    private static function getServerList(string $type = null, array $columns = ['*']): array
     {
         if (empty($type)) {
             return DB::table("server_list")
                 ->orderBy("id")
-                ->get()
+                ->get($columns)
                 ->toArray();
         } else {
             return DB::table("server_list")
                 ->where("server_type", $type)
                 ->orderBy("id")
-                ->get()
+                ->get($columns)
                 ->toArray();
         }
     }
@@ -442,10 +448,13 @@ class SwitchServerController extends Controller
      */
     public static function getSSHConfig(): array
     {
+        $file = getenv('HOME') . "/.ssh/config";
+        if (!file_exists($file)) {
+            return [];
+        }
         $host = "";
         $config = [];
-        $data = file_get_contents(getenv('HOME') . "/.ssh/config");
-        $data = explode("\n", $data);
+        $data = explode("\n", file_get_contents($file));
         foreach ($data as $line) {
             // empty
             if (empty($line)) continue;
@@ -482,16 +491,13 @@ class SwitchServerController extends Controller
      */
     public static function getPublishServerList(): array
     {
-        return array_map(function ($server) {
-            return [
-                "server_name" => $server->server_name,
-                "server_id" => $server->server_id,
-                "server_host" => $server->server_host,
-                "server_port" => $server->server_port,
-                "tab_name" => $server->tab_name,
-                "state" => $server->state,
-            ];
-        }, self::getServerList("local"));
+        $column = [
+            "server_name",
+            "server_id",
+            "server_host",
+            "server_port",
+        ];
+        return self::getServerList("local", $column);
     }
 
     // reload static server list

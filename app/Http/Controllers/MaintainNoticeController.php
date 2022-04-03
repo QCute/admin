@@ -7,6 +7,31 @@ use Illuminate\Support\Facades\DB;
 
 class MaintainNoticeController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path = "/api/maintain-notice",
+     *     summary = "维护公告",
+     *     @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property = "platform",
+     *                     type = "string",
+     *                     description = "平台",
+     *                 ),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response = 200,
+     *         description = "OK",
+     *         @OA\JsonContent(
+     *             @OA\Examples(example = "result", value = {"title": "this is title", "content": "this is content", "start_time": 1649308407, "end_time": 1649394797}, summary = "维护公告"),
+     *         )
+     *     )
+     * )
+     */
     public function get(): JsonResponse
     {
         $platform = request()->input("platform", "");

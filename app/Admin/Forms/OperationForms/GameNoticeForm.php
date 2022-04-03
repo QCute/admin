@@ -67,6 +67,19 @@ class GameNoticeForm extends Form {
             ->select("server", trans("admin.server"))
             ->options($options)
             ->required();
+        $options = [
+            "board" => "公告栏",
+            "mail" => "邮件",
+            "chat" => "聊天框",
+            "float" => "漂浮提示",
+            "scroll" => "滚动提示",
+            "pop" => "弹出",
+            "dialog" => "弹出框",
+        ];
+        $this
+            ->select("type", trans("admin.type"))
+            ->options($options)
+            ->required();
         $this
             ->text("title", trans("admin.title"))
             ->required();

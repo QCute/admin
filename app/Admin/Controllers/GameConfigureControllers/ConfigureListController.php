@@ -9,6 +9,7 @@ use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
 use Exception;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ConfigureListController extends AdminController
 {
@@ -93,8 +94,9 @@ class ConfigureListController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($url, $path, $row) {
                     if ($row->OPERATION) {
-                        $href = "$url?action=$path&file=$this->file";
-                        return "<a href='$href'>" . trans("admin.generate"). "</a>";
+                        $generate = "<a href='$url?action=$path&file=$this->file'>" . trans("admin.generate"). "</a>";
+                        $export = "<a href='$url?action=$path-export&file=$this->file&xml=$this->description'>" . trans("admin.export"). "</a>";
+                        return "$generate | $export";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -158,15 +160,35 @@ class ConfigureListController extends AdminController
     public function action(Content $content, string $action): Content
     {
         // act action
-        if (is_int(strpos($action, "erl"))) {
+        if (is_int(strpos($action, "export"))) {
+            // ensure dir
+            $path = storage_path("app/admin/xml/");
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+            // generate xml file
+            $file = request()->input("file");
+            $basename = request()->input("xml");
+            $filename = $basename . ".xml";
+            SwitchServerController::executeMakerScript(["sheet", $file, "xml/"]);
+            SwitchServerController::pullFile("xml/$filename", $path . $filename);
+            // download xml file
+            // pjax use location.href redirection to download file or use ajax
+            $url = request()->url();
+            $content->body("
+                <a href='$url-download?file=$filename' target='_blank' style='display: none;' id='download'></a>
+                <script>document.getElementById('download').click();</script>
+            ");
+            return $this->displayIndex($content);
+        } else if (is_int(strpos($action, "erl"))) {
             $file = basename(request()->input("file"), ".erl");
             // generate
-            SwitchServerController::executeMakerScript(["data"]);
+            SwitchServerController::executeMakerScript(["data", $file]);
             // compile
             SwitchServerController::executeMakerScript(["release", $file]);
             // load
             $name = SwitchServerController::getCurrentServer();
-            $result = SwitchServerController::executeRunScript([$name, "-load", $file]);
+            $result = SwitchServerController::executeRunScript([$name, "load", $file]);
             // index page
             return $this->displayIndex($content)->withSuccess($result);
         } else if (is_int(strpos($action, "lua"))) {
@@ -184,4 +206,10 @@ class ConfigureListController extends AdminController
         }
     }
 
+    public function download(): BinaryFileResponse
+    {
+        $file = request()->input("file", "");
+        $path = storage_path("app/admin/xml/$file");
+        return response()->download($path, $file, ["Content-Type: text/xml"]);
+    }
 }
