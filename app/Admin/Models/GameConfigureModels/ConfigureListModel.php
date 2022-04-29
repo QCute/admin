@@ -8,6 +8,7 @@ use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ConfigureListModel extends Model
 {
@@ -88,10 +89,10 @@ class ConfigureListModel extends Model
         $description = request()->input("description");
         $file = request()->input("file");
         return array_filter($data, function ($row) use ($description, $file) {
-            if (!is_null($description) && is_bool(strpos($row["description"], $description))) {
+            if (!is_null($description) && is_bool(strpos($row->description, $description))) {
                 return false;
             }
-            if (!is_null($file) && is_bool(strpos($row["file"], $file))) {
+            if (!is_null($file) && is_bool(strpos($row->file, $file))) {
                 return false;
             }
             return true;
@@ -107,15 +108,41 @@ class ConfigureListModel extends Model
     private function getData(): array
     {
         $path = request()->path();
+        // list
         if (is_int(strpos($path, "erl"))) {
-            return self::erl();
+            $data = self::erl();
         } else if (is_int(strpos($path, "lua"))) {
-            return self::lua();
+            $data = self::lua();
         } else if (is_int(strpos($path, "js"))) {
-            return self::js();
+            $data = self::js();
         } else {
             throw new Exception("Unknown Path: $path");
         }
+        // import log
+        $server = SwitchServerController::getCurrentServer();
+        $sub = DB::table("table_import_log")
+            ->select(Db::raw("MAX(id)"))
+            ->where("table_schema", $server)
+            ->groupBy("table_name");
+        $log = DB::table("table_import_log")
+            ->select(["user_name", "table_name", "table_comment", "time", "state"])
+            ->whereRaw(DB::raw("id in ({$sub->toSql()})"), $sub->getBindings())
+            ->get()
+            ->toArray();
+        $map = array_reduce($log, function ($acc, $row) {
+            $acc[$row->table_comment] = $row;
+            return $acc;
+        }, []);
+        // fill log message
+        foreach ($data as $row) {
+            if (!array_key_exists($row->description, $map)) continue;
+            $join = $map[$row->description];
+            $row->user_name = $join->user_name;
+            $row->time = $join->time;
+            $row->action = $join->state;
+            $row->state = $join->state == "0" ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-lock" style="color: red"></i>';
+        }
+        return $data;
     }
 
     /**
@@ -128,8 +155,7 @@ class ConfigureListModel extends Model
     {
         // read configure from data script
         $data = SwitchServerController::executeMakerScript(["data"]);
-        return json_decode($data, true) ? : [];
-
+        return json_decode($data) ? : [];
     }
 
     /**
@@ -142,7 +168,7 @@ class ConfigureListModel extends Model
     {
         // read configure from lua script
         $data = SwitchServerController::executeMakerScript(["lua"]);
-        return json_decode($data, true) ? : [];
+        return json_decode($data) ? : [];
     }
 
     /**
@@ -155,6 +181,6 @@ class ConfigureListModel extends Model
     {
         // read configure from js script
         $data = SwitchServerController::executeMakerScript(["js"]);
-        return json_decode($data, true) ? : [];
+        return json_decode($data) ? : [];
     }
 }

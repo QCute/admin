@@ -29,13 +29,13 @@ class GameNoticeForm extends Form {
         // send notice
         $server = $request->input("server", "");
         // construct data
-        $json = [
-            "title" => $request->input("title"),
-            "content" => $request->input("content"),
-            "items" => $request->input("items")
+        $data = [
+            "title" => $request->input("title", ""),
+            "content" => $request->input("content", ""),
+            "items" => $request->input("items", "") ?? "",
         ];
         // request
-        $array = SwitchServerController::send($server, "notice", $json);
+        $array = SwitchServerController::send($server, "notice", $data);
         // handle result
         $ok = implode("", array_map(function ($k, $v) {
             return "$k: $v<br/>";
@@ -93,7 +93,8 @@ class GameNoticeForm extends Form {
             ->textarea("items", trans("admin.items"))
             ->style("resize", "vertical")
             ->help($help)
-            ->required();
+            ->default("")
+            ->value("");
     }
 
     /**

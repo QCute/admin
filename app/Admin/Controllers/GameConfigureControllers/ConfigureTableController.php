@@ -87,32 +87,26 @@ class ConfigureTableController extends AdminController
         });
         $data = [
             (object)[
-                "OPERATION" => false,
                 "NAME" => "TABLE_NAME",
                 "COMMENT" => trans("admin.table"),
             ],
             (object)[
-                "OPERATION" => false,
                 "NAME" => "TABLE_COMMENT",
                 "COMMENT" => trans("admin.name"),
             ],
             (object)[
-                "OPERATION" => false,
                 "NAME" => "user_name",
                 "COMMENT" => trans("admin.username"),
             ],
             (object)[
-                "OPERATION" => false,
                 "NAME" => "time",
                 "COMMENT" => trans("admin.time"),
             ],
             (object)[
-                "OPERATION" => false,
                 "NAME" => "state",
                 "COMMENT" => trans("admin.state"),
             ],
             (object)[
-                "OPERATION" => true,
                 "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
@@ -122,9 +116,10 @@ class ConfigureTableController extends AdminController
                 ->column($row->NAME, $row->COMMENT)
                 ->style("min-width:8em")
                 ->display(function () use ($url, $row) {
-                    if ($row->OPERATION) {
-                        $href = "$url?action=export&table=$this->TABLE_NAME&xml=$this->TABLE_COMMENT";
-                        return "<a href=\"$href\">" . trans("admin.export"). "</a>";
+                    if ($row->NAME == "OPERATION" && (empty($this->action) || $this->action == "0")) {
+                        return "<a href='$url?action=export&table=$this->TABLE_NAME&xml=$this->TABLE_COMMENT'><strong>" . trans("admin.export"). "</strong></a>";
+                    } else if ($row->NAME == "OPERATION") {
+                        return "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.export"). "</strong></a>";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -138,10 +133,10 @@ class ConfigureTableController extends AdminController
 
             // filter
             foreach ($data as $row) {
-                if ($row->NAME == "username") continue;
+                if ($row->NAME == "user_name") continue;
                 if ($row->NAME == "time") continue;
                 if ($row->NAME == "state") continue;
-                if ($row->OPERATION) continue;
+                if ($row->NAME == "OPERATION") continue;
                 $filter->like($row->NAME, $row->COMMENT);
             }
 
@@ -205,6 +200,10 @@ class ConfigureTableController extends AdminController
             $filename = $basename . ".xml";
             SwitchServerController::executeMakerScript(["xml", $table, "xml/"]);
             SwitchServerController::pullFile("xml/$filename", $path . $filename);
+            // export log
+            $server = SwitchServerController::getCurrentServer();
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
+            DB::table("table_import_log")->insert($data);
             // download xml file
             // pjax use location.href redirection to download file or use ajax
             $url = request()->url();
@@ -228,11 +227,25 @@ class ConfigureTableController extends AdminController
             if(!$result) {
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
+            // check state
+            $server = SwitchServerController::getCurrentServer();
+            $sub = DB::table("table_import_log")
+                ->select(Db::raw("MAX(id)"))
+                ->where("table_schema", $server)
+                ->where("table_comment", $basename)
+                ->groupBy("table_name");
+            $log = DB::table("table_import_log")
+                ->select(["user_name", "table_name", "table_comment", "time", "state"])
+                ->whereRaw(DB::raw("id in ({$sub->toSql()})"), $sub->getBindings())
+                ->get()
+                ->toArray();
+            if(!empty($log) && $log[0]->state !== 0 && $log[0]->user_name != Auth::user()->name) {
+                return $this->displayIndex($content)->withError("Configure Lock By: {$log[0]->user_name}");
+            }
             // import table data
             SwitchServerController::pushFile($pathname, "xml/$filename");
             $result = SwitchServerController::executeMakerScript(["table", "xml/$filename"]);
             // import log
-            $schema = SwitchServerController::getCurrentServer();
             $data = SwitchServerController::getDB()
                 ->table("information_schema.TABLES")
                 ->select("TABLE_NAME")
@@ -240,7 +253,7 @@ class ConfigureTableController extends AdminController
                 ->where("TABLE_COMMENT", "=", $basename)
                 ->get()
                 ->toArray();
-            $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $data[0]->TABLE_NAME, "table_comment" => $basename];
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $data[0]->TABLE_NAME, "table_comment" => $basename, "state" => "0"];
             DB::table("table_import_log")->insert($data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {

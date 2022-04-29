@@ -9,6 +9,8 @@ use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Layout\Content;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ConfigureListController extends AdminController
@@ -71,19 +73,51 @@ class ConfigureListController extends AdminController
         $path = request()->path();
         $grid = new Grid(new ConfigureListModel());
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
+        $grid->header(function () use ($url) {
+            return "
+<style>.action{cursor: pointer;}</style>
+<div class=input-group file-caption-main'>
+    <div class='file-caption form-control kv-fileinput-caption icon-visible'>
+        <span class='file-caption-icon'><i class='glyphicon glyphicon-file'></i></span>
+        <input class='file-caption-name' onkeydown='return false;' onpaste='return false;' id='filename' placeholder='" . trans("admin.choose_file") . "'>
+    </div>
+    <div class='input-group-btn input-group-append'>
+        <form action='$url' method='POST' enctype='multipart/form-data' pjax-container>
+            " . csrf_field() . "
+            <input type='hidden' name='action' value='import'>
+            <div class='btn btn-primary btn-file'>
+                <i class='glyphicon glyphicon-folder-open'></i>
+                <span>" . trans("admin.browse") . "</span>
+                <input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='xml'>
+            </div>
+            <input class='btn btn-primary' type='submit' value='" . trans("admin.import") . "'/>
+        </form>
+    </div>
+</div>
+            ";
+        });
         $data = [
             (object)[
-                "OPERATION" => false,
                 "NAME" => "description",
                 "COMMENT" => trans("admin.description"),
             ],
             (object)[
-                "OPERATION" => false,
                 "NAME" => "file",
                 "COMMENT" => trans("admin.file"),
             ],
             (object)[
-                "OPERATION" => true,
+                "NAME" => "user_name",
+                "COMMENT" => trans("admin.username"),
+            ],
+            (object)[
+                "NAME" => "time",
+                "COMMENT" => trans("admin.time"),
+            ],
+            (object)[
+                "NAME" => "state",
+                "COMMENT" => trans("admin.state"),
+            ],
+            (object)[
                 "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
@@ -93,9 +127,13 @@ class ConfigureListController extends AdminController
                 ->column($row->NAME, $row->COMMENT)
                 ->style("min-width:8em")
                 ->display(function () use ($url, $path, $row) {
-                    if ($row->OPERATION) {
-                        $generate = "<a href='$url?action=$path&file=$this->file'>" . trans("admin.generate"). "</a>";
-                        $export = "<a href='$url?action=$path-export&file=$this->file&xml=$this->description'>" . trans("admin.export"). "</a>";
+                    if ($row->NAME == "OPERATION" && (empty($this->action) || $this->action == "0")) {
+                        $generate = "<a href='$url?action=$path&file=$this->file'><strong>" . trans("admin.generate"). "</strong></a>";
+                        $export = "<a href='$url?action=$path-export&file=$this->file&xml=$this->description'><strong>" . trans("admin.export"). "</strong></a>";
+                        return "$generate | $export";
+                    } else if ($row->NAME == "OPERATION") {
+                        $generate = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.generate"). "</strong></a>";
+                        $export = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.export"). "</strong></a>";
                         return "$generate | $export";
                     } else {
                         return $this->{$row->NAME};
@@ -110,7 +148,10 @@ class ConfigureListController extends AdminController
 
             // filter
             foreach ($data as $row) {
-                if ($row->OPERATION) continue;
+                if ($row->NAME == "user_name") continue;
+                if ($row->NAME == "time") continue;
+                if ($row->NAME == "state") continue;
+                if ($row->NAME == "OPERATION") continue;
                 $filter->like($row->NAME, $row->COMMENT);
             }
 
@@ -172,6 +213,10 @@ class ConfigureListController extends AdminController
             $filename = $basename . ".xml";
             SwitchServerController::executeMakerScript(["sheet", $file, "xml/"]);
             SwitchServerController::pullFile("xml/$filename", $path . $filename);
+            // export log
+            $schema = SwitchServerController::getCurrentServer();
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
+            DB::table("table_import_log")->insert($data);
             // download xml file
             // pjax use location.href redirection to download file or use ajax
             $url = request()->url();
@@ -180,6 +225,43 @@ class ConfigureListController extends AdminController
                 <script>document.getElementById('download').click();</script>
             ");
             return $this->displayIndex($content);
+        } else if ($action == "import") {
+            // file upload
+            $path = storage_path("app/admin/xml/");
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+            $file = request()->file("xml");
+            $filename = $file->getClientOriginalName();
+            $basename = basename($filename, ".xml");
+            $pathname = $path . $filename;
+            $result = $file->storeAs("xml", $filename, ["disk" => "admin"]);
+            // handle store result
+            if(!$result) {
+                return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
+            }
+            // check state
+            $server = SwitchServerController::getCurrentServer();
+            $sub = DB::table("table_import_log")
+                ->select(Db::raw("MAX(id)"))
+                ->where("table_schema", $server)
+                ->where("table_comment", $basename)
+                ->groupBy("table_name");
+            $log = DB::table("table_import_log")
+                ->select(["user_name", "table_name", "table_comment", "time", "state"])
+                ->whereRaw(DB::raw("id in ({$sub->toSql()})"), $sub->getBindings())
+                ->get()
+                ->toArray();
+            if(!empty($log) && $log[0]->state !== 0 && $log[0]->user_name != Auth::user()->name) {
+                return $this->displayIndex($content)->withError("Configure Lock By: {$log[0]->user_name}");
+            }
+            // import table data
+            SwitchServerController::pushFile($pathname, "xml/$filename");
+            $result = SwitchServerController::executeMakerScript(["collection", "xml/$filename"]);
+            // import log
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $basename, "table_comment" => $basename, "state" => "0"];
+            DB::table("table_import_log")->insert($data);
+            return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else if (is_int(strpos($action, "erl"))) {
             $file = basename(request()->input("file"), ".erl");
             // generate

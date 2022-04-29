@@ -45,10 +45,13 @@ Route::group([
     $router->post('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
     $router->get('/configure-table-download', 'GameConfigureControllers\\ConfigureTableController@download');
     $router->get('/erl-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->post('/erl-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->get('/erl-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
     $router->get('/lua-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->post('/lua-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->get('/lua-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
     $router->get('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->post('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->get('/js-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
 
     // Server Manage

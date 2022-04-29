@@ -6,14 +6,13 @@
         <title>Home</title>
         <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYGAAAAAFAAGKM+MAAAAAAElFTkSuQmCC" type="image/x-icon" />
         <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYGAAAAAFAAGKM+MAAAAAAElFTkSuQmCC" type="image/x-icon" />
-        <script src="https://cdn.jsdelivr.net/npm/axios@0.26.1/dist/axios.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.min.js"></script>
+        <script src="https://unpkg.com/vue@3.2.33/dist/vue.global.prod.js"></script>
         <!-- AntDesign -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@2.2.8/dist/antd.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@2.2.8/dist/antd.min.js"></script>
+        <script src="https://unpkg.com/dayjs@1.11.2/dayjs.min.js"></script>
+        <link href="https://unpkg.com/ant-design-vue@3.2.3/dist/antd.min.css" rel="stylesheet">
+        <script src="https://unpkg.com/ant-design-vue@3.2.3/dist/antd.min.js"></script>
         <!-- FontAwesome -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css">
+        <link href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" rel="stylesheet">
     </head>
     <body>
         <div id="container"></div>
@@ -21,15 +20,7 @@
             // view
             let app = Vue.createApp({
                 setup() {
-                    return {
-                        'data': [{
-
-                        },{
-
-                        },{
-
-                        }]
-                    }
+                    return {}
                 },
                 mounted() {
 

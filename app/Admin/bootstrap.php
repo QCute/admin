@@ -18,13 +18,13 @@
  *
  */
 
-Encore\Admin\Form::forget(['map', 'editor']);
-// axios
-Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js');
+Encore\Admin\Form::forget(['map', 'editor', 'DateMultiple']);
 // cookie
-Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/js-cookie/latest/js.cookie.min.js');
+Encore\Admin\Facades\Admin::js('vendor/cdn/js-cookie/js/js.cookie.min.js');
+// axios
+Encore\Admin\Facades\Admin::js('vendor/cdn/axios/js/axios.min.js');
 // echarts lib
-Encore\Admin\Facades\Admin::js('https://cdn.bootcdn.net/ajax/libs/echarts/5.1.1/echarts.min.js');
+Encore\Admin\Facades\Admin::js('vendor/cdn/echarts/js/echarts.min.js');
 // navigate bar
 Encore\Admin\Facades\Admin::navbar(function (Encore\Admin\Widgets\Navbar $navbar) {
     $navbar->right(App\Admin\Controllers\SwitchServerController::list());

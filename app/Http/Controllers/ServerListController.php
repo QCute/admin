@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Admin\Controllers\SwitchServerController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +45,7 @@ class ServerListController extends Controller
             ->get()
             ->toArray();
         // server role not set
-        if(empty($serverList)) {
+        if(empty($serverList) && config('app.env') !== 'local') {
             // select the min role number server
             $server = DB::table("server_role")
                 ->select(DB::raw("server_list.server_name, server_list.server_id, server_list.server_host, server_list.server_port, count(`account_name`) AS `count`"))
@@ -53,10 +54,12 @@ class ServerListController extends Controller
                 ->orderBy("count", "ASC")
                 ->first();
             unset($server->count);
-            // save role data
-            DB::insert("INSERT IGNORE `server_role` VALUES (?, ?, ?)", [$unionId, 0, $server->server_id]);
+            // save role data if union id not empty
+            if(!empty($unionId)) DB::insert("INSERT IGNORE `server_role` VALUES (?, ?, ?)", [$unionId, 0, $server->server_id]);
             // set to list
             $serverList = [$server];
+        } else {
+            $serverList = SwitchServerController::getPublishServerList();
         }
         return response()
             ->json($serverList)

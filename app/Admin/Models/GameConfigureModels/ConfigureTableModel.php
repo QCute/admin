@@ -114,7 +114,8 @@ class ConfigureTableModel extends Model
             $join = $map[$row->TABLE_COMMENT];
             $row->user_name = $join->user_name;
             $row->time = $join->time;
-            $row->state = $join->state;
+            $row->action = $join->state;
+            $row->state = $join->state == "0" ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-lock" style="color: red"></i>';
         }
         return $data;
     }

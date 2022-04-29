@@ -28,14 +28,14 @@ class GameMailForm extends Form {
     {
         $server = $request->input("server", "");
         // construct data
-        $args = [
+        $data = [
             "title" => $request->input("title", ""),
             "content" => $request->input("content", ""),
-            "items" => $request->input("items", ""),
+            "items" => $request->input("items", "") ?? "",
             "role_id" => $request->input("role_id", ""),
         ];
         // request
-        $array = SwitchServerController::send($server, "mail", $args);
+        $array = SwitchServerController::send($server, "mail", $data);
         // handle result
         $ok = implode("", array_map(function ($k, $v) {
             return "$k: $v<br/>";
@@ -79,9 +79,10 @@ class GameMailForm extends Form {
             ->textarea("items", trans("admin.items"))
             ->style("resize", "vertical")
             ->help($help)
-            ->required();
+            ->default("")
+            ->value("");
         $this
-            ->textarea("roleId", trans("admin.role_id"))
+            ->textarea("role_id", trans("admin.role_id"))
             ->style("resize", "vertical")
             ->required();
     }

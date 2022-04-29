@@ -30,6 +30,7 @@ class CreateExtraTables extends Migration
             $table->string('db_username')->default('')->comment('游戏服数据库用户名');
             $table->string('db_password')->default('')->comment('游戏服数据库密码');
             $table->string('server_type')->default('')->comment('服务器类型');
+            $table->string('server_cookie')->default('')->comment('服务器令牌');
             $table->unsignedInteger('open_time')->default(0)->comment('开服时间');
             $table->string('tab_name')->default('')->comment('分页名字');
             $table->string('center')->default('')->comment('中央服');

@@ -227,9 +227,9 @@ class SwitchServerController extends Controller
             try {
                 $url = "$server->server_host:$server->server_port";
                 if ($method == "POST") {
-                    $response = Http::timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
+                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
                 } else {
-                    $response = Http::timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
+                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
                 }
                 $result["ok"][$server->server_name] = $response->throw()->body();
             } catch (Exception $exception) {

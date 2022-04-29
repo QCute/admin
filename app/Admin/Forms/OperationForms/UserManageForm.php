@@ -84,7 +84,7 @@ class UserManageForm extends Form {
                         "set_role_master" => trans("admin.set_role_master"),
                         "set_role_refuse" => trans("admin.set_role_refuse"),
                     ])
-                    ->default("normal")
+                    ->default("set_role_normal")
                     ->required();
             })
             ->when("chat", function (Form $form) {
@@ -98,7 +98,7 @@ class UserManageForm extends Form {
                         "set_role_chat_silent_scene" => trans("admin.set_silent_scene"),
                         "set_role_chat_silent_private" => trans("admin.set_silent_private"),
                     ])
-                    ->default("unlimited")
+                    ->default("set_role_chat_unlimited")
                     ->required();
             })
             ->default("account")
