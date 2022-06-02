@@ -210,9 +210,9 @@ class ConfigureListController extends AdminController
             // generate xml file
             $file = request()->input("file");
             $basename = request()->input("xml");
-            $filename = $basename . ".xml";
+            $filename = "$basename.xml";
             SwitchServerController::executeMakerScript(["sheet", $file, "xml/"]);
-            SwitchServerController::pullFile("xml/$filename", $path . $filename);
+            SwitchServerController::pullFile("xml/$filename", "$path$filename");
             // export log
             $schema = SwitchServerController::getCurrentServer();
             $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];

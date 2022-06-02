@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
 
 class SSHPassInstaller extends Command
 {
@@ -58,7 +59,15 @@ else
     setsid "$@"
 fi
 ';
-        file_put_contents(base_path("vendor/bin/sshpass"), $data);
+        $file = base_path("vendor/bin/sshpass");
+        file_put_contents($file, $data);
+        // mode
+        $process = new Process(["chmod", "0755", $file]);
+        $process->run();
+        if(!$process->isSuccessful()) {
+            $this->error($process->getErrorOutput());
+            return $process->getExitCode();
+        }
         return 0;
     }
 }

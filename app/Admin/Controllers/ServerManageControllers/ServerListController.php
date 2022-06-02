@@ -174,6 +174,8 @@ class ServerListController extends AdminController
             $form->ssh_pass = empty($form->ssh_pass) ? "" : $form->ssh_pass;
             $form->ssh_host = empty($form->ssh_host) ? "" : $form->ssh_host;
             $form->tab_name = empty($form->tab_name) ? "" : $form->tab_name;
+            $form->center = empty($form->center) ? "" : $form->center;
+            $form->world = empty($form->world) ? "" : $form->world;
         });
         return $form;
     }

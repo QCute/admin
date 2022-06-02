@@ -50,6 +50,8 @@ After=mariadb.service
 WantedBy=multi-user.target
 
 [Service]
+# specific user
+User=root
 # lararvel admin directory
 WorkingDirectory=$path
 # start

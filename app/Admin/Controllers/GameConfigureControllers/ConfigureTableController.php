@@ -197,12 +197,12 @@ class ConfigureTableController extends AdminController
             // generate xml file
             $table = request()->input("table");
             $basename = request()->input("xml");
-            $filename = $basename . ".xml";
+            $filename = "$basename.xml";
             SwitchServerController::executeMakerScript(["xml", $table, "xml/"]);
-            SwitchServerController::pullFile("xml/$filename", $path . $filename);
+            SwitchServerController::pullFile("xml/$filename", "$path$filename");
             // export log
             $server = SwitchServerController::getCurrentServer();
-            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $table, "table_comment" => $basename, "state" => "1"];
             DB::table("table_import_log")->insert($data);
             // download xml file
             // pjax use location.href redirection to download file or use ajax
