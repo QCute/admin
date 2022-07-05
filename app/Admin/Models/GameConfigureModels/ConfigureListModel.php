@@ -108,21 +108,25 @@ class ConfigureListModel extends Model
     private function getData(): array
     {
         $path = request()->path();
+        $current = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getServer($current);
         // list
         if (is_int(strpos($path, "erl"))) {
             $data = self::erl();
+            $status = self::repository_status();
         } else if (is_int(strpos($path, "lua"))) {
             $data = self::lua();
+            $status = self::repository_status($server->configure_root);
         } else if (is_int(strpos($path, "js"))) {
             $data = self::js();
+            $status = self::repository_status($server->configure_root);
         } else {
             throw new Exception("Unknown Path: $path");
         }
         // import log
-        $server = SwitchServerController::getCurrentServer();
         $sub = DB::table("table_import_log")
             ->select(Db::raw("MAX(id)"))
-            ->where("table_schema", $server)
+            ->where("table_schema", $current)
             ->groupBy("table_name");
         $log = DB::table("table_import_log")
             ->select(["user_name", "table_name", "table_comment", "time", "state"])
@@ -135,14 +139,65 @@ class ConfigureListModel extends Model
         }, []);
         // fill log message
         foreach ($data as $row) {
-            if (!array_key_exists($row->description, $map)) continue;
-            $join = $map[$row->description];
-            $row->user_name = $join->user_name;
-            $row->time = $join->time;
-            $row->action = $join->state;
-            $row->state = $join->state == "0" ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-lock" style="color: red"></i>';
+            if (array_key_exists($row->description, $map)) {
+                $join = $map[$row->description];
+                $row->user_name = $join->user_name;
+                $row->time = $join->time;
+                $row->action = $join->state;
+                $row->state = $join->state == "0" ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-lock" style="color: red"></i>';
+            }
+            $basename = basename($row->file);
+            if (array_key_exists($basename, $status)) {
+                $row->status = $status[$basename];
+            }
         }
         return $data;
+    }
+
+    /**
+     * Execute get repository status
+     *
+     * @param string|null $path
+     * @param object|null $config
+     * @param string $output
+     * @return array
+     * @throws Exception
+     */
+    private static function repository_status(string $path = null, object $config = null, string $output = "stdout"): array
+    {
+        $status = "";
+        try {
+            $status .= SwitchServerController::execute(["git", "status", "--porcelain"], $path, $config, $output);
+        } catch (Exception) {
+            // suppress error when dir not a git repository
+        }
+        try {
+            $status .= SwitchServerController::execute(["svn", "status"], $path, $config, $output);
+        } catch (Exception) {
+            // suppress error when dir not a svn repository
+        }
+        $data = explode("\n", $status);
+        $array = [];
+        foreach ($data as $row) {
+            $row = preg_replace("/\s+/", ",", trim($row));
+            if (empty($row)) continue;
+            [$mode, $file] = explode(",", $row);
+            switch ($mode) {
+                case "A":
+                    $array[basename($file)] = trans("admin.add");
+                    break;
+                case "D":
+                    $array[basename($file)] = trans("admin.delete");
+                    break;
+                case "M":
+                    $array[basename($file)] = trans("admin.modify");
+                    break;
+                default:
+                    $array[basename($file)] = trans("admin.unknown");
+                    break;
+            }
+        }
+        return $array;
     }
 
     /**
@@ -151,7 +206,7 @@ class ConfigureListModel extends Model
      * @return array
      * @throws Exception
      */
-    static private function erl(): array
+    private static function erl(): array
     {
         // read configure from data script
         $data = SwitchServerController::executeMakerScript(["data"]);
@@ -164,7 +219,7 @@ class ConfigureListModel extends Model
      * @return array
      * @throws Exception
      */
-    static private function lua(): array
+    private static function lua(): array
     {
         // read configure from lua script
         $data = SwitchServerController::executeMakerScript(["lua"]);
@@ -177,7 +232,7 @@ class ConfigureListModel extends Model
      * @return array
      * @throws Exception
      */
-    static private function js(): array
+    private static function js(): array
     {
         // read configure from js script
         $data = SwitchServerController::executeMakerScript(["js"]);

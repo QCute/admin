@@ -3,6 +3,7 @@
 namespace App\Admin\Forms\ServerManageForms;
 
 use App\Admin\Controllers\SwitchServerController;
+use App\Http\Controllers\ServerListController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
 use Exception;
@@ -65,8 +66,6 @@ class MergeServerForm extends Form {
             ";
             DB::update($sql, [$dst, $dst, $src]);
         }
-        // republic server list
-        SwitchServerController::publishServerList();
         // success tips
         admin_success(trans("admin.completed"));
         return back();

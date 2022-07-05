@@ -117,7 +117,7 @@ class ConfigureTableController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($url, $row) {
                     if ($row->NAME == "OPERATION" && (empty($this->action) || $this->action == "0")) {
-                        return "<a href='$url?action=export&table=$this->TABLE_NAME&xml=$this->TABLE_COMMENT'><strong>" . trans("admin.export"). "</strong></a>";
+                        return "<a href='$url?action=export&table=$this->TABLE_NAME&xml=$this->TABLE_COMMENT'><i class='fa fa-upload'></i><span class='hidden-xs'> " . trans("admin.export"). "</span></a>";
                     } else if ($row->NAME == "OPERATION") {
                         return "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.export"). "</strong></a>";
                     } else {
@@ -199,7 +199,7 @@ class ConfigureTableController extends AdminController
             $basename = request()->input("xml");
             $filename = "$basename.xml";
             SwitchServerController::executeMakerScript(["xml", $table, "xml/"]);
-            SwitchServerController::pullFile("xml/$filename", "$path$filename");
+            SwitchServerController::pullFile("xml/$filename", "$path/$filename");
             // export log
             $server = SwitchServerController::getCurrentServer();
             $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $table, "table_comment" => $basename, "state" => "1"];
@@ -208,8 +208,8 @@ class ConfigureTableController extends AdminController
             // pjax use location.href redirection to download file or use ajax
             $url = request()->url();
             $content->body("
-                <a href='$url-download?file=$filename' target='_blank' style='display: none;' id='download'></a>
-                <script>document.getElementById('download').click();</script>
+                <a href='$url-export?file=$filename' target='_blank' style='display: none;' id='export'></a>
+                <script>document.getElementById('export').click();</script>
             ");
             return $this->displayIndex($content);
         } else if ($action == "import") {
@@ -221,7 +221,6 @@ class ConfigureTableController extends AdminController
             $file = request()->file("xml");
             $filename = $file->getClientOriginalName();
             $basename = basename($filename, ".xml");
-            $pathname = $path . $filename;
             $result = $file->storeAs("xml", $filename, ["disk" => "admin"]);
             // handle store result
             if(!$result) {
@@ -243,7 +242,7 @@ class ConfigureTableController extends AdminController
                 return $this->displayIndex($content)->withError("Configure Lock By: {$log[0]->user_name}");
             }
             // import table data
-            SwitchServerController::pushFile($pathname, "xml/$filename");
+            SwitchServerController::pushFile("$path/$filename", "xml/$filename");
             $result = SwitchServerController::executeMakerScript(["table", "xml/$filename"]);
             // import log
             $data = SwitchServerController::getDB()
@@ -261,7 +260,7 @@ class ConfigureTableController extends AdminController
         }
     }
 
-    public function download(): BinaryFileResponse
+    public function export(): BinaryFileResponse
     {
         $file = request()->input("file", "");
         $path = storage_path("app/admin/xml/$file");

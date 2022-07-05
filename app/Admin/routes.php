@@ -1,8 +1,8 @@
 <?php
 
+use Encore\Admin\Facades\Admin;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
-use Encore\Admin\Facades\Admin;
 
 Admin::routes();
 
@@ -43,15 +43,19 @@ Route::group([
     // Configure Data
     $router->get('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
     $router->post('/configure-table', 'GameConfigureControllers\\ConfigureTableController@index');
+    $router->get('/configure-table-export', 'GameConfigureControllers\\ConfigureTableController@export');
     $router->get('/configure-table-download', 'GameConfigureControllers\\ConfigureTableController@download');
     $router->get('/erl-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->post('/erl-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->get('/erl-configure-export', 'GameConfigureControllers\\ConfigureListController@export');
     $router->get('/erl-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
     $router->get('/lua-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->post('/lua-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->get('/lua-configure-export', 'GameConfigureControllers\\ConfigureListController@export');
     $router->get('/lua-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
     $router->get('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
     $router->post('/js-configure', 'GameConfigureControllers\\ConfigureListController@index');
+    $router->get('/js-configure-export', 'GameConfigureControllers\\ConfigureListController@export');
     $router->get('/js-configure-download', 'GameConfigureControllers\\ConfigureListController@download');
 
     // Server Manage
@@ -80,5 +84,7 @@ Route::group([
     $router->post('/key-assistant', 'AssistantControllers\\KeyAssistantController@index');
     $router->get('/configure-assistant', 'AssistantControllers\\ConfigureAssistantController@index');
     $router->post('/configure-assistant', 'AssistantControllers\\ConfigureAssistantController@index');
+    $router->get('/subversion-assistant', 'AssistantControllers\\SubversionAssistantController@index');
+    $router->post('/subversion-assistant', 'AssistantControllers\\SubversionAssistantController@index');
 
 });

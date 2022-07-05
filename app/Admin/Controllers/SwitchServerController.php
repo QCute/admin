@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ServerListController;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
@@ -11,9 +12,8 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use PDO;
-use stdClass;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class SwitchServerController extends Controller
 {
@@ -24,6 +24,11 @@ class SwitchServerController extends Controller
      */
     public function switch(): RedirectResponse
     {
+        $reload = request()->input("reload");
+        if ($reload) {
+            ServerListController::reload();
+            return back();
+        }
         $server = request()->input("server");
         Cookie::queue("current_server", $server);
         self::changeConnection($server);
@@ -57,18 +62,28 @@ class SwitchServerController extends Controller
             $list = "<option value='$current->server_node'>$current->server_name</option>$list";
         }
         $url = "switch-server?server=";
-        $prefix = env('ADMIN_ROUTE_PREFIX');
-        if(!empty($prefix)) {
-            $url = "/{$prefix}/${url}";
+        $prefix = config('admin.route.prefix');
+        if (!empty($prefix)) {
+            $url = "/$prefix/$url";
         }
         return "
             <style>.server-select{margin: 8px 8px 0px 0px;}</style>
             <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
             <li class='server-select'><select class='form-control server-list' style='min-width:18em;outline:none;'>$list</select></li>
+            <li class='server-select'>
+                 <div class='btn-group server-refresh'>
+                    <label class='btn btn-info'>
+                        <i class='fa fa-send'></i>
+                    </label>
+                </div>
+            </li>
             <script>
                 $(document).ready(function() { 
                     $('.server-list').select2({placeholder: ''}).on('change', function(){
-                        $.pjax({container: '#pjax-container', url: '{$url}' + this.value});
+                        $.pjax({container: '#pjax-container', url: '$url' + this.value});
+                    });
+                    $('.server-refresh').on('click', function(){
+                        $.pjax({container: '#pjax-container', url: '$url' + $('.server-list').val() + '&reload=true'});
                     });
                 });
             </script>
@@ -240,48 +255,6 @@ class SwitchServerController extends Controller
     }
 
     /**
-     * Execute command
-     *
-     * @param array $command
-     * @param string|null $path
-     * @param object|null $config
-     * @param string $output
-     * @return string
-     * @throws Exception
-     */
-    public static function execute(array $command, string $path = null, object $config = null, string $output = "stdout"): string
-    {
-        $server = self::getServer(self::getCurrentServer());
-        // path
-        $path = empty($path) ? $server->server_root : $path;
-        // remote or local
-        if (empty($server->ssh_host)) {
-            // local machine
-            $process = new Process($command, $path, ["PATH" => getenv("PATH")]);
-        } else {
-            // remote machine
-            $alias = empty($config) ? $server->ssh_host : $config->Host;
-            $pass = empty($config) ? $server->ssh_pass : $config->Password;
-            $pass = [base_path("vendor/bin/sshpass"), $pass];
-            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
-            $script = ["cd", $path, "&&"];
-            $process = new Process(array_merge($pass, $ssh, $script, $command));
-        }
-        $process->run();
-        // result
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-        if ($output == "stdout") {
-            return $process->getOutput();
-        } else if ($output == "stderr") {
-            return $process->getErrorOutput();
-        } else {
-            throw new Exception("Unknown output: $output", 1);
-        }
-    }
-
-    /**
      * Push file to remote
      *
      * @param string $local
@@ -296,25 +269,11 @@ class SwitchServerController extends Controller
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
-            $process = new Process(["cp", $local, "$server->server_root/$remote"], $server->server_root);
+            return self::executeLocal(["cp", $local, "$server->server_root/$remote"]);
         } else {
             // remote machine
-            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
-            $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
-            $file = [$local, "$server->ssh_host:$server->server_root/$remote"];
-            $process = new Process(array_merge($pass, $scp, $file));
-        }
-        $process->run();
-        // result
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-        if ($output == "stdout") {
-            return $process->getOutput();
-        } else if ($output == "stderr") {
-            return $process->getErrorOutput();
-        } else {
-            throw new Exception("Unknown output: $output", 1);
+            $command = [$local, "$server->ssh_host:$server->server_root/$remote"];
+            return self::executeRemote($command, $server->ssh_pass, "scp", $output);
         }
     }
 
@@ -333,16 +292,97 @@ class SwitchServerController extends Controller
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
-            $process = new Process(["cp", "$server->server_root/$remote", $local], $server->server_root);
+            return self::executeLocal(["cp", "$server->server_root/$remote", $local], $output);
         } else {
             // remote machine
-            $pass = [base_path("vendor/bin/sshpass"), $server->ssh_pass];
-            $scp = ["scp", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C"];
-            $file = ["$server->ssh_host:$server->server_root/$remote", $local];
-            $process = new Process(array_merge($pass, $scp, $file));
+            $command = ["$server->ssh_host:$server->server_root/$remote", $local];
+            return self::executeRemote($command, $server->ssh_pass, "scp", $output);
         }
+    }
+
+    /**
+     * Execute command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param object|null $config
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function execute(array $command, string $path = null, object $config = null, string $output = "stdout"): string
+    {
+        $server = self::getServer(self::getCurrentServer());
+        // server path as default
+        $path = empty($path) ? $server->server_root : $path;
+        // remote or local
+        if (empty($server->ssh_host)) {
+            // local machine
+            return self::executeLocal($command, $path);
+        } else {
+            // remote machine
+            $ssh_host = empty($config) ? $server->ssh_host : $config->Host;
+            $ssh_pass = empty($config) ? $server->ssh_pass : $config->Password;
+            // concat ssh command
+            $command = implode(" ", array_merge(["cd", $path, "&&"], $command));
+            // set host and command
+            $command = ["-C", $ssh_host, $command];
+            return self::executeRemote($command, $ssh_pass, "ssh", $output);
+        }
+    }
+
+    /**
+     * Execute command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeLocal(array $command, string $path = null, string $output = "stdout"): string
+    {
+        // fill PATH and SSH_AUTH_SOCK env variables
+        $env = ["PATH" => getenv("PATH"), "SSH_AUTH_SOCK" => getenv("SSH_AUTH_SOCK")];
+        // default timeout 10 seconds
+        $process = new Process($command, $path, $env, null, env('PROCESS_TIMEOUT', 10));
+        return self::runProcess($process, $output);
+    }
+
+    /**
+     * Execute command
+     *
+     * @param array $command
+     * @param string $ssh_pass
+     * @param string $program
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeRemote(array $command, string $ssh_pass = "", string $program = "", string $output = "stdout"): string
+    {
+        $pass = [base_path("vendor/bin/sshpass"), $ssh_pass];
+        $ssh = [$program, "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"];
+        $process = new Process(array_merge($pass, $ssh, $command), null, null, null, env('PROCESS_TIMEOUT', 10));
+        return self::runProcess($process, $output);
+    }
+
+    /**
+     * Execute command
+     *
+     * @param Process $process
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    private static function runProcess(Process $process, string $output = "stdout"): string
+    {
+        // turning on PTY support, need by ssh, git/svn etc...
+        // reference https://symfony.com/doc/current/components/process.html#using-tty-and-pty-modes
+        $process->setPty(true);
+        // run equals start and wait
         $process->run();
-        // result
+        // handle result
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
@@ -367,34 +407,8 @@ class SwitchServerController extends Controller
      */
     public static function executeMakerScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
-        $server = self::getServer(self::getCurrentServer());
-        // server path
-        $path = empty($path) ? $server->server_root : $path;
-        // remote or local
-        if (empty($server->ssh_host)) {
-            // local machine
-            $script = ["$server->server_root/script/shell/maker.sh"];
-            $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
-        } else {
-            $alias = empty($config) ? $server->ssh_host : $config->Host;
-            $pass = empty($config) ? $server->ssh_pass : $config->Password;
-            $pass = [base_path("vendor/bin/sshpass"), $pass];
-            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
-            $script = ["cd", $path, "&&", "$server->server_root/script/shell/maker.sh"];
-            $process = new Process(array_merge($pass, $ssh, $script, $command));
-        }
-        $process->run();
-        // result
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-        if ($output == "stdout") {
-            return $process->getOutput();
-        } else if ($output == "stderr") {
-            return $process->getErrorOutput();
-        } else {
-            throw new Exception("Unknown output: $output", 1);
-        }
+        $script = array_merge(["script/shell/maker.sh"], $command);
+        return self::execute($script, $path, $config, $output);
     }
 
     /**
@@ -409,35 +423,8 @@ class SwitchServerController extends Controller
      */
     public static function executeRunScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
-        $server = self::getServer(self::getCurrentServer());
-        // server path
-        $path = empty($path) ? $server->server_root : $path;
-        // remote or local
-        if (empty($server->ssh_host)) {
-            // local machine
-            $script = ["$server->server_root/script/shell/run.sh"];
-            $process = new Process(array_merge($script, $command), $path, ["PATH" => getenv("PATH")]);
-        } else {
-            // remote machine
-            $alias = empty($config) ? $server->ssh_host : $config->Host;
-            $pass = empty($config) ? $server->ssh_pass : $config->Password;
-            $pass = [base_path("vendor/bin/sshpass"), $pass];
-            $ssh = ["ssh", "-o", "LogLevel=error", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-C", $alias];
-            $script = ["cd", $path, "&&", "$server->server_root/script/shell/run.sh"];
-            $process = new Process(array_merge($pass, $ssh, $script, $command));
-        }
-        $process->run();
-        // result
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-        if ($output == "stdout") {
-            return $process->getOutput();
-        } else if ($output == "stderr") {
-            return $process->getErrorOutput();
-        } else {
-            throw new Exception("Unknown output: $output", 1);
-        }
+        $script = array_merge(["script/shell/run.sh"], $command);
+        return self::execute($script, $path, $config, $output);
     }
 
     /**
@@ -473,9 +460,7 @@ class SwitchServerController extends Controller
                     throw new Exception("Duplicate Host: $value");
                 }
                 // save
-                $object = new stdClass();
-                $object->{$key} = $value;
-                $config[$host] = $object;
+                $config[$host] = (object)[$key => $value];
             } else {
                 $object = $config[$host];
                 $object->{$key} = $value;
@@ -498,22 +483,6 @@ class SwitchServerController extends Controller
             "server_port",
         ];
         return self::getServerList("local", $column);
-    }
-
-    // reload static server list
-    public static function publishServerList(string $path = "")
-    {
-        if ($path == "") {
-            $path = public_path("server-list.php");
-        }
-        $list = json_encode(self::getPublishServerList());
-        $data = "<?php 
-            header('content-type:application:json;charset=utf8');
-            header('Access-Control-Allow-Origin: *');
-            header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
-            echo '$list'
-        ?>";
-        file_put_contents($path, $data);
     }
 
     /**

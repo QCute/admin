@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class ConfigureListController extends AdminController
 {
@@ -51,7 +52,6 @@ class ConfigureListController extends AdminController
      *
      * @param Content $content
      * @return Content
-     * @throws Exception
      */
     public function displayIndex(Content $content): Content
     {
@@ -65,7 +65,6 @@ class ConfigureListController extends AdminController
      * Make a grid builder.
      *
      * @return Grid
-     * @throws Exception
      */
     protected function grid(): Grid
     {
@@ -118,6 +117,10 @@ class ConfigureListController extends AdminController
                 "COMMENT" => trans("admin.state"),
             ],
             (object)[
+                "NAME" => "status",
+                "COMMENT" => trans("admin.status") . " (<a href='$url?action=submit'><i class='fa fa-cloud-upload'></i><span class='hidden-xs'> " . trans("admin.submit"). "</span></a>)",
+            ],
+            (object)[
                 "NAME" => "OPERATION",
                 "COMMENT" => trans("admin.operation"),
             ],
@@ -128,13 +131,15 @@ class ConfigureListController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($url, $path, $row) {
                     if ($row->NAME == "OPERATION" && (empty($this->action) || $this->action == "0")) {
-                        $generate = "<a href='$url?action=$path&file=$this->file'><strong>" . trans("admin.generate"). "</strong></a>";
-                        $export = "<a href='$url?action=$path-export&file=$this->file&xml=$this->description'><strong>" . trans("admin.export"). "</strong></a>";
-                        return "$generate | $export";
+                        $export = "<a href='$url?action=export&file=$this->file&xml=$this->description'><i class='fa fa-upload'></i><span class='hidden-xs'> " . trans("admin.export"). "</span></a>";
+                        $generate = "<a href='$url?action=$path&file=$this->file'><i class='fa fa-refresh'></i><span class='hidden-xs'> " . trans("admin.generate"). "</span></a>";
+                        $download = "<a href='$url?action=download&file=$this->file'><i class='fa fa-download'></i><span class='hidden-xs'> " . trans("admin.download"). "</span></a>";
+                        return "$export | $generate | $download";
                     } else if ($row->NAME == "OPERATION") {
-                        $generate = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.generate"). "</strong></a>";
                         $export = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.export"). "</strong></a>";
-                        return "$generate | $export";
+                        $generate = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.generate"). "</strong></a>";
+                        $download = "<a href='javascript:void(0)' style='color: black; pointer-events: none'><strong>" . trans("admin.download"). "</strong></a>";
+                        return "$export | $generate | $download";
                     } else {
                         return $this->{$row->NAME};
                     }
@@ -151,6 +156,7 @@ class ConfigureListController extends AdminController
                 if ($row->NAME == "user_name") continue;
                 if ($row->NAME == "time") continue;
                 if ($row->NAME == "state") continue;
+                if ($row->NAME == "status") continue;
                 if ($row->NAME == "OPERATION") continue;
                 $filter->like($row->NAME, $row->COMMENT);
             }
@@ -201,7 +207,7 @@ class ConfigureListController extends AdminController
     public function action(Content $content, string $action): Content
     {
         // act action
-        if (is_int(strpos($action, "export"))) {
+        if ($action == "export") {
             // ensure dir
             $path = storage_path("app/admin/xml/");
             if (!file_exists($path)) {
@@ -211,8 +217,8 @@ class ConfigureListController extends AdminController
             $file = request()->input("file");
             $basename = request()->input("xml");
             $filename = "$basename.xml";
-            SwitchServerController::executeMakerScript(["sheet", $file, "xml/"]);
-            SwitchServerController::pullFile("xml/$filename", "$path$filename");
+            SwitchServerController::executeMakerScript(["sheet", basename($file), "xml/"]);
+            SwitchServerController::pullFile("xml/$filename", "$path/$filename");
             // export log
             $schema = SwitchServerController::getCurrentServer();
             $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
@@ -221,8 +227,8 @@ class ConfigureListController extends AdminController
             // pjax use location.href redirection to download file or use ajax
             $url = request()->url();
             $content->body("
-                <a href='$url-download?file=$filename' target='_blank' style='display: none;' id='download'></a>
-                <script>document.getElementById('download').click();</script>
+                <a href='$url-export?file=$filename' target='_blank' style='display: none;' id='export'></a>
+                <script>document.getElementById('export').click();</script>
             ");
             return $this->displayIndex($content);
         } else if ($action == "import") {
@@ -234,7 +240,6 @@ class ConfigureListController extends AdminController
             $file = request()->file("xml");
             $filename = $file->getClientOriginalName();
             $basename = basename($filename, ".xml");
-            $pathname = $path . $filename;
             $result = $file->storeAs("xml", $filename, ["disk" => "admin"]);
             // handle store result
             if(!$result) {
@@ -256,12 +261,49 @@ class ConfigureListController extends AdminController
                 return $this->displayIndex($content)->withError("Configure Lock By: {$log[0]->user_name}");
             }
             // import table data
-            SwitchServerController::pushFile($pathname, "xml/$filename");
+            SwitchServerController::pushFile("$path/$filename", "xml/$filename");
             $result = SwitchServerController::executeMakerScript(["collection", "xml/$filename"]);
             // import log
             $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $basename, "table_comment" => $basename, "state" => "0"];
             DB::table("table_import_log")->insert($data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
+        } else if ($action == "submit") {
+            // repository commit/push
+            $path = request()->path();
+            if (is_int(strpos($path, "erl"))) {
+                // the server dir
+                return $this->repository_commit($content);
+            } else if (is_int(strpos($path, "lua"))) {
+                $current = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getServer($current);
+                // the configure dir
+                return $this->repository_commit($content, $server->configure_root);
+            } else if (is_int(strpos($path, "js"))) {
+                $current = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getServer($current);
+                // the configure dir
+                return $this->repository_commit($content, $server->configure_root);
+            } else {
+                throw new Exception("Unknown Path: $path");
+            }
+        } else if ($action == "download") {
+            // download erl/lua/js file
+            $file = request()->input("file");
+            $filename = basename($file);
+            $type = substr(strrchr($file, "."), 1);
+            // ensure dir
+            $path = storage_path("app/admin/$type/");
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+            SwitchServerController::pullFile($file, "$path/$filename");
+            // pjax use location.href redirection to download file or use ajax
+            $url = request()->url();
+            $content->body("
+                <a href='$url-download?type=$type&file=$filename' target='_blank' style='display: none;' id='download'></a>
+                <script>document.getElementById('download').click();</script>
+            ");
+            return $this->displayIndex($content);
         } else if (is_int(strpos($action, "erl"))) {
             $file = basename(request()->input("file"), ".erl");
             // generate
@@ -288,10 +330,82 @@ class ConfigureListController extends AdminController
         }
     }
 
-    public function download(): BinaryFileResponse
+    public function export(): BinaryFileResponse
     {
         $file = request()->input("file", "");
         $path = storage_path("app/admin/xml/$file");
         return response()->download($path, $file, ["Content-Type: text/xml"]);
+    }
+
+    public function download(): BinaryFileResponse
+    {
+        $type = request()->input("type", "");
+        $file = request()->input("file", "");
+        $path = storage_path("app/admin/$type/$file");
+        return response()->download($path, $file, ["Content-Type: application/json"]);
+    }
+
+    private function repository_commit(Content $content, string $path = null): Content
+    {
+        try {
+            // @todo check SSH_AUTH_SOCK is valid
+            SwitchServerController::execute(["printenv", "SSH_AUTH_SOCK"], $path);
+        } catch (ProcessFailedException $process) {
+            dump($process->getProcess()->getOutput());
+            dump($process->getProcess()->getErrorOutput());
+            $error = "Could not found SSH_AUTH_SOCK environment variable need by SSH";
+            return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+        } catch (Exception $exception) {
+            $error = str_replace("\n", "<br>", $exception->getMessage());
+            return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+        }
+        try {
+            $url = SwitchServerController::execute(["git", "config", "--get", "remote.origin.url"], $path);
+            if (!str_contains($url, "@")) {
+                $error = "Git repository not connected by SSH: $url";
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            }
+            try {
+                // git use ssh, key passphrase store in ssh-agent
+                // self::execute(["git", "stash"], $path);
+                SwitchServerController::execute(["git", "pull"], $path);
+                // self::execute(["git", "stash", "pop", "--quiet"], $path);
+                // self::execute(["git", "checkout", "--ours", "."], $path);
+                SwitchServerController::execute(["git", "add", "."], $path);
+                SwitchServerController::execute(["git", "commit", "--message=Configure"], $path);
+                SwitchServerController::execute(["git", "push"], $path);
+            } catch (ProcessFailedException $process) {
+                $error = str_replace("\n", "<br>", $process->getProcess()->getOutput());
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            } catch (Exception $exception) {
+                $error = str_replace("\n", "<br>", $exception->getMessage());
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            }
+        } catch (Exception) {
+            // suppress error when dir not a git repository
+        }
+        try {
+            $url = SwitchServerController::execute(["svn", "info", "--show-item", "repos-root-url"], $path);
+            if (!str_contains($url, "@")) {
+                $error = "SVN repository not connected by SSH: $url";
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            }
+            try {
+                // svn use ssh, key passphrase store in ssh-agent
+                // self::execute(["svn", "update", "--non-interactive"], $path);
+                // self::execute(["svn", "resolve", "--accept", "mine-full", "*", "--force"], $path);
+                SwitchServerController::execute(["svn", "add", ".", "--no-ignore", "--force"], $path);
+                SwitchServerController::execute(["svn", "commit", "--message=Configure", "--username", "--password"], $path);
+            } catch (ProcessFailedException $process) {
+                $error = str_replace("\n", "<br>", $process->getProcess()->getOutput());
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            } catch (Exception $exception) {
+                $error = str_replace("\n", "<br>", $exception->getMessage());
+                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+            }
+        } catch (Exception) {
+            // suppress error when dir not a svn repository
+        }
+        return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
     }
 }

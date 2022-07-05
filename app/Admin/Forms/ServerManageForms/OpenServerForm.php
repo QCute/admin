@@ -3,6 +3,7 @@
 namespace App\Admin\Forms\ServerManageForms;
 
 use App\Admin\Controllers\SwitchServerController;
+use App\Http\Controllers\ServerListController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
 use Exception;
@@ -55,8 +56,6 @@ class OpenServerForm extends Form {
         SwitchServerController::executeMakerScript(["open_server", $name], null, $config);
         // todo fill server list data
         DB::insert("INSERT INTO `server_list` (`server_node`, `server_name`, `server_port`, `server_id`, `server_type`, `open_time`, `tab_name`, `state`, `recommend`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [$node, $name, $port, $server_id, 'local', time(), $tab,  1, $recommend]);
-        // update server list
-        SwitchServerController::publishServerList();
         // success tips
         admin_success(trans("admin.completed"));
         return back();

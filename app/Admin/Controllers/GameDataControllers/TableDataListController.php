@@ -4,10 +4,10 @@ namespace App\Admin\Controllers\GameDataControllers;
 
 use App\Admin\Controllers\SwitchServerController;
 use App\Admin\Models\GameDataModels\TableDataModel;
-use Exception;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
+use Exception;
 
 class TableDataListController extends AdminController
 {

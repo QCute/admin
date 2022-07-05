@@ -22,6 +22,8 @@ class CreateExtraTables extends Migration
             $table->string('ssh_host')->default('')->comment('SSH地址');
             $table->string('ssh_pass')->default('')->comment('SSH密码');
             $table->string('server_root')->default('')->comment('服务器根目录');
+            $table->string('configure_root')->default('')->comment('配置根目录');
+            $table->string('protocol_root')->default('')->comment('协议根目录');
             $table->string('server_host')->default('')->comment('游戏服地址');
             $table->unsignedInteger('server_port')->default(0)->comment('游戏服端口');
             $table->string('db_host')->default('')->comment('游戏服数据库地址');
@@ -118,14 +120,13 @@ class CreateExtraTables extends Migration
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });
 
-        Schema::create('server_role', function (Blueprint $table) {
+        Schema::create('server_role_number', function (Blueprint $table) {
             $table->increments('id')->comment('ID');
-            $table->string('account_name')->default('')->comment('账户名');
-            $table->string('role_id')->default(0)->comment('角色ID');
-            $table->string('server_id')->default(0)->comment('服务器ID');
-            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
-            $table->index(['account_name', 'server_id'], 'account', 'BTREE');
+            $table->string('server_name')->default('')->comment('服务器名');
+            $table->unsignedSmallInteger('server_id')->index('server_id')->default(0)->comment('服务器ID');
+            $table->string('server_host')->default('')->comment('服务器地址');
+            $table->unsignedSmallInteger('server_port')->default(0)->comment('服务器端口');
+            $table->unsignedInteger('role_number')->index('role_number')->default(0)->comment('数量');
             $table->engine = 'MEMORY';
         });
     }
@@ -144,6 +145,6 @@ class CreateExtraTables extends Migration
         Schema::dropIfExists('client_error_log');
         Schema::dropIfExists('impeach');
         Schema::dropIfExists('ssh_key');
-        Schema::dropIfExists('server_role');
+        Schema::dropIfExists('server_role_number');
     }
 }

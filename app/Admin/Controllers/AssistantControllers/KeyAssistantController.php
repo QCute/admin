@@ -16,6 +16,6 @@ class KeyAssistantController extends AdminController
      */
     public function index(Content $content): Content
     {
-        return $content->title("")->body(new KeyAssistantForm($content));
+        return $content->title("")->body(new KeyAssistantForm());
     }
 }

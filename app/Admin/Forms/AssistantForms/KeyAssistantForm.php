@@ -37,7 +37,7 @@ class KeyAssistantForm extends Form
         $passphrase = $request->input('passphrase', '');
         $passphrase_again = $request->input('passphrase_again', '');
         if ($passphrase != $passphrase_again) {
-            admin_error(trans("admin.password") . trans("admin.not_match"));
+            admin_error(trans("admin.password") . trans("admin.mismatch"));
             return back();
         }
         $name = $request->input('name', '');

@@ -5,8 +5,8 @@ namespace App\Admin\Forms\AssistantForms;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Traits\DefaultDatetimeFormat;
 use Encore\Admin\Widgets\Form;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
 class ConfigureAssistantForm extends Form

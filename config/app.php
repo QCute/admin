@@ -58,6 +58,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application API route settings
+    |--------------------------------------------------------------------------
+    |
+    | The routing configuration of the api route, including the path prefix
+    | and the domain. If you want to access through the root path, just set
+    | the prefix to empty string.
+    |
+    */
+    'api' => [
+
+        'prefix' => env('API_ROUTE_PREFIX', 'api'),
+
+        'domain' => env('API_ROUTE_DOMAIN'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

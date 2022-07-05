@@ -52,8 +52,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | The routing configuration of the admin page, including the path prefix,
-    | the controller namespace, and the default middleware. If you want to
-    | access through the root path, just set the prefix to empty string.
+    | the controller namespace, the default middleware, and the domain. If you
+    | want to access through the root path, just set the prefix to empty string.
     |
     */
     'route' => [
@@ -64,7 +64,7 @@ return [
 
         'middleware' => ['web', 'admin'],
 
-        'domain' => (!empty(env('ADMIN_ROUTE_DOMAIN', 'admin')) ? env('ADMIN_ROUTE_DOMAIN') . '.' : '' ) . env('APP_URL'),
+        'domain' => env('ADMIN_ROUTE_DOMAIN'),
     ],
 
     /*
@@ -131,7 +131,7 @@ return [
         ],
 
         // Add "remember me" to login form
-        'remember' => (bool) env("APP_ENV", "production") != "production",
+        'remember' => env("APP_ENV", "production") != "production",
 
         // Redirect to the specified URI when user is not authorized.
         'redirect_to' => 'auth/login',

@@ -31,42 +31,35 @@ class ServerListController extends Controller
      */
     public function get(): JsonResponse
     {
-        $unionId = request()->input("unionId", "");
-        $serverList = DB::table("server_list")
-            ->select([
-                "server_list.server_name",
-                "server_list.server_id",
-                "server_list.server_host",
-                "server_list.server_port",
-            ])
-            ->leftJoin("server_role", "server_list.server_id", "=", "server_role.server_id")
-            ->where("server_list.server_type", "local")
-            ->where("server_role.account_name", "=", $unionId)
-            ->get()
-            ->toArray();
-        // server role not set
-        if(empty($serverList) && config('app.env') !== 'local') {
-            // select the min role number server
-            $server = DB::table("server_role")
-                ->select(DB::raw("server_list.server_name, server_list.server_id, server_list.server_host, server_list.server_port, count(`account_name`) AS `count`"))
-                ->rightJoin("server_list", "server_list.server_id", "=", "server_role.server_id")
-                ->groupBy("server_role.server_id")
-                ->orderBy("count", "ASC")
-                ->first();
-            unset($server->count);
-            // save role data if union id not empty
-            if(!empty($unionId)) DB::insert("INSERT IGNORE `server_role` VALUES (?, ?, ?)", [$unionId, 0, $server->server_id]);
-            // set to list
-            $serverList = [$server];
+        if (!env('API_SERVER_LIST', false)) {
+            $list = DB::table('server_role_number')
+                ->select(["server_name", "server_id", "server_host", "server_port"])
+                ->get()
+                ->toArray();
         } else {
-            $serverList = SwitchServerController::getPublishServerList();
+            $sub = DB::table('server_role_number')
+                ->select(DB::raw('MIN(`role_number`)'))
+                ->toSql();
+            $list = DB::table('server_role_number')
+                ->select(["server_name", "server_id", "server_host", "server_port"])
+                ->whereRaw("role_number = ( $sub )")
+                ->limit(1)
+                ->get()
+                ->toArray();
         }
         return response()
-            ->json($serverList)
+            ->json($list)
             ->withHeaders([
                 "Access-Control-Allow-Origin" => "*",
                 "Access-Control-Max-Age" => "86400",
                 "Access-Control-Allow-Headers" => "Content-Type, Accept, Authorization, X-Requested-With"
             ]);
+    }
+
+    public static function reload()
+    {
+        $list = SwitchServerController::getPublishServerList();
+        $list = array_map(function ($row) { $row->role_number = 0; return (array)$row; }, $list);
+        DB::table('server_role_number')->insertOrIgnore($list);
     }
 }
