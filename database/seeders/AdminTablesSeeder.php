@@ -39,7 +39,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 3,
                     "title" => "实时在线人数",
                     "icon" => "fa-area-chart",
-                    "uri" => "/user-online",
+                    "uri" => "/active-statistics/user-online",
                     "permission" => NULL
                 ],
                 [
@@ -47,7 +47,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 4,
                     "title" => "注册统计",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/user-register",
+                    "uri" => "/active-statistics/user-register",
                     "permission" => NULL
                 ],
                 [
@@ -55,7 +55,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 5,
                     "title" => "登录统计",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/user-login",
+                    "uri" => "/active-statistics/user-login",
                     "permission" => NULL
                 ],
                 [
@@ -63,7 +63,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 6,
                     "title" => "存活统计",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/user-survival",
+                    "uri" => "/active-statistics/user-survival",
                     "permission" => NULL
                 ],
                 [
@@ -71,7 +71,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 7,
                     "title" => "每日在线时长",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/daily-online-time",
+                    "uri" => "/active-statistics/daily-online-time",
                     "permission" => NULL
                 ],
                 [
@@ -87,7 +87,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 9,
                     "title" => "每日充值统计",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/daily-recharge",
+                    "uri" => "/recharge-statistics/daily-recharge",
                     "permission" => NULL
                 ],
                 [
@@ -95,7 +95,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 10,
                     "title" => "充值排行",
                     "icon" => "fa-bar-chart",
-                    "uri" => "/recharge-rank",
+                    "uri" => "/recharge-statistics/recharge-rank",
                     "permission" => NULL
                 ],
                 [
@@ -103,7 +103,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 11,
                     "title" => "充值比例",
                     "icon" => "fa-pie-chart",
-                    "uri" => "/recharge-ratio",
+                    "uri" => "/recharge-statistics/recharge-ratio",
                     "permission" => NULL
                 ],
                 [
@@ -111,7 +111,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 12,
                     "title" => "充值区间分布",
                     "icon" => "fa-pie-chart",
-                    "uri" => "/recharge-distribution",
+                    "uri" => "/recharge-statistics/recharge-distribution",
                     "permission" => NULL
                 ],
                 [
@@ -119,7 +119,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 13,
                     "title" => "首充时间分布",
                     "icon" => "fa-pie-chart",
-                    "uri" => "/first-recharge-time-distribution",
+                    "uri" => "/recharge-statistics/first-recharge-time-distribution",
                     "permission" => NULL
                 ],
                 [
@@ -135,7 +135,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 15,
                     "title" => "玩家数据",
                     "icon" => "fa-user-plus",
-                    "uri" => "/user-data",
+                    "uri" => "/game-data/user-data",
                     "permission" => NULL
                 ],
                 [
@@ -143,7 +143,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 16,
                     "title" => "配置数据",
                     "icon" => "fa-tags",
-                    "uri" => "/configure-data",
+                    "uri" => "/game-data/configure-data",
                     "permission" => NULL
                 ],
                 [
@@ -151,7 +151,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 17,
                     "title" => "日志数据",
                     "icon" => "fa-history",
-                    "uri" => "/log-data",
+                    "uri" => "/game-data/log-data",
                     "permission" => NULL
                 ],
                 [
@@ -159,7 +159,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 18,
                     "title" => "客户端错误日志",
                     "icon" => "fa-warning",
-                    "uri" => "/client-error-log",
+                    "uri" => "/game-data/client-error-log",
                     "permission" => NULL
                 ],
                 [
@@ -175,7 +175,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 20,
                     "title" => "配置表",
                     "icon" => "fa-list-ol",
-                    "uri" => "/configure-table",
+                    "uri" => "/configure-data/configure-table",
                     "permission" => NULL
                 ],
                 [
@@ -183,7 +183,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 21,
                     "title" => "服务器配置(erl)",
                     "icon" => "fa-server",
-                    "uri" => "/erl-configure",
+                    "uri" => "/configure-data/erl-configure",
                     "permission" => NULL
                 ],
                 [
@@ -191,7 +191,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 22,
                     "title" => "客户端配置(lua)",
                     "icon" => "fa-desktop",
-                    "uri" => "/lua-configure",
+                    "uri" => "/configure-data/lua-configure",
                     "permission" => NULL
                 ],
                 [
@@ -199,7 +199,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 23,
                     "title" => "客户端配置(js)",
                     "icon" => "fa-tv",
-                    "uri" => "/js-configure",
+                    "uri" => "/configure-data/js-configure",
                     "permission" => NULL
                 ],
                 [
@@ -215,7 +215,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 25,
                     "title" => "服务器列表",
                     "icon" => "fa-list-ul",
-                    "uri" => "/server-list",
+                    "uri" => "/server-manage/server-list",
                     "permission" => NULL
                 ],
                 [
@@ -223,7 +223,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 26,
                     "title" => "服务器调整",
                     "icon" => "fa-cog",
-                    "uri" => "server-tuning",
+                    "uri" => "/server-manage/server-tuning",
                     "permission" => NULL
                 ],
                 [
@@ -231,7 +231,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 27,
                     "title" => "开服",
                     "icon" => "fa-clone",
-                    "uri" => "/open-server",
+                    "uri" => "/server-manage/open-server",
                     "permission" => NULL
                 ],
                 [
@@ -239,7 +239,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 28,
                     "title" => "合服",
                     "icon" => "fa-copy",
-                    "uri" => "/merge-server",
+                    "uri" => "/server-manage/merge-server",
                     "permission" => NULL
                 ],
                 [
@@ -255,7 +255,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 30,
                     "title" => "封号/禁言",
                     "icon" => "fa-sliders",
-                    "uri" => "/user-manage",
+                    "uri" => "/operation/user-manage",
                     "permission" => NULL
                 ],
                 [
@@ -263,7 +263,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 31,
                     "title" => "邮件",
                     "icon" => "fa-envelope-o",
-                    "uri" => "/game-mail",
+                    "uri" => "/operation/game-mail",
                     "permission" => NULL
                 ],
                 [
@@ -271,7 +271,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 32,
                     "title" => "公告",
                     "icon" => "fa-edit",
-                    "uri" => "/game-notice",
+                    "uri" => "/operation/game-notice",
                     "permission" => NULL
                 ],
                 [
@@ -279,7 +279,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 33,
                     "title" => "维护公告",
                     "icon" => "fa-bullhorn",
-                    "uri" => "/maintain-notice",
+                    "uri" => "/operation/maintain-notice",
                     "permission" => NULL
                 ],
                 [
@@ -287,7 +287,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 34,
                     "title" => "举报信息",
                     "icon" => "fa-info-circle",
-                    "uri" => "/impeach",
+                    "uri" => "/operation/impeach",
                     "permission" => NULL
                 ],
                 [
@@ -295,7 +295,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 35,
                     "title" => "敏感词",
                     "icon" => "fa-filter",
-                    "uri" => "/sensitive-word",
+                    "uri" => "/operation/sensitive-word",
                     "permission" => NULL
                 ],
                 [
@@ -311,7 +311,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 37,
                     "title" => "配表助手",
                     "icon" => "fa-magic",
-                    "uri" => "/configure-assistant",
+                    "uri" => "/assistant/configure-assistant",
                     "permission" => NULL
                 ],
                 [
@@ -319,7 +319,7 @@ class AdminTablesSeeder extends Seeder
                     "order" => 38,
                     "title" => "SSH Key生成",
                     "icon" => "fa-key",
-                    "uri" => "/key-assistant",
+                    "uri" => "/assistant/key-assistant",
                     "permission" => NULL
                 ],
                 [
@@ -386,7 +386,7 @@ class AdminTablesSeeder extends Seeder
                     "name" => "Dashboard",
                     "slug" => "dashboard",
                     "http_method" => "GET",
-                    "http_path" => "/"
+                    "http_path" => "/\r\n/switch-server"
                 ],
                 [
                     "name" => "Login",
@@ -405,30 +405,6 @@ class AdminTablesSeeder extends Seeder
                     "slug" => "auth.management",
                     "http_method" => "",
                     "http_path" => "/auth/roles\r\n/auth/permissions\r\n/auth/menu\r\n/auth/logs"
-                ],
-                [
-                    "name" => "Scheduling",
-                    "slug" => "ext.scheduling",
-                    "http_method" => "",
-                    "http_path" => "/scheduling*"
-                ],
-                [
-                    "name" => "Logs",
-                    "slug" => "ext.log-viewer",
-                    "http_method" => "",
-                    "http_path" => "/logs*"
-                ],
-                [
-                    "name" => "Admin helpers",
-                    "slug" => "ext.helpers",
-                    "http_method" => "",
-                    "http_path" => "/helpers/*"
-                ],
-                [
-                    "name" => "Api tester",
-                    "slug" => "ext.api-tester",
-                    "http_method" => "",
-                    "http_path" => "/api-tester*"
                 ]
             ]
         );
@@ -465,35 +441,7 @@ class AdminTablesSeeder extends Seeder
             [
                 [
                     "role_id" => 1,
-                    "menu_id" => 2
-                ],
-                [
-                    "role_id" => 1,
-                    "menu_id" => 8
-                ],
-                [
-                    "role_id" => 1,
-                    "menu_id" => 9
-                ],
-                [
-                    "role_id" => 1,
-                    "menu_id" => 12
-                ],
-                [
-                    "role_id" => 4,
-                    "menu_id" => 12
-                ],
-                [
-                    "role_id" => 5,
-                    "menu_id" => 8
-                ],
-                [
-                    "role_id" => 5,
-                    "menu_id" => 9
-                ],
-                [
-                    "role_id" => 5,
-                    "menu_id" => 12
+                    "menu_id" => 39
                 ]
             ]
         );

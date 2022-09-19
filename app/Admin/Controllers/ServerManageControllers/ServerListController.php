@@ -30,7 +30,10 @@ class ServerListController extends AdminController
         $data = DB::table("information_schema.COLUMNS")
             ->where("TABLE_SCHEMA", env("DB_DATABASE"))
             ->where("TABLE_NAME", "server_list")
-            ->get();
+            ->orderBy('ORDINAL_POSITION')
+            ->get()
+            ->toArray();
+
         foreach ($data as $row) {
             $grid
                 ->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)
@@ -73,7 +76,10 @@ class ServerListController extends AdminController
         $data = DB::table("information_schema.COLUMNS")
             ->where("TABLE_SCHEMA", env("DB_DATABASE"))
             ->where("TABLE_NAME", "server_list")
-            ->get();
+            ->orderBy('ORDINAL_POSITION')
+            ->get()
+            ->toArray();
+
         foreach ($data as $row) {
 
             switch ($row->COLUMN_NAME) {

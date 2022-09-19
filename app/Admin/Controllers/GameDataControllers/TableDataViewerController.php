@@ -45,9 +45,15 @@ class TableDataViewerController extends AdminController
             ->select(["COLUMN_NAME", "COLUMN_COMMENT"])
             ->where("TABLE_SCHEMA", $database)
             ->where("TABLE_NAME", $table)
-            ->get();
+            ->orderBy('ORDINAL_POSITION')
+            ->get()
+            ->toArray();
+
         foreach ($data as $row) {
-            $grid->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)->style("min-width:8em");
+            $grid
+                ->column($row->COLUMN_NAME, $row->COLUMN_COMMENT)
+                ->style("min-width:8em")
+                ->sortable();
         }
 
         // filter

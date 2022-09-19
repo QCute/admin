@@ -14,7 +14,7 @@ class ServerListController extends Controller
      *     summary = "获取服务器列表",
      *     @OA\Parameter(
      *         description = "微信UnionId",
-     *         in = "path",
+     *         in = "query",
      *         name = "unionId",
      *         required = true,
      *         @OA\Schema(type = "string"),

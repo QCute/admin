@@ -38,6 +38,7 @@ class SSHPassInstaller extends Command
      */
     public function handle(): int
     {
+        // bash script
         $data =
 '#!/usr/bin/env bash
 # sshpass - use command line password with ssh
@@ -60,6 +61,29 @@ else
 fi
 ';
         $file = base_path("vendor/bin/sshpass");
+        file_put_contents($file, $data);
+        // mode
+        $process = new Process(["chmod", "0755", $file]);
+        $process->run();
+        if(!$process->isSuccessful()) {
+            $this->error($process->getErrorOutput());
+            return $process->getExitCode();
+        }
+
+        // batch script
+        $data =
+            '@echo off
+if "%SSH_ASKPASS_PASSWORD%" == "" ( 
+    set SSH_ASKPASS=%~dp0%0
+    set SSH_ASKPASS_PASSWORD=%1
+    set DISPLAY=:0
+    shift
+    cmd /c "%2 %3 %4 %5 %6 %7 %8 %9"
+) else (
+    echo %SSH_ASKPASS_PASSWORD%
+)
+';
+        $file = base_path("vendor/bin/sshpass.bat");
         file_put_contents($file, $data);
         // mode
         $process = new Process(["chmod", "0755", $file]);

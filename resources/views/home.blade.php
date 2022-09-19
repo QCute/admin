@@ -85,7 +85,7 @@
                     后台目录
                 </template>
                 <template #description>
-                    <h3>git@192.168.30.155:~/admin</h3>
+                    <h3>git@192.168.30.155:~/moco/admin</h3>
                 </template>
             </a-card-meta>
         </a-card>
@@ -100,7 +100,7 @@
                     服务器目录
                 </template>
                 <template #description>
-                    <h3>git@192.168.30.155:~/server</h3>
+                    <h3>git@192.168.30.155:~/moco/server</h3>
                 </template>
             </a-card-meta>
         </a-card>

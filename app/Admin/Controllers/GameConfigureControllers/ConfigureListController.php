@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\Process\Exception\LogicException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class ConfigureListController extends AdminController
@@ -270,17 +271,15 @@ class ConfigureListController extends AdminController
         } else if ($action == "submit") {
             // repository commit/push
             $path = request()->path();
+            $current = SwitchServerController::getCurrentServer();
+            $server = SwitchServerController::getServer($current);
             if (is_int(strpos($path, "erl"))) {
                 // the server dir
-                return $this->repository_commit($content);
+                return $this->repository_commit($content, "$server->server_root/src/module/");
             } else if (is_int(strpos($path, "lua"))) {
-                $current = SwitchServerController::getCurrentServer();
-                $server = SwitchServerController::getServer($current);
                 // the configure dir
                 return $this->repository_commit($content, $server->configure_root);
             } else if (is_int(strpos($path, "js"))) {
-                $current = SwitchServerController::getCurrentServer();
-                $server = SwitchServerController::getServer($current);
                 // the configure dir
                 return $this->repository_commit($content, $server->configure_root);
             } else {
@@ -347,36 +346,28 @@ class ConfigureListController extends AdminController
 
     private function repository_commit(Content $content, string $path = null): Content
     {
+        // try parse as git repository
         try {
-            // @todo check SSH_AUTH_SOCK is valid
-            SwitchServerController::execute(["printenv", "SSH_AUTH_SOCK"], $path);
-        } catch (ProcessFailedException $process) {
-            dump($process->getProcess()->getOutput());
-            dump($process->getProcess()->getErrorOutput());
-            $error = "Could not found SSH_AUTH_SOCK environment variable need by SSH";
-            return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
-        } catch (Exception $exception) {
-            $error = str_replace("\n", "<br>", $exception->getMessage());
-            return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
-        }
-        try {
+            // try read remote url
             $url = SwitchServerController::execute(["git", "config", "--get", "remote.origin.url"], $path);
-            if (!str_contains($url, "@")) {
+            // connect by http
+            if (str_starts_with($url, "http")) {
                 $error = "Git repository not connected by SSH: $url";
                 return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
             }
             try {
-                // git use ssh, key passphrase store in ssh-agent
-                // self::execute(["git", "stash"], $path);
-                SwitchServerController::execute(["git", "pull"], $path);
-                // self::execute(["git", "stash", "pop", "--quiet"], $path);
-                // self::execute(["git", "checkout", "--ours", "."], $path);
+                // git use ssh, auth by public key, but without key passphrase
+                // SwitchServerController::execute(["git", "stash", "--include-untracked"], $path);
+                // SwitchServerController::execute(["git", "stash", "pop", "--quiet"], $path);
+                // SwitchServerController::execute(["git", "checkout", "--ours", "."], $path);
                 SwitchServerController::execute(["git", "add", "."], $path);
-                SwitchServerController::execute(["git", "commit", "--message=Configure"], $path);
-                SwitchServerController::execute(["git", "push"], $path);
-            } catch (ProcessFailedException $process) {
-                $error = str_replace("\n", "<br>", $process->getProcess()->getOutput());
-                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+                SwitchServerController::execute(["git", "commit", "--message=Add Configure Data"], $path);
+                $branch = SwitchServerController::execute(["git", "branch", "--show-current"]);
+                SwitchServerController::execute(["git", "pull", "origin", trim($branch), "--rebase"], $path);
+                SwitchServerController::execute(["git", "push", "origin", trim($branch), "--force-with-lease"], $path);
+            } catch (ProcessFailedException $exception) {
+                $error = str_replace("\n", "<br>", $exception->getProcess()->getOutput());
+                return $this->displayIndex($content)->withError($exception->getProcess()->getCommandLine(), $error);
             } catch (Exception $exception) {
                 $error = str_replace("\n", "<br>", $exception->getMessage());
                 return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
@@ -384,21 +375,24 @@ class ConfigureListController extends AdminController
         } catch (Exception) {
             // suppress error when dir not a git repository
         }
+        // try parse as svn repository
         try {
+            // try read remote url
             $url = SwitchServerController::execute(["svn", "info", "--show-item", "repos-root-url"], $path);
-            if (!str_contains($url, "@")) {
+            // connect by svn or http
+            if (str_starts_with($url, "svn://") || str_starts_with($url, "http")) {
                 $error = "SVN repository not connected by SSH: $url";
                 return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
             }
             try {
-                // svn use ssh, key passphrase store in ssh-agent
-                // self::execute(["svn", "update", "--non-interactive"], $path);
-                // self::execute(["svn", "resolve", "--accept", "mine-full", "*", "--force"], $path);
+                // svn use ssh, auth by public key, but without key passphrase
+                // SwitchServerController::execute(["svn", "update", "--non-interactive"], $path);
+                // SwitchServerController::execute(["svn", "resolve", "--accept", "mine-full", "*", "--force"], $path);
                 SwitchServerController::execute(["svn", "add", ".", "--no-ignore", "--force"], $path);
-                SwitchServerController::execute(["svn", "commit", "--message=Configure", "--username", "--password"], $path);
-            } catch (ProcessFailedException $process) {
-                $error = str_replace("\n", "<br>", $process->getProcess()->getOutput());
-                return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);
+                SwitchServerController::execute(["svn", "commit", "--message", "Add Configure Data"], $path);
+            } catch (ProcessFailedException $exception) {
+                $error = str_replace("\n", "<br>", $exception->getProcess()->getOutput());
+                return $this->displayIndex($content)->withError($exception->getProcess()->getCommandLine(), $error);
             } catch (Exception $exception) {
                 $error = str_replace("\n", "<br>", $exception->getMessage());
                 return $this->displayIndex($content)->withError(admin_trans("admin.failed"), $error);

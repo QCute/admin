@@ -11,17 +11,13 @@ class MaintainNoticeController extends Controller
      * @OA\Get(
      *     path = "/api/maintain-notice",
      *     summary = "维护公告",
-     *     @OA\RequestBody(
-     *         @OA\MediaType(
-     *             mediaType="application/x-www-form-urlencoded",
-     *             @OA\Schema(
-     *                 @OA\Property(
-     *                     property = "platform",
-     *                     type = "string",
-     *                     description = "平台",
-     *                 ),
-     *             )
-     *         )
+     *     @OA\Parameter(
+     *         description = "平台",
+     *         in = "query",
+     *         name = "platform",
+     *         required = true,
+     *         @OA\Schema(type = "string"),
+     *         @OA\Examples(example = "int", value = "deal", summary = "敏感词查询"),
      *     ),
      *     @OA\Response(
      *         response = 200,

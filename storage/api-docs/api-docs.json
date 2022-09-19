@@ -147,21 +147,23 @@
             "get": {
                 "summary": "维护公告",
                 "operationId": "0b76bff5cbb26a52084afd0e9a8790ca",
-                "requestBody": {
-                    "content": {
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "properties": {
-                                    "platform": {
-                                        "description": "平台",
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "query",
+                        "description": "平台",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "int": {
+                                "summary": "敏感词查询",
+                                "value": "deal"
                             }
                         }
                     }
-                },
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -192,7 +194,7 @@
                 "parameters": [
                     {
                         "name": "unionId",
-                        "in": "path",
+                        "in": "query",
                         "description": "微信UnionId",
                         "required": true,
                         "schema": {

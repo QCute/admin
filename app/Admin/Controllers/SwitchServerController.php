@@ -269,7 +269,12 @@ class SwitchServerController extends Controller
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
-            return self::executeLocal(["cp", $local, "$server->server_root/$remote"]);
+            if (file_exists($local)) {
+                copy($local, "$server->server_root/$remote");
+                return "";
+            } else {
+                return "no such file or directory";
+            }
         } else {
             // remote machine
             $command = [$local, "$server->ssh_host:$server->server_root/$remote"];
@@ -292,12 +297,49 @@ class SwitchServerController extends Controller
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
-            return self::executeLocal(["cp", "$server->server_root/$remote", $local], $output);
+            if (file_exists("$server->server_root/$remote")) {
+                copy("$server->server_root/$remote", $local);
+                return "";
+            } else {
+                return "no such file or directory";
+            }
         } else {
             // remote machine
             $command = ["$server->ssh_host:$server->server_root/$remote", $local];
             return self::executeRemote($command, $server->ssh_pass, "scp", $output);
         }
+    }
+
+    /**
+     * Execute maker command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param object|null $config
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeMakerScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
+    {
+        $script = array_merge(["script/shell/maker.sh"], $command);
+        return self::execute($script, $path, $config, $output);
+    }
+
+    /**
+     * Execute run command
+     *
+     * @param array $command
+     * @param string|null $path
+     * @param object|null $config
+     * @param string $output
+     * @return string
+     * @throws Exception
+     */
+    public static function executeRunScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
+    {
+        $script = array_merge(["script/shell/run.sh"], $command);
+        return self::execute($script, $path, $config, $output);
     }
 
     /**
@@ -342,10 +384,8 @@ class SwitchServerController extends Controller
      */
     public static function executeLocal(array $command, string $path = null, string $output = "stdout"): string
     {
-        // fill PATH and SSH_AUTH_SOCK env variables
-        $env = ["PATH" => getenv("PATH"), "SSH_AUTH_SOCK" => getenv("SSH_AUTH_SOCK")];
         // default timeout 10 seconds
-        $process = new Process($command, $path, $env, null, env('PROCESS_TIMEOUT', 10));
+        $process = new Process($command, $path, ["PATH" => getenv("PATH")], null, env('PROCESS_TIMEOUT', 10));
         return self::runProcess($process, $output);
     }
 
@@ -393,38 +433,6 @@ class SwitchServerController extends Controller
         } else {
             throw new Exception("Unknown output: $output", 1);
         }
-    }
-
-    /**
-     * Execute maker command
-     *
-     * @param array $command
-     * @param string|null $path
-     * @param object|null $config
-     * @param string $output
-     * @return string
-     * @throws Exception
-     */
-    public static function executeMakerScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
-    {
-        $script = array_merge(["script/shell/maker.sh"], $command);
-        return self::execute($script, $path, $config, $output);
-    }
-
-    /**
-     * Execute run command
-     *
-     * @param array $command
-     * @param string|null $path
-     * @param object|null $config
-     * @param string $output
-     * @return string
-     * @throws Exception
-     */
-    public static function executeRunScript(array $command, string $path = null, object $config = null, string $output = "stdout"): string
-    {
-        $script = array_merge(["script/shell/run.sh"], $command);
-        return self::execute($script, $path, $config, $output);
     }
 
     /**
