@@ -11,7 +11,7 @@ return [
     | login page.
     |
     */
-    'name' => 'Admin',
+    'name' => env('ADMIN_NAME', 'Admin'),
 
     /*
     |--------------------------------------------------------------------------
@@ -87,7 +87,7 @@ return [
     | Html title for all pages.
     |
     */
-    'title' => 'Admin',
+    'title' => env('ADMIN_TITLE', env('ADMIN_NAME', 'Admin')),
 
     /*
     |--------------------------------------------------------------------------
