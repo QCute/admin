@@ -18,7 +18,7 @@ class ServerListController extends Controller
      *         name = "unionId",
      *         required = true,
      *         @OA\Schema(type = "string"),
-     *         @OA\Examples(example = "int", value = "oic_x5YDSA3gzvOFmf5E76", summary = "Union Id."),
+     *         @OA\Examples(example = "unionId", value = "oic_x5YDSA3gzvOFmf5E76", summary = "微信 Union Id."),
      *     ),
      *     @OA\Response(
      *         response = 200,

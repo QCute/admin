@@ -17,7 +17,7 @@ class MaintainNoticeController extends Controller
      *         name = "platform",
      *         required = true,
      *         @OA\Schema(type = "string"),
-     *         @OA\Examples(example = "int", value = "deal", summary = "敏感词查询"),
+     *         @OA\Examples(example = "platform", value = "deal", summary = "平台"),
      *     ),
      *     @OA\Response(
      *         response = 200,
