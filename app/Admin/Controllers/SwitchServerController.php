@@ -61,11 +61,12 @@ class SwitchServerController extends Controller
             }
             $list = "<option value='$current->server_node'>$current->server_name</option>$list";
         }
-        $url = "switch-server?server=";
+        // path
+        $path = "/switch-server?server=";
+        // add prefix
         $prefix = config('admin.route.prefix');
-        if (!empty($prefix)) {
-            $url = "/$prefix/$url";
-        }
+        $path = empty($prefix) ? $path : "/$prefix" . $path;
+        // view
         return "
             <style>.server-select{margin: 8px 8px 0px 0px;}</style>
             <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
@@ -80,10 +81,10 @@ class SwitchServerController extends Controller
             <script>
                 $(document).ready(function() { 
                     $('.server-list').select2({placeholder: ''}).on('change', function(){
-                        $.pjax({container: '#pjax-container', url: '$url' + this.value});
+                        $.pjax({container: '#pjax-container', url: '$path' + this.value});
                     });
                     $('.server-refresh').on('click', function(){
-                        $.pjax({container: '#pjax-container', url: '$url' + $('.server-list').val() + '&reload=true'});
+                        $.pjax({container: '#pjax-container', url: '$path' + $('.server-list').val() + '&reload=true'});
                     });
                 });
             </script>
