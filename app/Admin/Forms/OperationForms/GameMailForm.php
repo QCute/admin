@@ -85,6 +85,8 @@ class GameMailForm extends Form {
             ->textarea("role_id", trans("admin.role_id"))
             ->style("resize", "vertical")
             ->required();
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**

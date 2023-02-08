@@ -103,6 +103,8 @@ class UserManageForm extends Form {
             })
             ->default("account")
             ->required();
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**

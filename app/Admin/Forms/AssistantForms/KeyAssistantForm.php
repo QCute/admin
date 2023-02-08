@@ -145,27 +145,29 @@ class KeyAssistantForm extends Form
         $key = str_replace("\n", "\\n", $data['key']);
         $pub_key = str_replace("\n", "\\n", $data['pub_key']);
         $this->html("
-        <script>
-            (function() {
-                // key type
-                const type = '$type'
-                // private key
-                const key = '$key';
-                if (key) save('id_' + type, key);
-                // public key
-                const pub_key = '$pub_key'
-                if (pub_key) save('id_' + type + '.pub', pub_key);
-            })();
-            function save(name, data) {
-                const aTag = document.createElement('a');
-                aTag.setAttribute('download', name);
-                const blob = new Blob([data], { 'type': 'application/octet-stream' });
-                aTag.setAttribute('href', URL.createObjectURL(blob));
-                aTag.click();
-                URL.revokeObjectURL(blob);
-            }
-        </script>
+            <script>
+                (function() {
+                    // key type
+                    const type = '$type'
+                    // private key
+                    const key = '$key';
+                    if (key) save('id_' + type, key);
+                    // public key
+                    const pub_key = '$pub_key'
+                    if (pub_key) save('id_' + type + '.pub', pub_key);
+                })();
+                function save(name, data) {
+                    const aTag = document.createElement('a');
+                    aTag.setAttribute('download', name);
+                    const blob = new Blob([data], { 'type': 'application/octet-stream' });
+                    aTag.setAttribute('href', URL.createObjectURL(blob));
+                    aTag.click();
+                    URL.revokeObjectURL(blob);
+                }
+            </script>
         ");
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**

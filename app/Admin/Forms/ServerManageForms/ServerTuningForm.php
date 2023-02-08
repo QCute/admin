@@ -137,48 +137,49 @@ class ServerTuningForm extends Form
         // script
         $this->html("
             <script>
-            // local time loop
-            function getLocalTime() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = (now.getMonth() + 1).toString(10, 2).padStart(2, '0');
-                const date = now.getDate().toString(10, 2).padStart(2, '0');
-                const hour = now.getHours().toString(10, 2).padStart(2, '0');
-                const minute = now.getMinutes().toString(10, 2).padStart(2, '0');
-                const second = now.getSeconds().toString(10, 2).padStart(2, '0');
-                const time = document.querySelector('[name=get-local-time]');
-                if(time) {
-                    time.text = year + '-' + month + '-' + date + ' ' + hour + ':' + minute + ':' + second;
-                    setTimeout(() => getLocalTime(), 1000);
-                }
-            }
-            // server time loop
-            function getServerTime() {
-                axios({ 'url': '$path' + '-get-server-time' }).then(({data}) => { 
-                    const time = document.querySelector('[name=get-server-time]');
+                // local time loop
+                function getLocalTime() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = (now.getMonth() + 1).toString(10, 2).padStart(2, '0');
+                    const date = now.getDate().toString(10, 2).padStart(2, '0');
+                    const hour = now.getHours().toString(10, 2).padStart(2, '0');
+                    const minute = now.getMinutes().toString(10, 2).padStart(2, '0');
+                    const second = now.getSeconds().toString(10, 2).padStart(2, '0');
+                    const time = document.querySelector('[name=get-local-time]');
                     if(time) {
-                        time.text = data;
-                        setTimeout(() => getServerTime(), 1000);
-                    } 
-                });
-            }
-            // server state loop
-            function getServerState() {
-                axios({ 'url': '$path' + '-get-server-state' }).then(({data}) => {
-                    const state = document.querySelector('[name=get-server-state]');
-                    if(state) {
-                        state.text = data;
-                        setTimeout(() => getServerState(), 1000);
+                        time.text = year + '-' + month + '-' + date + ' ' + hour + ':' + minute + ':' + second;
+                        setTimeout(() => getLocalTime(), 1000);
                     }
-                })
-            }
-            
-            // time and state loop
-            getLocalTime();
-            getServerTime();
-            getServerState();
-            
-        </script>");
+                }
+                // server time loop
+                function getServerTime() {
+                    axios({ 'url': '$path' + '-get-server-time' }).then(({data}) => { 
+                        const time = document.querySelector('[name=get-server-time]');
+                        if(time) {
+                            time.text = data;
+                            setTimeout(() => getServerTime(), 1000);
+                        } 
+                    });
+                }
+                // server state loop
+                function getServerState() {
+                    axios({ 'url': '$path' + '-get-server-state' }).then(({data}) => {
+                        const state = document.querySelector('[name=get-server-state]');
+                        if(state) {
+                            state.text = data;
+                            setTimeout(() => getServerState(), 1000);
+                        }
+                    })
+                }
+                // time and state loop
+                getLocalTime();
+                getServerTime();
+                getServerState();
+            </script>
+        ");
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
 
         $this->disableReset();
         $this->disableSubmit();

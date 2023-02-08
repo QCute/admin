@@ -95,6 +95,8 @@ class GameNoticeForm extends Form {
             ->help($help)
             ->default("")
             ->value("");
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**

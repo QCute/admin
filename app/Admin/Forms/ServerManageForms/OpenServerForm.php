@@ -121,6 +121,8 @@ class OpenServerForm extends Form {
             ->select("recommend", trans("admin.server_recommend.recommend"))
             ->options($options)
             ->required();
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**

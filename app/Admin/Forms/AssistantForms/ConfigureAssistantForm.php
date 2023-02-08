@@ -67,6 +67,8 @@ class ConfigureAssistantForm extends Form
                 ->min(1)
                 ->required();
         });
+        // scroll to top
+        $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");
     }
 
     /**
