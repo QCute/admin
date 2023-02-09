@@ -4,6 +4,8 @@ namespace App\Admin\Controllers;
 
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Widgets\Tab;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class ChartController extends AdminController
 {
@@ -46,34 +48,21 @@ class ChartController extends AdminController
      * @param array $series
      * @return string
      */
-    public function makeChart(array $grid = [], array $legend = [], array $xAxis = [], array $yAxis = [], array $series = []): string
+    public function makeChart(array $option = [], string $active = '', int $padding = 164, int $height = 0): string
     {
-        if (empty($grid)) {
-            $grid = json_encode([
-                'left' => '0px',
-                'right' => '0px',
-                'top' => '25px',
-                'bottom' => '0px',
-                'containLabel' => true
-            ]);
-        }
-        $legend = json_encode($legend);
-        $xAxis = json_encode($xAxis);
-        $yAxis = json_encode($yAxis);
-        $series = json_encode($series);
+        $id = Str::random();
+        $option = json_encode($option);
+        // add time picker height
+        $padding = $active == "pick" ? $padding + 34 + 10 : $padding;
+        $height = $height == 0 ? "calc(100vh - {$padding}px)" : "{$height}px";
         return "
-            <div id='chart' style='width: 100%; height: calc(100vh - 165px); position: relative;'></div>
+            <div id='chart-{$id}' style='width: 100%; height: $height; position: relative;'></div>
             <script>
                 $(function () {
-                    let chart = echarts.init(document.getElementById('chart'), 'shine');
-                    chart.setOption({
-                        grid: $grid,
-                        legend: $legend,
-                        xAxis: $xAxis,
-                        yAxis: $yAxis,
-                        series: $series
-                    });
+                    const chart = echarts.init(document.getElementById('chart-{$id}'), 'shine');
+                    chart.setOption($option);
                     window.onresize = () => chart.resize();
+                    (new ResizeObserver(() => chart.resize())).observe(document.querySelector('#chart-{$id}'));
                 });
             </script>
         ";
@@ -87,36 +76,40 @@ class ChartController extends AdminController
      * @param string $chart
      * @return string
      */
-    public function makeTab(array $array, string $active, string $chart): string
+    public function makeTimeTab(array $array, string $active, string $content): string
     {
         $url = request()->url();
+        $start_date = request()->input("start-date", date_format(date_create(),"Y-m-d"));
+        $end_date = request()->input("end-date", date_format(date_create("+1 day"),"Y-m-d"));
+        $tomorrow = date_format(date_create("+1 day"),"Y-m-d");
+        $open_time = date('Y-m-d', SwitchServerController::getCurrentServerOpenTime());
         // date picker
         if ($active == "pick") {
             $datePicker = "
-                <div name='date-picker' class='col-lg-12 col-md-12 col-xs-12 col-sm-12' style='width:300px; float: left; margin-top: -50px;'>
-                    <div class='col-lg-6 col-md-6 col-xs-6 col-sm-6 center'>
-                        <div class='input-group'>
-                            <span class='input-group-addon'><i class='fa fa-calendar'></i></span>
-                            <input type='text' name='start-date' class='form-control date' style='width: 100px'>
-                        </div>
+                <div style='display: flex;margin-bottom: 10px;padding: unset;'>
+                    <div class='input-group'>
+                        <span class='input-group-addon input-group-addon-front' style='cursor: pointer;'><i class='fa fa-calendar'></i></span>
+                        <input class='form-control date' type='text' name='start-date' value='{$start_date}'>
                     </div>
-                    <div class='col-lg-6 col-md-6 col-xs-6 col-sm-6 center'>
-                        <div class='input-group'>
-                            <span class='input-group-addon'><i class='fa fa-arrows-h'></i></span>
-                            <input type='text' name='end-date' class='form-control date' style='width: 100px'>
-                            <span class='input-group-btn'>
-                                <a id='picker-ok' onclick=\"this.href += '&start-date=' + document.querySelector('[name=start-date]').value + '&end-date=' + document.querySelector('[name=end-date]').value\" href='$url?time=pick'>
-                                    <button class='form-control btn-info' type='button'>" . trans("admin.confirm") . "</button>
-                                </a>
-                            </span>
-                        </div>
+                    <div class='input-group'>
+                        <span class='input-group-addon input-group-addon-back' style='cursor: pointer;'><i class='fa fa-arrows-h'></i></span>
+                        <input class='form-control date' type='text' name='end-date' value='{$end_date}'>
                     </div>
+                    <span class='input-group'>
+                        <a class='btn btn-info' style='border-radius: unset;' onclick=\"this.href += '&start-date=' + document.querySelector('[name=start-date]').value + '&end-date=' + document.querySelector('[name=end-date]').value\" href='$url?time=pick'>
+                            " . trans("admin.confirm") . "
+                        </a>
+                    </span>
                 </div>
-                <script type='text/javascript'>
+                <script>
                     $(function () { 
                         $('.date').datetimepicker({ 'format': 'YYYY-MM-DD', defaultDate: 'now', 'locale' : moment.locale('" . config("app.locale") . "'), 'allowInputToggle' : true});
-                        const width = Array.from(document.querySelector('.nav-tabs').children).reduce((a, e) => a + e.clientWidth, -30);
-                        document.querySelector('[name=date-picker]').style.marginLeft = width + 'px';
+                        document.querySelector('.input-group-addon-front').onclick = () => {
+                            document.querySelector('[name=start-date]').value = '$open_time';
+                        };
+                        document.querySelector('.input-group-addon-back').onclick = () => {
+                            document.querySelector('[name=end-date]').value = '$tomorrow';
+                        };
                     });
                 </script>
             ";
@@ -124,12 +117,55 @@ class ChartController extends AdminController
             $datePicker = "";
         }
         // tab
+        $array = array_map(function ($row) {
+            return ["name" => $row, "title" => trans("admin." . $row), "key" => "time", "value" => $row];
+        }, $array);
+        return $this->makeTab($array, $active, "$datePicker$content");
+    }
+    /**
+     * Make Search.
+     *
+     * @param string $key
+     * @param string $value
+     * @return string
+     */
+    public function makeSearch(string $key = "", string $value = ""): string
+    {
+        $url = request()->url();
+        $query = Arr::query(request()->query());
+        // search
+        return "
+            <div style='display: flex;margin-bottom: 10px;padding: unset;'>
+                <div class='input-group'>
+                    <span class='input-group-addon input-group-addon-front' style='cursor: pointer;'><i class='fa fa-user'></i></span>
+                    <input class='form-control' type='text' name='$key' value='$value' placeholder='" . trans("admin.$key") . "'>
+                </div>
+                <span class='input-group'>
+                    <a class='btn btn-info' style='border-radius: unset;' onclick=\"this.href += '$key=' + document.querySelector('[name=$key]').value\" href='$url?$query&'>
+                        " . trans("admin.filter") . "
+                    </a>
+                </span>
+            </div>
+        ";
+    }
+
+    public function makeTab(array $array = [], string $active = "", string $content = ""): string
+    {
+        // the tab
         $tab = new Tab();
-        foreach ($array as $time) {
-            if ($time == $active) {
-                $tab->add(trans("admin." . $time), "$datePicker$chart", "$url?time=$time", true);
+        // the url
+        $url = request()->url();
+        // the request
+        $input = request()->query();
+        // build request
+        foreach ($array as $row) {
+            $row = (array)$row;
+            $input[$row["key"]] = $row["value"];
+            $query = Arr::query($input);
+            if ($row["name"] == $active) {
+                $tab->add($row["title"], $content, true);
             } else {
-                $tab->addLink(trans("admin." . $time), "$url?time=$time", false);
+                $tab->addLink($row["title"], "$url?$query", false);
             }
         }
         // view

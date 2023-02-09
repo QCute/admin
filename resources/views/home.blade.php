@@ -1,233 +1,189 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Home</title>
-        <script src="https://unpkg.com/vue@3.2.33/dist/vue.global.prod.js"></script>
-        <!-- AntDesign -->
-        <script src="https://unpkg.com/dayjs@1.11.2/dayjs.min.js"></script>
-        <link href="https://unpkg.com/ant-design-vue@3.2.3/dist/antd.min.css" rel="stylesheet">
-        <script src="https://unpkg.com/ant-design-vue@3.2.3/dist/antd.min.js"></script>
-        <!-- FontAwesome -->
-        <link href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" rel="stylesheet">
-    </head>
-    <body>
-        <div id="container"></div>
-        <script>
-            // view
-            let app = Vue.createApp({
-                setup() {
-                    return {}
-                },
-                mounted() {
+<head>
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html, body { margin: 0; width: 100vw; height: 100vh; display: flex; }
+        body { opacity: 0; animation: fade-in 1s forwards; }
+        @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        div { display: flex; align-items: center; }
+        a { color: #1890ff; text-decoration: none; }
 
-                },
-                'methods': {
-                },
-                "template": `
+        .left {
+            width: 250px;
+            height: 100vh;
+            overflow: auto;
+            flex-direction: column;
+            background-color: #323232;
+        }
 
-<a-row justify="center">
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-brands fa-git-alt fa-3x"></i>
-                </template>
-                <template #title>
-                    Git
-                </template>
-                <template #description>
-                    <h3 style="color:red">git用ssh key(可进入后台 - 工具 - SSH Key生成页面生成)<h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa fa-gears fa-3x" aria-hidden="true"></i>
-                </template>
-                <template #title>
-                    SVN
-                </template>
-                <template #description>
-                    <h3 style="color:red">账号名字拼音, 密码私聊发</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-solid fa-gamepad fa-3x"></i>
-                </template>
-                <template #title>
-                    协议调试
-                </template>
-                <template #description>
-                    <h3><a href="/web/protocol.html">进入</a></h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-</a-row>
-<a-row justify="center">
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-brands fa-laravel fa-3x"></i>
-                </template>
-                <template #title>
-                    后台目录
-                </template>
-                <template #description>
-                    <h3>git@192.168.30.155:~/moco/admin</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa fa-code-branch fa-3x" aria-hidden="true"></i>
-                </template>
-                <template #title>
-                    服务器目录
-                </template>
-                <template #description>
-                    <h3>git@192.168.30.155:~/moco/server</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-brands fa-unity fa-3x"></i>
-                </template>
-                <template #title>
-                    客户端目录
-                </template>
-                <template #description>
-                    <h3>svn://192.168.30.155/moco/client</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-</a-row>
-<a-row justify="center">
+        .left > .top {
+            width: 100%;
+            height: 64px;
+        }
 
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa fa-code fa-3x" aria-hidden="true"></i>
-                </template>
-                <template #title>
-                    协议目录
-                </template>
-                <template #description>
-                    <h3>svn://192.168.30.155/moco/protocol</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-brands fa-js fa-3x"></i>
-                </template>
-                <template #title>
-                    客户端配置文件目录
-                </template>
-                <template #description>
-                    <h3>svn://192.168.30.155/moco/configure</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa fa-book fa-3x" aria-hidden="true"></i>
-                </template>
-                <template #title>
-                    文档文件目录
-                </template>
-                <template #description>
-                    <h3>svn://192.168.30.155/moco/doc</h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-</a-row>
-<a-row justify="center">
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-solid fa-file-image fa-3x"></i>
-                </template>
-                <template #title>
-                    美术资源文件目录
-                </template>
-                <template #description>
-                    <h3>svn://192.168.30.155/moco/res<h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa fa-user-large fa-3x" aria-hidden="true"></i>
-                </template>
-                <template #title>
-                    后台地址
-                </template>
-                <template #description>
-                    <h3><a href="/admin">进入</a></h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-    <a-col :span="8">
-        <a-card hoverable style="">
-            <a-card-meta>
-                <template #avatar>
-                    <i class="fa-solid fa-paper-plane fa-3x"></i>
-                </template>
-                <template #title>
-                    API文档
-                </template>
-                <template #description>
-                    <h3><a href="/api/documentation#/default">进入</a></h3>
-                </template>
-            </a-card-meta>
-        </a-card>
-    </a-col>
-</a-row>
-                `,
-            });
-            app.use(antd.Avatar);
-            app.use(antd.Card);
-            app.use(antd.Col);
-            app.use(antd.Row);
-            app.use(antd.Form);
-            app.use(antd.Input);
-            app.use(antd.List);
-            app.use(antd.Select);
-            app.use(antd.Tabs);
-            app.mount('#container');
-        </script>
-    </body>
+        .left > .item {
+            width: 100%;
+            padding: 8px 0px 8px 0px;
+            margin-bottom: 2%;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 1.2em;
+        }
+
+        .left > .item:hover {
+            background-color: rgba(255,255,255,.1);
+            cursor: pointer;
+        }
+
+        .left > .item  > .icon {
+            width: 20%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .left > .item > .text {
+            width: 80%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+        }
+
+        .right {
+            position: relative;
+            width: calc(100vw - 250px);
+            height: 100vh;
+            overflow: auto;
+            flex-direction: column;
+            background-color: #f7f7f7;
+        }
+
+        .right > .top {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: calc(100vw - 250px);
+            height: 64px;
+            background-color: #fff;
+            box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+            z-index: 10;
+        }
+
+        .right > .content {
+            width: 100%;
+            flex-direction: column;
+            padding: 24px 0px 48px 0px;
+        }
+        
+        .right > .content > .header {
+            width: calc(100% - 4%);
+            margin: 12px 2%;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .right > .content > .block {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .right > .content > .block > .card {
+            width: 22.5%;
+            height: 96px;
+            margin: 12px 1%;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+        }
+        
+        .right > .content > .block > .card:first-child {
+            width: 22.5%;
+            height: 96px;
+            margin: 12px 1% 12px 2%;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+        }
+
+        .right > .content > .block > .card > .icon {
+            width: 20%;
+            height: 75%;
+            justify-content: center;
+            font-size: 2.5em;
+        }
+
+        .right > .content > .block > .card > .text {
+            width: 80%;
+            flex-direction: column;
+        }
+
+        .right > .content > .block > .card > .text > .title {
+            width: 100%;
+            margin: 0px 0px 4px 0px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .right > .content > .block > .card > .text > .content {
+            width: 100%;
+            margin: 4px 0px 0px 0px;
+            font-size: 0.76em;
+        }
+
+    </style>
+    <script>
+
+    </script>
+</head>
+<body>
+    <div id='nav' class='left'>
+        <!-- <div class="top"></div> -->
+        @foreach ($menu as $item)
+        <div class='item' onclick="javascript:location.href='#{{ $item->title }}'">
+            <div class="icon">
+                <i class="fa {{ $item->icon }}" style="color: {{ $item->color }}"></i>
+            </div>
+            <div class='text'>{{ $item->title }}</div>
+        </div>
+        @endforeach
+    </div>
+    <div id='pannel' class='right'>
+        <!-- <div class="top"></div> -->
+        <div class="content">
+            @foreach ($menu as $item)
+            <div id="{{ $item->title }}" class="header">
+                {{ $item->title }}
+            </div>
+
+            <div class="block">
+                @foreach ($item->sub as $value)
+                <div class="card">
+                    <div class="icon">
+                        <i class="fa {{ $value->icon }}" style="color: {{ $value->color }}"></i>
+                    </div>
+                    <div class="text">
+                        
+                        <div class="title">{{ $value->title }}</div>
+                        @if ($value->url == "")
+                        <div class="content">{{ $value->content }}</div>
+                        @else
+                        <div class="content"><a href="{{ $value->url }}">{{ $value->content }}</a></div>
+                        @endif
+                        
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endforeach
+
+        </div>
+    </div>
+</body>
 </html>

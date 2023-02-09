@@ -77,6 +77,14 @@ class UserOnlineController extends ChartController
             $online = array_column($data, "online");
             $hosting = array_column($data, "hosting");
         }
+        // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $legend = [
             'icon' => 'circle',
             'top' => '5%',
@@ -180,9 +188,15 @@ class UserOnlineController extends ChartController
                 'data' => $hosting
             ],
         ];
-        // chart
-        $chart = $this->makeChart([], $legend, $xAxis, $yAxis, $series);
-        $tab = $this->makeTab(["hour", "day", "pick"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'legend' => $legend,
+            'xAxis' => $xAxis,
+            'yAxis' => $yAxis,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["hour", "day", "pick"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

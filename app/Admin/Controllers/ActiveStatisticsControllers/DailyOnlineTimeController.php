@@ -93,6 +93,13 @@ class DailyOnlineTimeController extends ChartController
             $color = ['#37a2da', '#32c5e9', '#9fe6b8', '#ffdb5c', '#ff9f7f', '#fb7293', '#e7bcf3', '#8378ea', '#5bc2e7', '#6980c5', '#12ED93', '#f376e0'];
         }
         // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $legend = [
             'type' => 'scroll',
             'orient' => 'vertical',
@@ -107,8 +114,13 @@ class DailyOnlineTimeController extends ChartController
             'color' => $color,
             'data' => $data,
         ];
-        $chart = $this->makeChart([], $legend, [], [], $series);
-        $tab = $this->makeTab(["week", "month", "all", "pick"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'legend' => $legend,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["week", "month", "all", "pick"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

@@ -12,10 +12,10 @@ class PaymentController extends Controller
     private static string $PRODUCT_SECRET = "88c19f4cc4fb440f8996d771d34c3a3c";
     public function pay(): JsonResponse
     {
-        // api.fake.me/payment?order_id=order_id&recharge_id=1&channel=channel&role_id=1&role_name=role_name&server_id=1001&account_name=account_name&money=0&mark=mark&coupon=coupon&sign=a5a5af8edc03300e44aa8ba9ff96dcb3
+        // api.fake.me/payment?order_id=order_id&charge_id=1&channel=channel&role_id=1&role_name=role_name&server_id=1001&account_name=account_name&money=0&mark=mark&coupon=coupon&sign=a5a5af8edc03300e44aa8ba9ff96dcb3
         $time = time();
         // parameter
-        $recharge_id = request()->input("recharge_id", 0);
+        $charge_id = request()->input("charge_id", 0);
         $order_id = request()->input("order_id", "");
         $channel = request()->input("channel", "");
         $role_id = request()->input("role_id", 0);
@@ -34,11 +34,11 @@ class PaymentController extends Controller
         if (is_null($server)) {
             return response()->json(["status" => "failure", "code" => 0, "msg" => "Server Id Invalid"]);
         }
-        // save recharge data
+        // save charge data
         try {
             $connection = SwitchServerController::changeConnection($server);
             $data = [
-                "recharge_id" => $recharge_id,
+                "charge_id" => $charge_id,
                 "order_id" => $order_id,
                 "channel" => $channel,
                 "role_id" => $role_id,
@@ -46,9 +46,9 @@ class PaymentController extends Controller
                 "money" => $money,
                 "time" => $time
             ];
-            $recharge_no = $connection->table("`recharge`")->insertGetId($data);
+            $charge_no = $connection->table("charge")->insertGetId($data);
             // notify server
-            $result = SwitchServerController::send($server, "recharge", ["recharge_no" => $recharge_no, "role_id" => intval($role_id)]);
+            $result = SwitchServerController::send($server, "charge", ["charge_no" => $charge_no, "role_id" => intval($role_id)]);
             if (!empty($result["error"])) {
                 Log::error("NOTIFY SERVER ERROR:", $result["error"]);
             }

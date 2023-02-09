@@ -33,20 +33,7 @@ class UserManageForm extends Form {
         // request
         $role_id = json_decode("[" . $role_id . "]");
         $array = SwitchServerController::send($server, $command, ["role_id" => $role_id]);
-        // handle result
-        $ok = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
-        }, array_keys($array["ok"]), $array["ok"]));
-        $error = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
-        }, array_keys($array["error"]), $array["error"]));
-        // tips
-        if (!empty($ok)){
-            admin_success(trans("admin.succeeded"), $ok);
-        }
-        if (!empty($error)) {
-            admin_error(trans("admin.failed"), $error);
-        }
+        SwitchServerController::handleSendResult($array);
         // back
         return back();
     }

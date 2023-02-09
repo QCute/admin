@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Admin\Controllers\RechargeStatisticsControllers;
+namespace App\Admin\Controllers\ChargeStatisticsControllers;
 
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
 
-class RechargeDistributionController extends ChartController
+class ChargeDistributionController extends ChartController
 {
     /**
      * Index interface.
@@ -27,7 +27,7 @@ class RechargeDistributionController extends ChartController
         // view
         list($before, $now, $active) = $this->getTime("day");
         $data = SwitchServerController::getDB()
-            ->table("recharge")
+            ->table("charge")
             ->whereBetween("time", [$before, $now])
             ->groupBy(["name"])
             ->select([
@@ -46,6 +46,14 @@ class RechargeDistributionController extends ChartController
                 return $object;
             }, $data);
         }
+        // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $legend = [
             'type' => 'scroll',
             'orient' => 'vertical',
@@ -60,8 +68,13 @@ class RechargeDistributionController extends ChartController
             'color' => $color,
             'data' => $data
         ];
-        $chart = $this->makeChart([], $legend, [], [], $series);
-        $tab = $this->makeTab(["day", "week", "month", "all", "pick"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'legend' => $legend,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["day", "week", "month", "all", "pick"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

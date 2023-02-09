@@ -26,12 +26,21 @@ Route::group([
     $router->get('/active-statistics/user-survival', 'ActiveStatisticsControllers\\UserSurvivalController@index');
     $router->get('/active-statistics/daily-online-time', 'ActiveStatisticsControllers\\DailyOnlineTimeController@index');
 
-    // User Recharge Statistics
-    $router->get('/recharge-statistics/daily-recharge', 'RechargeStatisticsControllers\\DailyRechargeController@index');
-    $router->get('/recharge-statistics/recharge-rank', 'RechargeStatisticsControllers\\RechargeRankController@index');
-    $router->get('/recharge-statistics/recharge-ratio', 'RechargeStatisticsControllers\\RechargeRatioController@index');
-    $router->get('/recharge-statistics/recharge-distribution', 'RechargeStatisticsControllers\\RechargeDistributionController@index');
-    $router->get('/recharge-statistics/first-recharge-time-distribution', 'RechargeStatisticsControllers\\FirstRechargeTimeDistributionController@index');
+    // User Charge Statistics
+    $router->get('/charge-statistics/ltv', 'ChargeStatisticsControllers\\LtvController@index');
+    $router->get('/charge-statistics/arp-u', 'ChargeStatisticsControllers\\ArpUController@index');
+    $router->get('/charge-statistics/arp-pu', 'ChargeStatisticsControllers\\ArpPuController@index');
+    $router->get('/charge-statistics/charge-rate', 'ChargeStatisticsControllers\\ChargeRateController@index');
+    $router->get('/charge-statistics/daily-charge', 'ChargeStatisticsControllers\\DailyChargeController@index');
+    $router->get('/charge-statistics/charge-rank', 'ChargeStatisticsControllers\\ChargeRankController@index');
+    $router->get('/charge-statistics/charge-ratio', 'ChargeStatisticsControllers\\ChargeRatioController@index');
+    $router->get('/charge-statistics/charge-distribution', 'ChargeStatisticsControllers\\ChargeDistributionController@index');
+    $router->get('/charge-statistics/first-charge-time-distribution', 'ChargeStatisticsControllers\\FirstChargeTimeDistributionController@index');
+
+    // User Statistics
+    $router->get('/statistics/level', 'StatisticsControllers\\LevelController@index');
+    $router->get('/statistics/asset-produce', 'StatisticsControllers\\AssetProduceController@index');
+    $router->get('/statistics/asset-consume', 'StatisticsControllers\\AssetConsumeController@index');
 
     // Game Data(user/configure/log)
     $router->get('/game-data/user-data', 'GameDataControllers\\TableDataListController@index');

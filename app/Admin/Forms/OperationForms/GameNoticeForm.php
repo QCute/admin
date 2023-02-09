@@ -36,20 +36,7 @@ class GameNoticeForm extends Form {
         ];
         // request
         $array = SwitchServerController::send($server, "notice", $data);
-        // handle result
-        $ok = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
-        }, array_keys($array["ok"]), $array["ok"]));
-        $error = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
-        }, array_keys($array["error"]), $array["error"]));
-        // tips
-        if (!empty($ok)) {
-            admin_success(trans("admin.succeeded"), $ok);
-        }
-        if (!empty($error)) {
-            admin_error(trans("admin.failed"), $error);
-        }
+        SwitchServerController::handleSendResult($array);
         return back();
     }
 

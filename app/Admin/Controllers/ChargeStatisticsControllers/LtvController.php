@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Admin\Controllers\ActiveStatisticsControllers;
+namespace App\Admin\Controllers\ChargeStatisticsControllers;
 
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
@@ -9,8 +9,9 @@ use Encore\Admin\Widgets\Table;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
-class UserSurvivalController extends ChartController
+class LtvController extends ChartController
 {
+
     /**
      * Index interface.
      *
@@ -29,7 +30,7 @@ class UserSurvivalController extends ChartController
         
         // view
         list($before, $now, $active) = $this->getTime("pick");
-
+        
         $table = null;
         for($date = $before; $date < $now; $date += 86400) {
             
@@ -46,18 +47,18 @@ class UserSurvivalController extends ChartController
             $row = SwitchServerController::getDB()->table($sub);
 
             for($day = 0; $day < 30; $day++) {
-                if($day > 5 && $day != 14 && $day != 29) continue;
+                if($day > 6 && $day != 14 && $day != 29) continue;
                 // each day
                 $sub = SwitchServerController::getDB()
                     ->table("role")
                     ->select([
-                        DB::raw("CONCAT(COUNT(DISTINCT login_log.`role_id`), '/', COUNT(DISTINCT role.`role_id`), '(', FORMAT(IFNULL(COUNT(DISTINCT login_log.`role_id`) * 100 / COUNT(DISTINCT role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
+                        DB::raw("CONCAT(IFNULL(SUM(`money`), 0), '/', COUNT(role.`role_id`), '(', FORMAT(IFNULL(IFNULL(SUM(`money`), 0) * 100 / COUNT(role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
                     ])
-                    ->whereBetween("role.register_time", [$date, $date + 86400]) // date
-                    ->leftJoin('login_log', function (JoinClause $join) use ($date, $day) {
+                    ->whereBetween("role.register_time", [$date, $date + 86400]) //date
+                    ->leftJoin('charge', function (JoinClause $join) use ($date, $day) {
                         $join
-                            ->on('role.role_id', '=', 'login_log.role_id')
-                            ->whereBetween('login_log.time', [$date + ($day + 1) * 86400, $date + ($day + 2) * 86400]); // the date offset day
+                            ->on('role.role_id', '=', 'charge.role_id')
+                            ->whereBetween('charge.time', [$date, $date + ($day + 1) * 86400]); // date total offset day
                     });
                 // row sub
                 $row->joinSub($sub, "role_$day", function() {});
@@ -69,11 +70,11 @@ class UserSurvivalController extends ChartController
 
         $data = $table ? array_reverse($table->get()->toArray()) : [];
 
-
         // table
         $headers = [
             trans("admin.date"),
             trans("admin.total"),
+            1 . trans("admin.day"),
             2 . trans("admin.day"),
             3 . trans("admin.day"),
             4 . trans("admin.day"),
@@ -85,9 +86,9 @@ class UserSurvivalController extends ChartController
         ];
 
         $rows = array_values($data);
-        $table = new Table($headers, $rows, ['table-hover']);
+        $table = (new Table($headers, $rows, ['table-hover']))->render();
         // box
-        $tab = $this->makeTimeTab(["pick"], $active, $table->render());
+        $tab = $this->makeTimeTab(["pick"], $active, "$table");
         // draw
         return $content->title("")->body($tab);
     }

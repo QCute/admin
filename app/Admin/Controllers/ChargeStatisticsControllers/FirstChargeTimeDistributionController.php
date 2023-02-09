@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Admin\Controllers\RechargeStatisticsControllers;
+namespace App\Admin\Controllers\ChargeStatisticsControllers;
 
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
 
-class FirstRechargeTimeDistributionController extends ChartController
+class FirstChargeTimeDistributionController extends ChartController
 {
 
     private static function slice($data): array
@@ -70,10 +70,10 @@ class FirstRechargeTimeDistributionController extends ChartController
         list(, , $active) = $this->getTime("all");
         $data = SwitchServerController::getDB()
             ->table("role")
-            ->where("first_recharge_time", ">", "0")
+            ->where("first_charge_time", ">", "0")
             ->groupBy(["name"])
             ->select([
-                DB::raw("(`first_recharge_time` - `register_time`) div 86400 + 1 AS `name`"),
+                DB::raw("(`first_charge_time` - `register_time`) div 86400 + 1 AS `name`"),
                 DB::raw("COUNT(1) AS `value`"),
             ])
             ->get()
@@ -90,6 +90,14 @@ class FirstRechargeTimeDistributionController extends ChartController
                 return $object;
             }, $data);
         }
+        // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $legend = [
             'type' => 'scroll',
             'orient' => 'vertical',
@@ -104,8 +112,13 @@ class FirstRechargeTimeDistributionController extends ChartController
             'color' => $color,
             'data' => $data
         ];
-        $chart = $this->makeChart([], $legend, [], [], $series);
-        $tab = $this->makeTab(["all"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'legend' => $legend,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["all"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

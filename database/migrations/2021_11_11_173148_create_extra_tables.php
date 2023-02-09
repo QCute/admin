@@ -129,6 +129,18 @@ class CreateExtraTables extends Migration
             $table->unsignedInteger('role_number')->index('role_number')->default(0)->comment('数量');
             $table->engine = 'MEMORY';
         });
+
+        Schema::create(config('navigation'), function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('parent_id')->default(0);
+            $table->integer('order')->default(0);
+            $table->string('icon')->default('');
+            $table->string('title')->default('');
+            $table->string('content')->default('');
+            $table->string('url')->default('');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
+        });
     }
 
     /**

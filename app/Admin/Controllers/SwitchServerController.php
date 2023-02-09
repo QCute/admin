@@ -238,7 +238,7 @@ class SwitchServerController extends Controller
             return [trans("admin.unknown_server") => $server];
         }
         // send and get result
-        $result = ["ok" => [], "error" => []];
+        $result = ["succeeded" => [], "failed" => [], "error" => []];
         foreach ($server_list as $server) {
             try {
                 $url = "$server->server_host:$server->server_port";
@@ -247,12 +247,47 @@ class SwitchServerController extends Controller
                 } else {
                     $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
                 }
-                $result["ok"][$server->server_name] = $response->throw()->body();
+                $json = $response->json();
+                $key = $json["result"] == "ok" ? "succeeded" : "failed";
+                $result[$key][$server->server_name] = $json;
             } catch (Exception $exception) {
                 $result["error"][$server->server_name] = $exception->getMessage();
             }
         }
         return $result;
+    }
+
+    public static function handleSendResult(array $array)
+    {
+        // succeeded
+        $succeeded = implode("", array_map(function ($k, $v) {
+            return "$k: $v<br/>";
+        }, array_keys($array["succeeded"]), $array["succeeded"]));
+        
+        // fail
+        $failed = implode("", array_map(function ($k, $v) {
+            return "$k: $v<br/>";
+        }, array_keys($array["failed"]), $array["failed"]));
+        
+        // error
+        $error = implode("", array_map(function ($k, $v) {
+            return "$k: $v<br/>";
+        }, array_keys($array["error"]), $array["error"]));
+
+        // succeeded
+        if (!empty($succeeded)) {
+            admin_success(trans("admin.succeeded"), $succeeded);
+        }
+        
+        // failed
+        if (!empty($failed)) {
+            admin_warning(trans("admin.failed"), $failed);
+        }
+
+        // error
+        if (!empty($error)) {
+            admin_error(trans("admin.error"), $error);
+        }
     }
 
     /**

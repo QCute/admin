@@ -76,13 +76,7 @@ class MergeServerForm extends Form {
      */
     public function form()
     {
-        $this->title = trans("admin.open_server");
-        $this
-            ->text("name", trans("admin.name"))
-            ->required();
-        $this
-            ->text("tab", trans("admin.tab"))
-            ->required();
+        $this->title = trans("admin.merge_server");
         // center
         $options = [];
         $list = DB::table("server_list")
@@ -93,12 +87,12 @@ class MergeServerForm extends Form {
         }
         // src
         $this
-            ->select("src", trans("admin.center_name"))
+            ->select("src", trans("admin.merge_from"))
             ->options($options)
             ->required();
         // dst
         $this
-            ->select("dst", trans("admin.world_name"))
+            ->select("dst", trans("admin.merge_to"))
             ->options($options)
             ->required();
         // mode

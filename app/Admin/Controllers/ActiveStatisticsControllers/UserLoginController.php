@@ -80,6 +80,14 @@ class UserLoginController extends ChartController
             $category = array_column($data, "date");
             $login = array_column($data, "number");
         }
+        // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $legend = [
             'icon' => 'circle',
             'top' => '5%',
@@ -148,8 +156,15 @@ class UserLoginController extends ChartController
                 'data' => $login
             ]
         ];
-        $chart = $this->makeChart([], $legend, $xAxis, $yAxis, $series);
-        $tab = $this->makeTab(["day", "week", "month", "all", "pick"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'legend' => $legend,
+            'xAxis' => $xAxis,
+            'yAxis' => $yAxis,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["day", "week", "month", "all", "pick"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

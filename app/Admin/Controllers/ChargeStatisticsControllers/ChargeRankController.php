@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Admin\Controllers\RechargeStatisticsControllers;
+namespace App\Admin\Controllers\ChargeStatisticsControllers;
 
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
 use Illuminate\Support\Facades\DB;
 
-class RechargeRankController extends ChartController
+class ChargeRankController extends ChartController
 {
     /**
      * Index interface.
@@ -28,13 +28,13 @@ class RechargeRankController extends ChartController
         list($before, $now, $active) = $this->getTime("day");
         $data = SwitchServerController::getDB()
             ->table("role")
-            ->where("recharge_total", ">", 0)
+            ->where("charge_total", ">", 0)
             ->whereBetween("register_time", [$before, $now])
             ->groupBy(["name"])
-            ->orderBy("recharge_total", "DESC")
+            ->orderBy("charge_total", "DESC")
             ->limit(100)
             ->select([
-                DB::raw("`recharge_total` AS `value`"),
+                DB::raw("`charge_total` AS `value`"),
                 DB::raw("`role_name` AS `name`"),
             ])
             ->get()
@@ -47,6 +47,14 @@ class RechargeRankController extends ChartController
             $category = array_column($data, "name");
             $rank = array_column($data, "value");
         }
+        // chart
+        $grid = [
+            'left' => '0px',
+            'right' => '0px',
+            'top' => '25px',
+            'bottom' => '0px',
+            'containLabel' => true
+        ];
         $xAxis = [
             'type'=> 'value',
             'splitLine'=> [
@@ -110,8 +118,14 @@ class RechargeRankController extends ChartController
             ],
             'data' => $data
         ];
-        $chart = $this->makeChart([], [], $xAxis, $yAxis, $series);
-        $tab = $this->makeTab(["day", "week", "month", "all", "pick"], $active, $chart);
+        $option = [
+            'grid' => $grid,
+            'xAxis' => $xAxis,
+            'yAxis' => $yAxis,
+            'series' => $series,
+        ];
+        $chart = $this->makeChart($option, $active);
+        $tab = $this->makeTimeTab(["day", "week", "month", "all", "pick"], $active, $chart);
         // draw
         return $content->title("")->body($tab);
     }

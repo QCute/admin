@@ -1,0 +1,25 @@
+<?php
+
+namespace Database\Seeders;
+
+use DB;
+use Illuminate\Database\Seeder;
+
+class DummyClass extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        // base tables
+        DB::table('Table')->truncate();
+        DB::table('Table')->insert(
+            ArrayNavigation
+        );
+
+        // finish
+    }
+}

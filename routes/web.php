@@ -13,4 +13,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('', function () { return view('home'); });
+Route::get('', function () { 
+    $menu = DB::table('navigation')->where('parent_id', 0)->orderBy('order')->get()->toArray();
+    foreach($menu as &$item) {
+        $item->sub = DB::table('navigation')->where('parent_id', $item->id)->orderBy('order')->get()->toArray();
+    }
+    return view('home', [ 'menu' => $menu ]); 
+});
