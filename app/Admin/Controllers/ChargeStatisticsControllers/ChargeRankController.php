@@ -5,6 +5,7 @@ namespace App\Admin\Controllers\ChargeStatisticsControllers;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
+use Encore\Admin\Widgets\Table;
 use Illuminate\Support\Facades\DB;
 
 class ChargeRankController extends ChartController
@@ -25,107 +26,37 @@ class ChargeRankController extends ChartController
                 ->withWarning("Could not found current server");
         }
         // view
-        list($before, $now, $active) = $this->getTime("day");
+        list($before, $now, $active) = $this->getTime("pick");
         $data = SwitchServerController::getDB()
-            ->table("role")
-            ->where("charge_total", ">", 0)
-            ->whereBetween("register_time", [$before, $now])
-            ->groupBy(["name"])
-            ->orderBy("charge_total", "DESC")
-            ->limit(100)
+            ->table("charge")
+            ->leftJoin("role", "role.role_id", "charge.role_id")
+            ->whereBetween("charge.time", [$before, $now])
+            ->groupBy("charge.role_id")
+            ->orderBy("today_rank", "ASC")
             ->select([
-                DB::raw("`charge_total` AS `value`"),
-                DB::raw("`role_name` AS `name`"),
+                DB::raw("charge.`role_id`"),
+                DB::raw("role.`role_name`"),
+                DB::raw("ROW_NUMBER() OVER ( ORDER BY `today` DESC) AS `today_rank`"),
+                DB::raw("SUM(charge.`money`) AS `today`"),
+                DB::raw("ROW_NUMBER() OVER ( ORDER BY `total` DESC) AS `total_rank`"),
+                DB::raw("role.`charge_total` AS `total`"),
             ])
             ->get()
             ->toArray();
-        // chart data
-        if (empty($data)) {
-            $category = [trans("admin.nothing")];
-            $rank = [""];
-        } else {
-            $category = array_column($data, "name");
-            $rank = array_column($data, "value");
-        }
-        // chart
-        $grid = [
-            'left' => '0px',
-            'right' => '0px',
-            'top' => '25px',
-            'bottom' => '0px',
-            'containLabel' => true
-        ];
-        $xAxis = [
-            'type'=> 'value',
-            'splitLine'=> [
-                'show'=> true
-            ],
-            'axisTick'=> [
-                'show'=> false
-            ],
-            'axisLabel'=> [
-                'textStyle'=> [
-                    'color'=> '#556677'
-                ]
-            ],
-            'axisLine'=> [
-                'show'=> false,
-                'lineStyle'=> [
-                    'color'=> '#DCE2E8'
-                ]
-            ]
-        ];
-        $yAxis = [
-            [
-                'type'=> 'category',
-                'inverse'=> true,
-                'splitLine'=> [
-                    'show'=> false
-                ],
-                'axisTick'=> [
-                    'show'=> false
-                ],
-                'axisLabel'=> [
-                    'textStyle'=> [
-                        'color'=> '#556677'
-                    ]
-                ],
-                'axisLine'=> [
-                    'show'=> false
-                ],
-                'data'=> $category
-            ], [
-                'inverse'=> true,
-                'axisTick'=> 'none',
-                'axisLine'=> 'none',
-                'show'=> true,
-                'axisLabel'=> [
-                    'textStyle'=> [
-                        'color'=> '#556677'
-                    ],
 
-                ],
-                'data'=> $rank
-            ]
+        // table
+        $headers = [
+            trans('admin.role_id'),
+            trans('admin.role_name'),
+            trans('admin.today') . " " . trans('admin.rank'),
+            trans('admin.charge'),
+            trans('admin.total') . " " . trans('admin.rank'),
+            trans('admin.charge'),
         ];
-        $series = [
-            'type' => 'bar',
-            'barWidth' => '5',
-            'itemStyle' => [
-                'normal' => [
-                    'color' => '#37a2da'
-                ]
-            ],
-            'data' => $data
-        ];
-        $option = [
-            'grid' => $grid,
-            'xAxis' => $xAxis,
-            'yAxis' => $yAxis,
-            'series' => $series,
-        ];
-        $chart = $this->makeChart($option, $active);
-        $tab = $this->makeTimeTab(["day", "week", "month", "all", "pick"], $active, $chart);
+
+        $table = new Table($headers, $data, ['table-hover']);
+        // box
+        $tab = $this->makeTimeTab(["pick"], $active, $table->render());
         // draw
         return $content->title("")->body($tab);
     }

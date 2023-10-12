@@ -50,15 +50,15 @@ class UserSurvivalController extends ChartController
                 // each day
                 $sub = SwitchServerController::getDB()
                     ->table("role")
-                    ->select([
-                        DB::raw("CONCAT(COUNT(DISTINCT login_log.`role_id`), '/', COUNT(DISTINCT role.`role_id`), '(', FORMAT(IFNULL(COUNT(DISTINCT login_log.`role_id`) * 100 / COUNT(DISTINCT role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
-                    ])
                     ->whereBetween("role.register_time", [$date, $date + 86400]) // date
                     ->leftJoin('login_log', function (JoinClause $join) use ($date, $day) {
                         $join
                             ->on('role.role_id', '=', 'login_log.role_id')
                             ->whereBetween('login_log.time', [$date + ($day + 1) * 86400, $date + ($day + 2) * 86400]); // the date offset day
-                    });
+                    })
+                    ->select([
+                        DB::raw("CONCAT(COUNT(DISTINCT login_log.`role_id`), '/', COUNT(DISTINCT role.`role_id`), '(', FORMAT(IFNULL(COUNT(DISTINCT login_log.`role_id`) * 100 / COUNT(DISTINCT role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
+                    ]);
                 // row sub
                 $row->joinSub($sub, "role_$day", function() {});
             }

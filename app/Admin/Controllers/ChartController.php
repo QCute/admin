@@ -34,8 +34,13 @@ class ChartController extends AdminController
                 $start = request()->input("start-date", date('Y-m-d', time()));
                 $end = request()->input("end-date", date('Y-m-d', time()));
                 return [strtotime($start), strtotime($end), $active];
+            case "all_server":
+                $start = request()->input("start-date", date('Y-m-d', time()));
+                $end = request()->input("end-date", date('Y-m-d', time()));
+                return [strtotime($start), strtotime($end), $active];
+            default:
+                throw new \Exception("Unhandled type: $active", 1);
         }
-        return [];
     }
 
     /**
@@ -53,7 +58,7 @@ class ChartController extends AdminController
         $id = Str::random();
         $option = json_encode($option);
         // add time picker height
-        $padding = $active == "pick" ? $padding + 34 + 10 : $padding;
+        $padding = $active == "pick" || $active == "all_server" ? $padding + 34 + 10 : $padding;
         $height = $height == 0 ? "calc(100vh - {$padding}px)" : "{$height}px";
         return "
             <div id='chart-{$id}' style='width: 100%; height: $height; position: relative;'></div>
@@ -84,7 +89,7 @@ class ChartController extends AdminController
         $tomorrow = date_format(date_create("+1 day"),"Y-m-d");
         $open_time = date('Y-m-d', SwitchServerController::getCurrentServerOpenTime());
         // date picker
-        if ($active == "pick") {
+        if ($active == "pick" || $active == "all_server") {
             $datePicker = "
                 <div style='display: flex;margin-bottom: 10px;padding: unset;'>
                     <div class='input-group'>
@@ -96,7 +101,7 @@ class ChartController extends AdminController
                         <input class='form-control date' type='text' name='end-date' value='{$end_date}'>
                     </div>
                     <span class='input-group'>
-                        <a class='btn btn-info' style='border-radius: unset;' onclick=\"this.href += '&start-date=' + document.querySelector('[name=start-date]').value + '&end-date=' + document.querySelector('[name=end-date]').value\" href='$url?time=pick'>
+                        <a class='btn btn-info' style='border-radius: unset;' onclick=\"this.href += '&start-date=' + document.querySelector('[name=start-date]').value + '&end-date=' + document.querySelector('[name=end-date]').value\" href='$url?time=$active'>
                             " . trans("admin.confirm") . "
                         </a>
                     </span>

@@ -5,6 +5,8 @@ namespace App\Admin\Controllers\ChargeStatisticsControllers;
 use App\Admin\Controllers\ChartController;
 use App\Admin\Controllers\SwitchServerController;
 use Encore\Admin\Layout\Content;
+use Encore\Admin\Widgets\Table;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
 class DailyChargeController extends ChartController
@@ -24,114 +26,99 @@ class DailyChargeController extends ChartController
                 ->title($this->title())
                 ->withWarning("Could not found current server");
         }
+
         // view
-        list($before, $now, $active) = $this->getTime("day");
-        $data = SwitchServerController::getDB()
-            ->table("charge")
-            ->whereBetween("time", [$before, $now])
-            ->groupBy(["name"])
-            ->select([
-                DB::raw("sum(`money`) AS `value`"),
-                DB::raw("DATE_FORMAT(FROM_UNIXTIME(`time`), '%m-%d') AS `name`"),
-            ])
-            ->get()
-            ->toArray();
-        // chart data
-        if (empty($data)) {
-            // data
-            $category = [];
-            for ($start = $before; $start <= $now; $start += 86400) {
-                array_push($category, date("m-d", $start));
-            }
-        } else {
-            $category = array_column($data, "name");
+        list($before, $now, $active) = $this->getTime("pick");
+
+        $table = null;
+        for ($date = $before; $date < $now; $date += 86400) {
+
+            // role number
+            $sub = SwitchServerController::getDB()
+                ->table("role")
+                ->whereBetween("role.register_time", [$date, $date + 86400])
+                ->select([
+                    DB::raw("'" . date("Y-m-d", $date) . "' AS `date`"),
+                    DB::raw("COUNT(role.`role_id`) AS `create`"),
+                ]);
+
+            // row base
+            $row = SwitchServerController::getDB()->table($sub);
+
+            // login
+            $sub = SwitchServerController::getDB()
+                ->table("role")
+                ->whereBetween("role.login_time", [$date, $date + 86400]) // date
+                ->select([
+                    DB::raw("COUNT(role.`role_id`) AS `login`"),
+                ]);
+            // login sub
+            $row->joinSub($sub, "login", function () { });
+
+            // new charge
+            $sub = SwitchServerController::getDB()
+                ->table("charge")
+                ->whereBetween("charge.time", [$date, $date + 86400]) // date
+                ->leftJoin("role", function(JoinClause $join) use ($date) {
+                    $join
+                        ->on("role.role_id", "=", "charge.role_id")
+                        ->whereBetween("role.register_time", [$date, $date + 86400]); // date
+                })
+                ->select([
+                    DB::raw("COUNT(DISTINCT charge.`role_id`) AS `new_user`"),
+                    DB::raw("COUNT(charge.`charge_no`) AS `new_times`"), 
+                    DB::raw("IFNULL(SUM(charge.`money`), 0.00) AS `new_money`"),
+                ]);
+            // new charge sub
+            $row->joinSub($sub, "new", function () { });
+
+            // total charge
+            $sub = SwitchServerController::getDB()
+                ->table("charge")
+                ->whereBetween("charge.time", [$date, $date + 86400]) // date
+                ->select([
+                    DB::raw("COUNT(DISTINCT charge.`role_id`) AS `user`"),
+                    DB::raw("COUNT(charge.`charge_no`) AS `times`"),
+                    DB::raw("IFNULL(SUM(charge.`money`), 0.00) AS `money`"),
+                ]);
+            // total charge sub
+            $row->joinSub($sub, "total", function () { });
+
+            $row->select([
+                "*",
+                DB::raw("IFNULL(money / login, 0) AS `arp_u`"),
+                DB::raw("IFNULL(money / user, 0) AS `arp_pu`"),
+                DB::raw("IFNULL(user / login, 0) AS `charge_rate`"),
+            ]);
+            // union all row
+            $table = $table ? $table->unionAll($row) : $row;
         }
-        // chart
-        $grid = [
-            'left' => '0px',
-            'right' => '0px',
-            'top' => '25px',
-            'bottom' => '0px',
-            'containLabel' => true
-        ];
-        $legend = [
-            'icon' => 'circle',
-            'top' => '5%',
-            'right' => '0%',
-            'itemWidth' => 6,
-            'itemGap' => 20,
-            'textStyle' => [
-                'color' => '#556677'
-            ]
-        ];
-        $xAxis = [
-            'type' => 'category',
-            'splitLine' => [
-                'show' => false
-            ],
-            'axisTick' => [
-                'show' => false
-            ],
-            'axisLabel' => [
-                'textStyle' => [
-                    'color' => '#556677'
-                ]
-            ],
-            'axisLine' => [
-                'lineStyle' => [
-                    'color' => '#DCE2E8'
-                ]
-            ],
-            'data' => $category
-        ];
-        $yAxis = [
-            'type' => 'value',
-            'splitLine' => [
-                'show' => false
-            ],
-            'axisTick' => [
-                'show' => false
-            ],
-            'axisLabel' => [
-                'textStyle' => [
-                    'color' => '#556677'
-                ],
 
-            ],
-            'axisLine' => [
-                'lineStyle' => [
-                'color' => '#DCE2E8'
-                ]
-            ]
-        ];
-        $series = [
-            [
-                'type' => 'bar',
-                'itemStyle' => [
-                    'normal' => [
-                        'color' => '#37a2da'
-                    ]
-                ]
-            ], [
-                'label' => [
-                    'normal' => [
-                        'show' => true,
-                        'position' => 'top',
+        $data = $table ? array_reverse($table->get()->toArray()) : [];
 
-                    ]
-                ],
-                'data' => $data
-            ]
+        $headers = [
+            trans("admin.date"),
+
+            trans("admin.create"),
+            trans("admin.login"),
+
+            trans("admin.new") . " " . trans("admin.charge") . " " . trans("admin.user"),
+            trans("admin.new") . " " . trans("admin.charge") . " " . trans("admin.times"),
+            trans("admin.new") . " " . trans("admin.charge"),
+
+            trans("admin.charge") . " " . trans("admin.user"),
+            trans("admin.charge") . " " . trans("admin.times"),
+            trans("admin.charge"),
+
+            "ARP-U",
+            "ARP-PU",
+            trans("admin.charge") . " " . trans("admin.ratio"),
         ];
-        $option = [
-            'grid' => $grid,
-            'legend' => $legend,
-            'xAxis' => $xAxis,
-            'yAxis' => $yAxis,
-            'series' => $series,
-        ];
-        $chart = $this->makeChart($option, $active);
-        $tab = $this->makeTimeTab(["day", "week", "month", "all", "pick"], $active, $chart);
+
+        $rows = array_values($data);
+        $table = new Table($headers, $rows, ["table-hover"]);
+
+        $tab = $this->makeTimeTab(["pick"], $active, $table->render());
         // draw
         return $content->title("")->body($tab);
     }

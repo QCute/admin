@@ -27,9 +27,10 @@ class ServerListController extends AdminController
     {
         $grid = new Grid(new ServerListModel());
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
+        $table = $grid->model()->getTable();
         $data = DB::table("information_schema.COLUMNS")
             ->where("TABLE_SCHEMA", env("DB_DATABASE"))
-            ->where("TABLE_NAME", "server_list")
+            ->where("TABLE_NAME", $table)
             ->orderBy('ORDINAL_POSITION')
             ->get()
             ->toArray();
@@ -40,13 +41,13 @@ class ServerListController extends AdminController
                 ->style("min-width:8em");
         }
         // filter
-        $grid->filter(function($filter) {
+        $grid->filter(function($filter) use ($table) {
             // remove default id filter
             $filter->disableIdFilter();
 
             $data = DB::table("information_schema.COLUMNS")
                 ->where("TABLE_SCHEMA", env("DB_DATABASE"))
-                ->where("TABLE_NAME", "server_list")
+                ->where("TABLE_NAME", $table)
                 ->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])
                 ->get();
             foreach ($data as $row) {
@@ -73,9 +74,10 @@ class ServerListController extends AdminController
     protected function form(): Form
     {
         $form = new Form(new ServerListModel());
+        $table = $form->model()->getTable();
         $data = DB::table("information_schema.COLUMNS")
             ->where("TABLE_SCHEMA", env("DB_DATABASE"))
-            ->where("TABLE_NAME", "server_list")
+            ->where("TABLE_NAME", $table)
             ->orderBy('ORDINAL_POSITION')
             ->get()
             ->toArray();
@@ -105,7 +107,7 @@ class ServerListController extends AdminController
                 }
                 case "center": {
                     $options = [0 => trans("admin.nothing")];
-                    $list = DB::table("server_list")
+                    $list = DB::table($table)
                         ->where("server_type", "center")
                         ->get();
                     foreach ($list as $item) {
@@ -119,7 +121,7 @@ class ServerListController extends AdminController
                 }
                 case "world": {
                     $options = [0 => trans("admin.nothing")];
-                    $list = DB::table("server_list")
+                    $list = DB::table($table)
                         ->where("server_type", "world")
                         ->get();
                     foreach ($list as $item) {

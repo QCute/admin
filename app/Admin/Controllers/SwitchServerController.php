@@ -47,7 +47,9 @@ class SwitchServerController extends Controller
             $list = "";
         } else {
             // first as default
-            $current = self::getCookieServer($data[0]->server_node);
+            $current = Cookie::get('current_server', $data[0]->server_node);
+            Cookie::queue("current_server", $current);
+
             // change connection
             self::changeConnection($current);
             // build select list
@@ -550,6 +552,33 @@ class SwitchServerController extends Controller
     }
 
     /**
+     * Fold DB
+     * get method must use keyBy after get
+     * 
+     * @param \Closure $get
+     * @param \Closure $update
+     * @return array
+     */
+    public static function foldDB(\Closure $get, \Closure $update): array
+    {
+        $list = self::getServerList();
+        $acc = [];
+        foreach($list as $server) {
+            $db = self::changeConnection($server->server_node);
+            $item = $get($db);
+            if(empty($acc)) {
+                $acc = $item;
+                continue;
+            }
+            foreach($item as $key => $row) {
+                // insert or update
+                $acc[$key] = isset($acc[$key]) ? $update($acc[$key], $row) : $row;
+            }
+        }
+        return $acc;
+    }
+    
+    /**
      * Change game data connection
      *
      * @param int|string|object $server
@@ -560,6 +589,7 @@ class SwitchServerController extends Controller
         $server = is_object($server) ? $server : self::getServer($server);
         $name = self::getConnection();
         $config = Config::get("database.connections.$name");
+        // todo optimize same connection
         // replace with pdo
         $pdo = new PDO("{$config["driver"]}:host=$server->db_host;port=$server->db_port;dbname=$server->db_name;charset={$config["charset"]}", $server->db_username, $server->db_password, [PDO::ATTR_PERSISTENT => true]);
         $connection = DB::connection($name);

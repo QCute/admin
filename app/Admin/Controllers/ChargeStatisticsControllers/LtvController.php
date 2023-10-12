@@ -51,15 +51,15 @@ class LtvController extends ChartController
                 // each day
                 $sub = SwitchServerController::getDB()
                     ->table("role")
-                    ->select([
-                        DB::raw("CONCAT(IFNULL(SUM(`money`), 0), '/', COUNT(role.`role_id`), '(', FORMAT(IFNULL(IFNULL(SUM(`money`), 0) * 100 / COUNT(role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
-                    ])
                     ->whereBetween("role.register_time", [$date, $date + 86400]) //date
                     ->leftJoin('charge', function (JoinClause $join) use ($date, $day) {
                         $join
                             ->on('role.role_id', '=', 'charge.role_id')
                             ->whereBetween('charge.time', [$date, $date + ($day + 1) * 86400]); // date total offset day
-                    });
+                    })
+                    ->select([
+                        DB::raw("CONCAT(IFNULL(SUM(`money`), 0), '/', COUNT(role.`role_id`), '(', FORMAT(IFNULL(IFNULL(SUM(`money`), 0) * 100 / COUNT(role.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
+                    ]);
                 // row sub
                 $row->joinSub($sub, "role_$day", function() {});
             }
@@ -86,9 +86,9 @@ class LtvController extends ChartController
         ];
 
         $rows = array_values($data);
-        $table = (new Table($headers, $rows, ['table-hover']))->render();
+        $table = new Table($headers, $rows, ['table-hover']);
         // box
-        $tab = $this->makeTimeTab(["pick"], $active, "$table");
+        $tab = $this->makeTimeTab(["pick"], $active, $table->render());
         // draw
         return $content->title("")->body($tab);
     }

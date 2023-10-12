@@ -51,15 +51,15 @@ class ArpPuController extends ChartController
                 // each day
                 $sub = SwitchServerController::getDB()
                     ->table("charge")
-                    ->select([
-                        DB::raw("CONCAT(IFNULL(SUM(`money`), 0), '/', COUNT(DISTINCT charge.`role_id`), '(', FORMAT(IFNULL(IFNULL(SUM(`money`), 0) * 100 / COUNT(DISTINCT charge.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
-                    ])
                     ->whereBetween("charge.time", [$date, $date + 86400]) // date
                     ->leftJoin('login_log', function (JoinClause $join) use ($date, $day) {
                         $join
                             ->on('charge.role_id', '=', 'login_log.role_id')
                             ->whereBetween('login_log.time', [$date + ($day) * 86400, $date + ($day + 1) * 86400]); // the date offset day
-                    });
+                    })
+                    ->select([
+                        DB::raw("CONCAT(IFNULL(SUM(`money`), 0), '/', COUNT(DISTINCT charge.`role_id`), '(', FORMAT(IFNULL(IFNULL(SUM(`money`), 0) * 100 / COUNT(DISTINCT charge.`role_id`), 0), 2), '%', ')') AS `day_$day`"),
+                    ]);
                 // row sub
                 $row->joinSub($sub, "role_$day", function() {});
             }
