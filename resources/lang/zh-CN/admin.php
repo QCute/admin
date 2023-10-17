@@ -114,6 +114,7 @@ return [
     'chat'                  => '聊天',
     'clear_silent'          => '解除禁言',
     'click'                 => '点击',
+    'comment'               => '注释',
     'completed'             => '完成',
     'configure_assistant'   => '配表助手',
     'connect_world'         => '是否连接大世界',

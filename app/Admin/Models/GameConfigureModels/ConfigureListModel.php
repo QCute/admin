@@ -86,13 +86,13 @@ class ConfigureListModel extends Model
      */
     private function filter(array $data = []): array
     {
-        $description = request()->input("description");
         $file = request()->input("file");
-        return array_filter($data, function ($row) use ($description, $file) {
-            if (!is_null($description) && is_bool(strpos($row->description, $description))) {
+        $comment = request()->input("comment");
+        return array_filter($data, function ($row) use ($file, $comment) {
+            if (!is_null($file) && is_bool(strpos($row->file, $file))) {
                 return false;
             }
-            if (!is_null($file) && is_bool(strpos($row->file, $file))) {
+            if (!is_null($comment) && is_bool(strpos($row->comment, $comment))) {
                 return false;
             }
             return true;
@@ -139,8 +139,8 @@ class ConfigureListModel extends Model
         }, []);
         // fill log message
         foreach ($data as $row) {
-            if (array_key_exists($row->description, $map)) {
-                $join = $map[$row->description];
+            if (array_key_exists($row->comment, $map)) {
+                $join = $map[$row->comment];
                 $row->user_name = $join->user_name;
                 $row->time = $join->time;
                 $row->action = $join->state;

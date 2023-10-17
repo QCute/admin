@@ -88,7 +88,7 @@ class ConfigureListController extends AdminController
             <div class='btn btn-primary btn-file'>
                 <i class='glyphicon glyphicon-folder-open'></i>
                 <span>" . trans("admin.browse") . "</span>
-                <input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='xml'>
+                <input type='file' onchange='document.getElementById(\"filename\").value = this.value.split(/\\\|\//g).pop()' name='sheet'>
             </div>
             <input class='btn btn-primary' type='submit' value='" . trans("admin.import") . "'/>
         </form>
@@ -98,8 +98,8 @@ class ConfigureListController extends AdminController
         });
         $data = [
             (object)[
-                "NAME" => "description",
-                "COMMENT" => trans("admin.description"),
+                "NAME" => "comment",
+                "COMMENT" => trans("admin.comment"),
             ],
             (object)[
                 "NAME" => "file",
@@ -132,7 +132,7 @@ class ConfigureListController extends AdminController
                 ->style("min-width:8em")
                 ->display(function () use ($url, $path, $row) {
                     if ($row->NAME == "OPERATION" && (empty($this->action) || $this->action == "0")) {
-                        $export = "<a href='$url?action=export&file=$this->file&xml=$this->description'><i class='fa fa-upload'></i><span class='hidden-xs'> " . trans("admin.export"). "</span></a>";
+                        $export = "<a href='$url?action=export&file=$this->file&comment=$this->comment'><i class='fa fa-upload'></i><span class='hidden-xs'> " . trans("admin.export"). "</span></a>";
                         $generate = "<a href='$url?action=$path&file=$this->file'><i class='fa fa-refresh'></i><span class='hidden-xs'> " . trans("admin.generate"). "</span></a>";
                         $download = "<a href='$url?action=download&file=$this->file'><i class='fa fa-download'></i><span class='hidden-xs'> " . trans("admin.download"). "</span></a>";
                         return "$export | $generate | $download";
@@ -216,7 +216,7 @@ class ConfigureListController extends AdminController
             }
             // generate xml file
             $file = request()->input("file");
-            $basename = request()->input("xml");
+            $basename = request()->input("comment");
             $filename = "$basename.xml";
             SwitchServerController::executeMakerScript(["sheet", basename($file), "xml/"]);
             SwitchServerController::pullFile("xml/$filename", "$path/$filename");
@@ -238,7 +238,7 @@ class ConfigureListController extends AdminController
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
-            $file = request()->file("xml");
+            $file = request()->file("sheet");
             $filename = $file->getClientOriginalName();
             $basename = basename($filename, ".xml");
             $result = $file->storeAs("xml", $filename, ["disk" => "admin"]);
