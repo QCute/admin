@@ -13,7 +13,7 @@ class ImpeachReportController extends Controller
      *     summary = "举报",
      *     @OA\RequestBody(
      *         @OA\MediaType(
-     *             mediaType="application/x-www-form-urlencoded",
+     *             mediaType="application/json",
      *             @OA\Schema(
      *                 @OA\Property(
      *                     property = "server_id",
@@ -55,7 +55,8 @@ class ImpeachReportController extends Controller
      *                     type = "string",
      *                     description = "内容",
      *                 ),
-     *             )
+     *             ),
+     *             @OA\Examples(example = "result", value = { "server_id": 1, "role_id": 1, "role_name": "nickname", "impeacher_server_id": 1, "impeacher_role_id": 1, "impeacher_role_name": "nickname", "type": "", "content": ""}, summary = "举报信息"),
      *         )
      *     ),
      *     @OA\Response(
@@ -70,14 +71,14 @@ class ImpeachReportController extends Controller
     public function report(): JsonResponse
     {
         // post must be carriage csrf field or remove VerifyCsrfToken
-        $server_id = request()->input("server_id", 0);
-        $role_id = request()->input("role_id", 0);
-        $role_name = request()->input("role_name", "");
-        $impeacher_server_id = request()->input("impeacher_server_id", 0);
-        $impeacher_role_id = request()->input("impeacher_role_id", 0);
-        $impeacher_role_name = request()->input("impeacher_role_name", "");
-        $type = request()->input("type", "");
-        $content = request()->input("content", "");
+        $server_id = request()->json("server_id", 0);
+        $role_id = request()->json("role_id", 0);
+        $role_name = request()->json("role_name", "");
+        $impeacher_server_id = request()->json("impeacher_server_id", 0);
+        $impeacher_role_id = request()->json("impeacher_role_id", 0);
+        $impeacher_role_name = request()->json("impeacher_role_name", "");
+        $type = request()->json("type", "");
+        $content = request()->json("content", "");
         $ip = request()->ip();
         $time = now();
         // save

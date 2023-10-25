@@ -13,7 +13,7 @@ class ServiceInstaller extends Command
      *
      * @var string
      */
-    protected $signature = 'service:install';
+    protected $signature = 'service:install {--name=}';
 
     /**
      * The console command description.
@@ -69,7 +69,8 @@ LimitNOFILE=262144
 # The limits of max core dump size
 LimitCORE=infinity
 ";
-        $file = "/usr/lib/systemd/system/laravel-admin.service";
+        $name = $this->option('name');
+        $file = "/usr/lib/systemd/system/laravel-admin" . ($name ? "-" . $name : $name) . ".service";
         // system unit
         file_put_contents($file, $data);
         // mode

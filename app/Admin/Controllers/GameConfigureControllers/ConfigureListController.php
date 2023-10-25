@@ -34,7 +34,7 @@ class ConfigureListController extends AdminController
     public function index(Content $content): Content
     {
         // check
-        $server = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getCurrentServerNode();
         if (empty($server)) {
             return $content
                 ->title($this->title())
@@ -221,8 +221,10 @@ class ConfigureListController extends AdminController
             SwitchServerController::executeMakerScript(["sheet", basename($file), "xml/"]);
             SwitchServerController::pullFile("xml/$filename", "$path/$filename");
             // export log
-            $schema = SwitchServerController::getCurrentServer();
-            $data = ["user_name" => Auth::user()->name, "table_schema" => $schema, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
+            $channel = SwitchServerController::getCurrentChannel();
+            $node = SwitchServerController::getCurrentServerNode();
+            $server = SwitchServerController::getServer($channel, $node);
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server->db_name, "table_name" => $basename, "table_comment" => $basename, "state" => "1"];
             DB::table("table_import_log")->insert($data);
             // download xml file
             // pjax use location.href redirection to download file or use ajax
@@ -247,7 +249,7 @@ class ConfigureListController extends AdminController
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
             // check state
-            $server = SwitchServerController::getCurrentServer();
+            $server = SwitchServerController::getCurrentServerNode();
             $sub = DB::table("table_import_log")
                 ->select(Db::raw("MAX(id)"))
                 ->where("table_schema", $server)
@@ -271,8 +273,9 @@ class ConfigureListController extends AdminController
         } else if ($action == "submit") {
             // repository commit/push
             $path = request()->path();
-            $current = SwitchServerController::getCurrentServer();
-            $server = SwitchServerController::getServer($current);
+            $channel = SwitchServerController::getCurrentChannel();
+            $node = SwitchServerController::getCurrentServerNode();
+            $server = SwitchServerController::getServer($channel, $node);
             if (is_int(strpos($path, "erl"))) {
                 // the server dir
                 return $this->repository_commit($content, "$server->server_root/src/module/");
@@ -310,7 +313,7 @@ class ConfigureListController extends AdminController
             // compile
             SwitchServerController::executeMakerScript(["release", $file]);
             // load
-            $name = SwitchServerController::getCurrentServer();
+            $name = SwitchServerController::getCurrentServerNode();
             $result = SwitchServerController::executeRunScript([$name, "load", $file]);
             // index page
             return $this->displayIndex($content)->withSuccess($result);

@@ -26,24 +26,26 @@ class TableDataViewerController extends AdminController
     protected function grid(): Grid
     {
         $connection = SwitchServerController::getConnection();
-        $database = SwitchServerController::getCurrentServer();
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         $table = request()->input("table", "");
         $key = DB::connection($connection)
             ->table("information_schema.COLUMNS")
             ->select(["COLUMN_NAME"])
-            ->where("TABLE_SCHEMA", $database)
+            ->where("TABLE_SCHEMA", $server->db_name)
             ->where("TABLE_NAME", $table)
             ->where("COLUMN_KEY", "PRI")
             ->get()
             ->first()
             ->COLUMN_NAME;
-        $grid = new Grid(new TableDataModel($connection, $table, $key));
+        $grid = new Grid(new TableDataModel($connection, "{$server->db_name}.$table", $key));
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
         // data
         $data = DB::connection($connection)
             ->table("information_schema.COLUMNS")
             ->select(["COLUMN_NAME", "COLUMN_COMMENT"])
-            ->where("TABLE_SCHEMA", $database)
+            ->where("TABLE_SCHEMA", $server->db_name)
             ->where("TABLE_NAME", $table)
             ->orderBy('ORDINAL_POSITION')
             ->get()
@@ -57,7 +59,7 @@ class TableDataViewerController extends AdminController
         }
 
         // filter
-        $grid->filter(function($filter) use ($connection, $database, $table) {
+        $grid->filter(function($filter) use ($connection, $server, $table) {
             // remove default id filter
             $filter->disableIdFilter();
 
@@ -65,7 +67,7 @@ class TableDataViewerController extends AdminController
             $data = DB::connection($connection)
                 ->table("information_schema.COLUMNS")
                 ->select(["COLUMN_NAME", "COLUMN_COMMENT"])
-                ->where("TABLE_SCHEMA", $database)
+                ->where("TABLE_SCHEMA", $server->db_name)
                 ->where("TABLE_NAME", $table)
                 ->whereIn("COLUMN_KEY", ['PRI', 'UNI', 'MUL'])
                 ->get();

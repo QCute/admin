@@ -13,7 +13,7 @@ class ClientErrorLogReportController extends Controller
      *     summary = "客户端错误日志上报",
      *     @OA\RequestBody(
      *         @OA\MediaType(
-     *             mediaType="application/x-www-form-urlencoded",
+     *             mediaType="application/json",
      *             @OA\Schema(
      *                 @OA\Property(
      *                     property = "server_id",
@@ -60,7 +60,8 @@ class ClientErrorLogReportController extends Controller
      *                     type = "string",
      *                     description = "内容核心",
      *                 ),
-     *             )
+     *             ),
+     *             @OA\Examples(example = "result", value = { "server_id": 1, "account": "account_name", "role_id": 1, "role_name": "nickname", "device": "android", "env": "release", "title": "", "content": "", "content_kernel": ""}, summary = "错误信息"),
      *         )
      *     ),
      *     @OA\Response(
@@ -75,15 +76,15 @@ class ClientErrorLogReportController extends Controller
     public function report(): JsonResponse
     {
         // post must be carriage csrf field or remove VerifyCsrfToken
-        $server_id = request()->input("server_id", 0);
-        $account = request()->input("account", "");
-        $role_id = request()->input("role_id", 0);
-        $role_name = request()->input("role_name", "");
-        $device = request()->input("device", "");
-        $env = request()->input("env", "");
-        $title = request()->input("title", "");
-        $content = request()->input("content", "");
-        $content_kernel = request()->input("content_kernel", "");
+        $server_id = request()->json("server_id", 0);
+        $account = request()->json("account", "");
+        $role_id = request()->json("role_id", 0);
+        $role_name = request()->json("role_name", "");
+        $device = request()->json("device", "");
+        $env = request()->json("env", "");
+        $title = request()->json("title", "");
+        $content = request()->json("content", "");
+        $content_kernel = request()->json("content_kernel", "");
         $ip = request()->ip();
         $time = now();
         // save

@@ -18,7 +18,7 @@ class ChargeDistributionController extends ChartController
     public function index(Content $content): Content
     {
         // check
-        $server = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getCurrentServerNode();
         if (empty($server)) {
             return $content
                 ->title($this->title())

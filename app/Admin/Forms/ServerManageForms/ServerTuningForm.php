@@ -69,9 +69,11 @@ class ServerTuningForm extends Form
         $this->title = trans("admin.tuning");
         $this->disableReset();
         $this->disableSubmit();
-        $server = SwitchServerController::getCurrentServer();
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         // not supported
-        if (empty(SwitchServerController::getServer($server)->ssh_host)) {
+        if (empty($server->ssh_host)) {
             $this
                 ->display("")
                 ->default("This server does not support tuning");

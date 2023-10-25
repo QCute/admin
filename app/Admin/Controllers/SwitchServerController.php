@@ -18,21 +18,29 @@ use Symfony\Component\Process\Process;
 class SwitchServerController extends Controller
 {
     /**
-     * Switch server
+     * Nav bar server list
      *
-     * @return  RedirectResponse
+     * @return string
      */
-    public function switch(): RedirectResponse
+    public static function list(): string
     {
-        $reload = request()->input("reload");
-        if ($reload) {
-            ServerListController::reload();
-            return back();
-        }
-        $server = request()->input("server");
-        Cookie::queue("current_server", $server);
-        self::changeConnection($server);
-        return back();
+        $list = self::getServerList();
+        $data = array_reduce($list, function($acc, $item) {
+            $group = $acc[$item->channel] ?? (object)["channel" => $item->channel, "channel_name" => $item->channel_name, "server_list" => []];
+            $group->server_list[$item->server_node] = $item;
+            $acc[$item->channel] = $group;
+            return $acc;
+        }, []);
+        // server
+        $server_list = self::makeServerlList($data);
+        // channel
+        $channel_list = self::makeChannelList($data);
+        // node
+        $node_list = self::makeNodeList($data);
+        // send
+        $send = self::makeSend();
+        // right side html
+        return $server_list . $channel_list . $node_list . $send;
     }
 
     /**
@@ -40,40 +48,159 @@ class SwitchServerController extends Controller
      *
      * @return string
      */
-    public static function list(): string
+    public static function makeServerlList(array $data): string
     {
-        $data = self::getServerList();
-        if (empty($data)) {
-            $list = "";
-        } else {
-            // first as default
-            $current = Cookie::get('current_server', $data[0]->server_node);
-            Cookie::queue("current_server", $current);
-
-            // change connection
-            self::changeConnection($current);
-            // build select list
-            $list = "";
-            foreach ($data as $row) {
-                if ($row->server_node === $current) {
-                    $current = $row;
-                } else {
-                    $list = "$list<option value='$row->server_node'>$row->server_name</option>";
-                }
+        $channel_list = [];
+        foreach($data as $name => $channel) {
+            $server_list = [];
+            foreach($channel->server_list as $key => $server) {
+                $server_list[$key] = (object)["id" => $server->server_node, "text" => $server->server_name];
             }
-            $list = "<option value='$current->server_node'>$current->server_name</option>$list";
+            $channel_list[$name] = (object)["id" => $channel->channel, "text" => $channel->channel_name, "server_list" => $server_list];
         }
+        $server = json_encode($channel_list);
+        return <<<HTML
+        <script>
+            const server = $server;
+        </script>
+HTML;
+    }
+
+    /**
+     * Nav bar channel list
+     *
+     * @return string
+     */
+    public static function makeChannelList(array $data): string
+    {
+        if(empty($data)) return "";
+
+        // channel
+        $current = Cookie::get('current_channel', array_key_first($data));
+        Cookie::queue("current_channel", $current);
+
+        // current channel
+        $current = $data[$current];
+        unset($data[$current->channel]);
+
+        // set current to fist
+        $data = array_values($data);
+        array_unshift($data, $current);
+
+        // make select json
+        $data = json_encode(array_map(function($value) {
+            return (object)["id" => $value->channel, "text" => $value->channel_name];
+        }, array_values($data)));
+
         // path
-        $path = "/switch-server?server=";
+        $path = "/switch/channel?channel=";
         // add prefix
         $prefix = config('admin.route.prefix');
         $path = empty($prefix) ? $path : "/$prefix" . $path;
-        // view
-        return "
-            <style>.server-select{margin: 8px 8px 0px 0px;}</style>
-            <style>.select2-dropdown,.select2-dropdown--below{border:unset!important;box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);}</style>
-            <li class='server-select'><select class='form-control server-list' style='min-width:18em;outline:none;'>$list</select></li>
-            <li class='server-select'>
+
+        return <<<HTML
+            <style>.channel-label{ margin: 16px 8px 0px 0px; }</style>
+            <style>.channel-select{ margin: 8px 8px 0px 0px; }</style>
+            <style>.select2-dropdown,.select2-dropdown--below{ border: unset!important; box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%); }</style>
+            <li class='channel-label'>
+                <label for="channel-select" class="asterisk control-label">渠道: </label>
+            </li>
+            <li class='channel-select'>
+                <select name='channel-select' class='form-control channel-list' style='min-width:18em; outline:none;'></select>
+            </li>
+            <script>
+                $(document).ready(function() { 
+                    setChannelList($data);
+                });
+                function setChannelList(data) {
+                    $(".channel-list").empty();
+                    $('.channel-list').select2({ data, placeholder: '' }).off('change', onChannelChange).on('change', onChannelChange);
+                }
+                async function onChannelChange() {
+                    await $.pjax({ container: '#pjax-container', url: '$path' + this.value });
+                    setServerList(Object.values(server[this.value].server_list));
+                }
+            </script>
+HTML;
+    }
+
+    /**
+     * Nav bar node list
+     *
+     * @return string
+     */
+    public static function makeNodeList(array $data): string
+    {
+        if(empty($data)) return "";
+        
+        // channel
+        $current = Cookie::get('current_channel', array_key_first($data));
+        Cookie::queue("current_channel", $current);
+        
+        $data = $data[$current]->server_list;
+
+        // server
+        $current = Cookie::get('current_server_node', array_key_first($data));
+        Cookie::queue("current_server_node", $current);
+
+        // current server
+        $current = $data[$current];
+        unset($data[$current->server_node]);
+
+        // change conenction
+        self::changeConnection($current);
+
+        // set current to fist
+        $data = array_values($data);
+        array_unshift($data, $current);
+
+        // make select json
+        $data = json_encode(array_map(function($value) {
+            return (object)["id" => $value->server_node, "text" => $value->server_name];
+        }, array_values($data)));
+
+        // path
+        $path = "/switch/node?node=";
+        // add prefix
+        $prefix = config('admin.route.prefix');
+        $path = empty($prefix) ? $path : "/$prefix" . $path;
+
+        return <<<HTML
+            <style>.node-label{ margin: 16px 8px 0px 0px; }</style>
+            <style>.node-select{ margin: 8px 8px 0px 0px; }</style>
+            <style>.select2-dropdown,.select2-dropdown--below{ border: unset!important; box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%); }</style>
+            <li class='node-label'>
+                <label for="node-select" class="asterisk control-label">服务器: </label>
+            </li>
+            <li class='node-select'>
+                <select class='form-control node-list' style='min-width:18em; outline:none;'></select>
+            </li>
+            <script>
+                $(document).ready(function() { 
+                    setServerList($data);
+                });
+                function setServerList(data) {
+                    $(".node-list").empty();
+                    $('.node-list').select2({ data, placeholder: '' }).off('change', onNodeChange).on('change', onNodeChange);
+                }
+                function onNodeChange() {
+                    $.pjax({ container: '#pjax-container', url: '$path' + this.value });
+                }
+            </script>
+HTML;
+    }
+
+    public static function makeSend(): string
+    {
+        // path
+        $path = "/reload/server";
+        // add prefix
+        $prefix = config('admin.route.prefix');
+        $path = empty($prefix) ? $path : "/$prefix" . $path;
+
+        return <<<HTML
+            <style>.send-btn{ margin: 8px 8px 0px 0px; }</style>
+            <li class='send-btn'>
                  <div class='btn-group server-refresh'>
                     <label class='btn btn-info'>
                         <i class='fa fa-send'></i>
@@ -82,28 +209,81 @@ class SwitchServerController extends Controller
             </li>
             <script>
                 $(document).ready(function() { 
-                    $('.server-list').select2({placeholder: ''}).on('change', function(){
-                        $.pjax({container: '#pjax-container', url: '$path' + this.value});
-                    });
                     $('.server-refresh').on('click', function(){
-                        $.pjax({container: '#pjax-container', url: '$path' + $('.server-list').val() + '&reload=true'});
+                        $.pjax({container: '#pjax-container', url: '$path' });
                     });
                 });
             </script>
-        ";
+HTML;
     }
 
     /**
-     * Get current cookie server
+     * Switch channel
      *
-     * @param string $default
-     * @return string
+     * @return  RedirectResponse
      */
-    static function getCookieServer(string $default = ''): string
+    public function switchChannel(): RedirectResponse
     {
-        $server = Cookie::get('current_server', $default);
-        Cookie::queue("current_server", $server);
-        return $server;
+        // channel
+        $channel = request()->input("channel");
+        Cookie::queue("current_channel", $channel);
+
+        [$server, ] = self::getServerList(["channel" => $channel, "server_type" => "local"]);
+
+        if($server) {
+            
+            // set server node
+            Cookie::queue("current_server_node", $server->server_node);
+
+            // change connection
+            self::changeConnection($server);
+
+        } else {
+            // remove server node
+            Cookie::unqueue("current_server_node");
+        }
+
+        return back();
+    }
+
+    /**
+     * Switch server
+     *
+     * @return  RedirectResponse
+     */
+    public function switchNode(): RedirectResponse
+    {
+        // server node
+        $node = request()->input("node");
+        Cookie::queue("current_server_node", $node);
+
+        // change connection
+        $channel = self::getCurrentChannel();
+        $server = self::getServer($channel, $node);
+        self::changeConnection($server);
+
+        return back();
+    }
+
+        /**
+     * Switch server
+     *
+     * @return  RedirectResponse
+     */
+    public function reloadServer(): RedirectResponse
+    {   
+        ServerListController::reload();   
+        return back();
+    }
+    
+    /**
+     * Get current cookie channel
+     *
+     * @return string|null
+     */
+    public static function getCurrentChannel(): string|null
+    {
+        return Cookie::get('current_channel');
     }
 
     /**
@@ -111,9 +291,9 @@ class SwitchServerController extends Controller
      *
      * @return string|null
      */
-    public static function getCurrentServer(): string|null
+    public static function getCurrentServerNode(): string|null
     {
-        return Cookie::get('current_server');
+        return Cookie::get('current_server_node');
     }
 
     /**
@@ -123,8 +303,9 @@ class SwitchServerController extends Controller
      */
     public static function getCurrentServerOpenTime(): int
     {
-        $server = self::getCurrentServer();
-        $server = self::getServer($server);
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         return $server->open_time;
     }
 
@@ -135,80 +316,42 @@ class SwitchServerController extends Controller
      */
     public static function getCurrentServerOpenDays(): int
     {
-        $server = self::getCurrentServer();
-        $server = self::getServer($server);
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         return intval((time() - $server->open_time) / 86400) + 1;
     }
 
     /**
      * Get current server from database
      *
-     * @param int|string $server
+     * @param string $channel
+     * @param string $node
      * @return object|null
      */
-    public static function getServer(mixed $server): object|null
+    public static function getServer(string $channel, string $node): object|null
     {
         return DB::table("server_list")
-            ->where("server_node", $server)
-            ->orWhere("server_id", $server)
+            ->where("channel", $channel)
+            ->where("server_node", $node)
             ->limit(1)
             ->first();
     }
-
-    /**
-     * Check server exists from database
-     *
-     * @param int|string $server
-     * @return bool
-     */
-    public static function hasServer(mixed $server): bool
-    {
-        return !is_null(self::getServer($server));
-    }
-
-    /**
-     * Next server id
-     *
-     * @param string $type
-     * @return int
-     */
-    public static function nextServerId(string $type): int
-    {
-        return DB::table("server_list")->where("server_type", $type)->max("server_id") + 1;
-    }
-
-    /**
-     * Next server port
-     *
-     * @param string $type
-     * @return int
-     */
-    public static function nextServerPort(string $type): int
-    {
-        return DB::table("server_list")->where("server_type", $type)->max("server_port") + 1;
-    }
-
+    
     /**
      * Get server list from database
      *
-     * @param string|null $type
+     * @param array $filter
      * @param array $columns
      * @return array
      */
-    private static function getServerList(string $type = null, array $columns = ['*']): array
+    public static function getServerList(array $filter = [], array $columns = ['*']): array
     {
-        if (empty($type)) {
-            return DB::table("server_list")
-                ->orderBy("id")
-                ->get($columns)
-                ->toArray();
-        } else {
-            return DB::table("server_list")
-                ->where("server_type", $type)
-                ->orderBy("id")
-                ->get($columns)
-                ->toArray();
+        $table = DB::table("server_list");
+        foreach($filter as $name => $value) {
+            $table->where($name, $value);
         }
+        return $table->orderBy("id", "ASC")->get($columns)->toArray();
     }
 
     /**
@@ -228,26 +371,35 @@ class SwitchServerController extends Controller
             $server_list = [$server];
         } else if ($server == "all") {
             // get all current node-type's node
-            $current = self::getServer(self::getCurrentServer());
-            $server_list = self::getServerList($current->server_type);
+            $channel = self::getCurrentChannel();
+            $node = self::getCurrentServerNode();
+            $server = self::getServer($channel, $node);
+            $server_list = self::getServerList(["server_type" => $server->server_type]);
+        } else if ($server == "channel") {
+            // get all current channel and node-type's node
+            $channel = self::getCurrentChannel();
+            $node = self::getCurrentServerNode();
+            $server = self::getServer($channel, $node);
+            $server_list = self::getServerList(["channel" => $server->channel, "server_type" => $server->server_type]);
         } else if ($server == "current") {
             // get current server
-            $server_list = [self::getServer(self::getCurrentServer())];
-        } else if (self::hasServer($server)) {
-            // this server
-            $server_list = [self::getServer($server)];
+            $channel = self::getCurrentChannel();
+            $node = self::getCurrentServerNode();
+            $server = self::getServer($channel, $node);
+            $server_list = [$server];
         } else {
             return [trans("admin.unknown_server") => $server];
         }
+
         // send and get result
         $result = ["succeeded" => [], "failed" => [], "error" => []];
         foreach ($server_list as $server) {
             try {
                 $url = "$server->server_host:$server->server_port";
                 if ($method == "POST") {
-                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->post($url, ["command" => $command, "data" => $data]);
+                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->post("$url/$command", $data);
                 } else {
-                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->get($url, ["command" => $command, "data" => $data]);
+                    $response = Http::withHeaders(["Cookie" => $server->server_cookie])->timeout($timeout)->get("$url/$command", $data);
                 }
                 $json = $response->json();
                 $key = $json["result"] == "ok" ? "succeeded" : "failed";
@@ -256,6 +408,7 @@ class SwitchServerController extends Controller
                 $result["error"][$server->server_name] = $exception->getMessage();
             }
         }
+
         return $result;
     }
 
@@ -263,17 +416,17 @@ class SwitchServerController extends Controller
     {
         // succeeded
         $succeeded = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
+            return "$k:<br/>→ $v<br/><br/>";
         }, array_keys($array["succeeded"]), $array["succeeded"]));
         
         // fail
         $failed = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
+            return "$k:<br/>→ $v<br/><br/>";
         }, array_keys($array["failed"]), $array["failed"]));
         
         // error
         $error = implode("", array_map(function ($k, $v) {
-            return "$k: $v<br/>";
+            return "$k:<br/>→ $v<br/><br/>";
         }, array_keys($array["error"]), $array["error"]));
 
         // succeeded
@@ -303,7 +456,9 @@ class SwitchServerController extends Controller
      */
     public static function pushFile(string $local, string $remote, string $output = "stdout"): string
     {
-        $server = self::getServer(self::getCurrentServer());
+        $channel = self::getCurrentChannel();
+        $node = self::getCurrentServerNode();
+        $server = self::getServer($channel, $node);
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
@@ -331,7 +486,9 @@ class SwitchServerController extends Controller
      */
     public static function pullFile(string $remote, string $local, string $output = "stdout"): string
     {
-        $server = self::getServer(self::getCurrentServer());
+        $channel = self::getCurrentChannel();
+        $node = self::getCurrentServerNode();
+        $server = self::getServer($channel, $node);
         // remote or local
         if (empty($server->ssh_host)) {
             // local machine
@@ -392,7 +549,9 @@ class SwitchServerController extends Controller
      */
     public static function execute(array $command, string $path = null, object $config = null, string $output = "stdout"): string
     {
-        $server = self::getServer(self::getCurrentServer());
+        $channel = self::getCurrentChannel();
+        $node = self::getCurrentServerNode();
+        $server = self::getServer($channel, $node);
         // server path as default
         $path = empty($path) ? $server->server_root : $path;
         // remote or local
@@ -489,15 +648,15 @@ class SwitchServerController extends Controller
         $config = [];
         $data = explode("\n", file_get_contents($file));
         foreach ($data as $line) {
+            $pos = strpos($line, "#");
+            $line = trim(substr($line, 0, is_bool($pos) ? strlen($line) : $pos));
             // empty
             if (empty($line)) continue;
-            // comment
-            if (str_starts_with(trim($line), "#")) continue;
             // config
-            if (!preg_match("/(\w+)(?:\s*=\s*|\s+)(.+)/", trim($line), $matches)) {
+            if (is_bool(preg_match("/(\w+)(\s*=\s*|\s+)(.+)/", $line, $matches))) {
                 throw new Exception("Invalid Config File Syntax");
             }
-            [, $key, $value] = $matches;
+            [, $key, , $value] = $matches;
             if ($key === "Host") {
                 // save
                 $host = $value;
@@ -528,7 +687,7 @@ class SwitchServerController extends Controller
             "server_host",
             "server_port",
         ];
-        return self::getServerList("local", $column);
+        return self::getServerList(["server_type" => "local"], $column);
     }
 
     /**
@@ -564,7 +723,7 @@ class SwitchServerController extends Controller
         $list = self::getServerList();
         $acc = [];
         foreach($list as $server) {
-            $db = self::changeConnection($server->server_node);
+            $db = self::changeConnection($server);
             $item = $get($db);
             if(empty($acc)) {
                 $acc = $item;
@@ -581,18 +740,18 @@ class SwitchServerController extends Controller
     /**
      * Change game data connection
      *
-     * @param int|string|object $server
+     * @param object $server
      * @return ConnectionInterface
      */
-    public static function changeConnection(mixed $server): ConnectionInterface
+    public static function changeConnection(object $server): ConnectionInterface
     {
-        $server = is_object($server) ? $server : self::getServer($server);
         $name = self::getConnection();
         $config = Config::get("database.connections.$name");
         // todo optimize same connection
         // replace with pdo
         $pdo = new PDO("{$config["driver"]}:host=$server->db_host;port=$server->db_port;dbname=$server->db_name;charset={$config["charset"]}", $server->db_username, $server->db_password, [PDO::ATTR_PERSISTENT => true]);
         $connection = DB::connection($name);
+        $connection->setDatabaseName($server->db_name);
         $connection->setPdo($pdo);
         return $connection;
     }

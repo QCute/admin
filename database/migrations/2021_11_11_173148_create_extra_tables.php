@@ -16,7 +16,8 @@ class CreateExtraTables extends Migration
         Schema::create('server_list', function (Blueprint $table) {
             $table->increments('id')->comment('ID');
             $table->string('channel')->default('')->comment('渠道');
-            $table->unsignedInteger('server_id')->default(0)->comment('游戏服编号');
+            $table->string('channel_name')->default('')->comment('渠道名');
+            $table->unsignedInteger('server_id')->default(0)->comment('游戏服ID');
             $table->string('server_node')->default('')->index('server_node')->comment('游戏服节点名');
             $table->string('server_name')->default('')->index('server_name')->comment('游戏服名');
             $table->string('ssh_host')->default('')->comment('SSH地址');
@@ -41,6 +42,20 @@ class CreateExtraTables extends Migration
             $table->string('recommend')->default('')->comment('推荐');
             $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
+            $table->unique(['channel', 'server_node'], 'channel_server');
+        });
+
+        Schema::create('statistics_block_list', function (Blueprint $table) {
+            $table->increments('id')->comment('ID');
+            $table->string('channel')->default('')->comment('渠道');
+            $table->string('channel_name')->default('')->comment('渠道名');
+            $table->unsignedInteger('server_id')->default(0)->index('server_id')->comment('游戏服ID');
+            $table->string('server_name')->default('')->comment('游戏服名');
+            $table->unsignedInteger('role_id')->default(0)->index('role_id')->comment('角色ID');
+            $table->string('role_name')->default('')->comment('角色名');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
+            $table->unique(['channel', 'server_id', 'role_id'], 'channel_server_role');
         });
 
         Schema::create('table_import_log', function (Blueprint $table) {
@@ -63,8 +78,8 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('maintain_notice', function (Blueprint $table) {
-            $table->increments('id')->comment('编号');
-            $table->string('platform', 50)->default('')->comment('平台类型');
+            $table->increments('id')->comment('ID');
+            $table->string('channel')->default('')->comment('渠道');
             $table->string('title', 1000)->default('')->comment('公告标题');
             $table->string('content', 1000)->default('')->comment('公告内容');
             $table->timestamp('start_time')->default('0000-00-00 00:00:00')->comment('开始时间');
@@ -74,7 +89,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('client_error_log', function (Blueprint $table) {
-            $table->increments('id')->comment('编号');
+            $table->increments('id')->comment('ID');
             $table->unsignedSmallInteger('server_id')->default(0)->comment('服务器ID');
             $table->char('account', 16)->default('')->comment('账号');
             $table->unsignedBigInteger('role_id')->default(0)->index('role_id')->comment('玩家ID');
@@ -91,7 +106,7 @@ class CreateExtraTables extends Migration
         });
 
         Schema::create('impeach', function (Blueprint $table) {
-            $table->increments('id')->comment('编号');
+            $table->increments('id')->comment('ID');
             $table->unsignedSmallInteger('server_id')->default(0)->comment('举报方玩家服号');
             $table->unsignedBigInteger('role_id')->default(0)->comment('举报方玩家ID');
             $table->char('role_name', 16)->default('')->comment('举报方玩家名字');
@@ -130,14 +145,15 @@ class CreateExtraTables extends Migration
             $table->engine = 'MEMORY';
         });
 
-        Schema::create(config('navigation'), function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('parent_id')->default(0);
-            $table->integer('order')->default(0);
-            $table->string('icon')->default('');
-            $table->string('title')->default('');
-            $table->string('content')->default('');
-            $table->string('url')->default('');
+        Schema::create('navigation', function (Blueprint $table) {
+            $table->increments('id')->comment('ID');
+            $table->integer('parent_id')->default(0)->comment('父ID');
+            $table->integer('order')->default(0)->comment('顺序');
+            $table->string('icon')->default('')->comment('图标');
+            $table->string('color')->default('')->comment('颜色');
+            $table->string('title')->default('')->comment('标题');
+            $table->string('content')->default('')->comment('内容');
+            $table->string('url')->default('')->comment('URL地址');
             $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
         });

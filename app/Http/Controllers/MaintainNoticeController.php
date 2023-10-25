@@ -12,12 +12,12 @@ class MaintainNoticeController extends Controller
      *     path = "/api/maintain-notice",
      *     summary = "维护公告",
      *     @OA\Parameter(
-     *         description = "平台",
+     *         description = "渠道",
      *         in = "query",
-     *         name = "platform",
+     *         name = "channel",
      *         required = true,
      *         @OA\Schema(type = "string"),
-     *         @OA\Examples(example = "platform", value = "deal", summary = "平台"),
+     *         @OA\Examples(example = "channel", value = "deal", summary = "渠道"),
      *     ),
      *     @OA\Response(
      *         response = 200,
@@ -30,8 +30,8 @@ class MaintainNoticeController extends Controller
      */
     public function get(): JsonResponse
     {
-        $platform = request()->input("platform", "");
-        $data = DB::select("SELECT `title`, `content`, `start_time`, `end_time` FROM `maintain_notice` WHERE `platform` = :platform ", ["platform" => $platform]);
+        $channel = request()->input("channel", "");
+        $data = DB::select("SELECT `title`, `content`, `start_time`, `end_time` FROM `maintain_notice` WHERE `channel` = :channel ", ["channel" => $channel]);
         return response()->json($data);
     }
 }

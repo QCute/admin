@@ -28,7 +28,7 @@ class UserManageForm extends Form {
     {
         // send command
         $server = $request->input("server", "");
-        $role_id = $request->input("role_id", "");
+        $role_id = str_replace($request->input("role_id", ""), ",", "\n");
         $command = $request->input($request->input("command", ""), "");
         // request
         $role_id = json_decode("[" . $role_id . "]");
@@ -46,6 +46,7 @@ class UserManageForm extends Form {
         $this->title = trans("admin.manage");
         $options = [
             "current" => trans("admin.current_server"),
+            "channel" => trans("admin.current_channel"),
             "all" => trans("admin.all_server"),
         ];
         $this

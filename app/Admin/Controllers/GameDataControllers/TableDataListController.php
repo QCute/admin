@@ -28,10 +28,12 @@ class TableDataListController extends AdminController
     {
         $path = request()->path();
         $connection = SwitchServerController::getConnection();
-        $database = SwitchServerController::getCurrentServer();
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         $grid = new Grid(new TableDataModel($connection, "information_schema.TABLES", "TABLE_NAME"));
         $grid->paginate(env("ADMIN_PER_PAGE", 20));
-        $grid->model()->where("TABLE_SCHEMA", "=", $database);
+        $grid->model()->where("TABLE_SCHEMA", "=", $server->db_name);
         if (is_int(strpos($path, "user"))) {
             $grid
                 ->model()

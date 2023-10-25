@@ -79,11 +79,13 @@ class ConfigureTableModel extends Model
      */
     private function getData(): array
     {
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         // log
-        $server = SwitchServerController::getCurrentServer();
         $sub = DB::table("table_import_log")
             ->select(Db::raw("MAX(id)"))
-            ->where("table_schema", $server)
+            ->where("table_schema", $server->db_name)
             ->groupBy("table_name");
         $log = DB::table("table_import_log")
             ->select(["user_name", "table_name", "table_comment", "time", "state"])
@@ -102,7 +104,7 @@ class ConfigureTableModel extends Model
         // data
         $data = SwitchServerController::getDB()
             ->table("information_schema.TABLES")
-            ->where("TABLE_SCHEMA", "=", SwitchServerController::getCurrentServer())
+            ->where("TABLE_SCHEMA", "=", $server->db_name)
             ->where("TABLE_NAME", "LIKE", "%_data")
             ->where("TABLE_COMMENT", "LIKE", $table_comment)
             ->where("TABLE_NAME", "LIKE", $table_name)

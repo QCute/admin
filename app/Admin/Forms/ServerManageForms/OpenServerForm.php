@@ -32,22 +32,25 @@ class OpenServerForm extends Form {
     {
         $server = $request->input("server", "");
         $password = $request->input("password", "");
+        $channel = $request->input("channel", "");
         $name = $request->input("name", "");
         $tab = $request->input("tab", "");
         $center = trim($request->input("center", ""));
         $world = trim($request->input("world", ""));
         $recommend = $request->input("recommend", "");
-        if(!empty($dst) && !SwitchServerController::hasServer($center)) {
+        if(!empty($dst) && !SwitchServerController::getServer($channel, $center)) {
             admin_error(trans("admin.invalid_center"));
             return back();
         }
-        if(!empty($dst) && !SwitchServerController::hasServer($world)) {
+        if(!empty($dst) && !SwitchServerController::getServer($channel, $world)) {
             admin_error(trans("admin.invalid_world"));
             return back();
         }
+        // next server id
+        $server_id = DB::table("server_list")->where("server_type", "local")->max("server_id") + 1;
+        // next port
+        $port = DB::table("server_list")->where("server_type", "local")->max("server_port") + 1;
         // node
-        $server_id = SwitchServerController::nextServerId("local");
-        $port = SwitchServerController::nextServerPort("local");
         $node = basename(env("SERVER_PATH", "server")) . "_" . $server_id;
         // machine
         $config = SwitchServerController::getSSHConfig()[$server];
@@ -81,12 +84,29 @@ class OpenServerForm extends Form {
         $this
             ->password("password", trans("admin.password"))
             ->required();
+        $options = [];
+        $list = DB::table("server_list")
+            ->where("server_type", "local")
+            ->groupBy("channel")
+            ->select([
+                "channel", 
+                "channel_name"
+            ])
+            ->get();
+        foreach ($list as $item) {
+            $options[$item->channel] = $item->channel_name;
+        }
+        $this
+            ->select("channel", trans("admin.channel"))
+            ->options($options)
+            ->required();
         $this
             ->text("name", trans("admin.name"))
             ->required();
         $this
             ->text("tab", trans("admin.tab"))
-            ->value("");
+            ->value("")
+            ->required();
         // center
         $options = [];
         $list = DB::table("server_list")
@@ -98,7 +118,8 @@ class OpenServerForm extends Form {
         $this
             ->select("center", trans("admin.center_name"))
             ->options($options)
-            ->value("");
+            ->value("")
+            ->required();
         // world
         $options = [];
         $list = DB::table("server_list")
@@ -110,7 +131,8 @@ class OpenServerForm extends Form {
         $this
             ->select("world", trans("admin.world_name"))
             ->options($options)
-            ->value("");
+            ->value("")
+            ->required();
         // status
         $options = [
             "new" => trans("admin.server_recommend.new"),

@@ -29,7 +29,7 @@ class ServerTuningController extends AdminController
     public function index(Content $content): Content
     {
         // check
-        $server = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getCurrentServerNode();
         if (empty($server)) {
             return $content
                 ->title($this->title())
@@ -52,7 +52,7 @@ class ServerTuningController extends AdminController
      */
     public function displayIndex(Content $content): Content
     {
-        $server = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getCurrentServerNode();
         $running = SwitchServerController::executeRunScript([$server, "state"]);
         $owner = $this->getServerLockOwner($server);
         return $content
@@ -81,7 +81,7 @@ class ServerTuningController extends AdminController
      */
     public function getServerState() : string
     {
-        $server = SwitchServerController::getCurrentServer();
+        $server = SwitchServerController::getCurrentServerNode();
         $running = SwitchServerController::executeRunScript([$server, "state"]);
         return json_decode($running) ? trans("admin.server_active") : trans("admin.server_down");
     }
@@ -94,7 +94,7 @@ class ServerTuningController extends AdminController
      */
     public function getServerLockOwner(string $server = ""): string
     {
-        $server = empty($server) ? SwitchServerController::getCurrentServer() : $server;
+        $server = empty($server) ? SwitchServerController::getCurrentServerNode() : $server;
         $file = storage_path("logs/server_state.json");
         if (file_exists($file)) {
             $content = file_get_contents($file);
@@ -113,7 +113,7 @@ class ServerTuningController extends AdminController
      */
     public function setServerLockOwner(string $owner = "", string $server = "")
     {
-        $server = empty($server) ? SwitchServerController::getCurrentServer() : $server;
+        $server = empty($server) ? SwitchServerController::getCurrentServerNode() : $server;
         $file = storage_path("logs/server_state.json");
         if (file_exists($file)) {
             $content = file_get_contents($file);
@@ -144,18 +144,18 @@ class ServerTuningController extends AdminController
                 return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
             }
             case "set-server-open-time": {
-                $server = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getCurrentServerNode();
                 $openTime = request()->input("time");
                 SwitchServerController::executeMakerScript(["cfg", "set", $server, "main, open_time", strtotime($openTime)]);
                 return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
             }
             case "server-start": {
-                $server = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getCurrentServerNode();
                 SwitchServerController::executeMakerScript([$server, "start"]);
                 return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
             }
             case "server-stop": {
-                $server = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getCurrentServerNode();
                 SwitchServerController::executeMakerScript([$server, "stop"]);
                 return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
             }
@@ -174,7 +174,7 @@ class ServerTuningController extends AdminController
                 return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
             }
             case "server-lock": {
-                $server = SwitchServerController::getCurrentServer();
+                $server = SwitchServerController::getCurrentServerNode();
                 $name = $this->getServerLockOwner();
                 if(empty($name)) {
                     $this->setServerLockOwner(Auth::user()->username, $server);

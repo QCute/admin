@@ -30,7 +30,7 @@ class PaymentController extends Controller
             return response()->json(["status" => "failure", "code" => 0, "msg" => "Sign Not Matched"]);
         }
         // check server id
-        $server = SwitchServerController::getServer($server_id);
+        $server = SwitchServerController::getServer($channel, $server_id);
         if (is_null($server)) {
             return response()->json(["status" => "failure", "code" => 0, "msg" => "Server Id Invalid"]);
         }

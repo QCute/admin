@@ -11,7 +11,7 @@
                 "operationId": "4871987a4e706592c853d86c933507c1",
                 "requestBody": {
                     "content": {
-                        "application/x-www-form-urlencoded": {
+                        "application/json": {
                             "schema": {
                                 "properties": {
                                     "server_id": {
@@ -52,6 +52,22 @@
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "examples": {
+                                "result": {
+                                    "summary": "错误信息",
+                                    "value": {
+                                        "server_id": 1,
+                                        "account": "account_name",
+                                        "role_id": 1,
+                                        "role_name": "nickname",
+                                        "device": "android",
+                                        "env": "release",
+                                        "title": "",
+                                        "content": "",
+                                        "content_kernel": ""
+                                    }
+                                }
                             }
                         }
                     }
@@ -82,7 +98,7 @@
                 "operationId": "e86f35cd3f436afd90b2c9fe85114ad9",
                 "requestBody": {
                     "content": {
-                        "application/x-www-form-urlencoded": {
+                        "application/json": {
                             "schema": {
                                 "properties": {
                                     "server_id": {
@@ -119,6 +135,21 @@
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "examples": {
+                                "result": {
+                                    "summary": "举报信息",
+                                    "value": {
+                                        "server_id": 1,
+                                        "role_id": 1,
+                                        "role_name": "nickname",
+                                        "impeacher_server_id": 1,
+                                        "impeacher_role_id": 1,
+                                        "impeacher_role_name": "nickname",
+                                        "type": "",
+                                        "content": ""
+                                    }
+                                }
                             }
                         }
                     }
@@ -149,16 +180,16 @@
                 "operationId": "0b76bff5cbb26a52084afd0e9a8790ca",
                 "parameters": [
                     {
-                        "name": "platform",
+                        "name": "channel",
                         "in": "query",
-                        "description": "平台",
+                        "description": "渠道",
                         "required": true,
                         "schema": {
                             "type": "string"
                         },
                         "examples": {
-                            "int": {
-                                "summary": "敏感词查询",
+                            "channel": {
+                                "summary": "渠道",
                                 "value": "deal"
                             }
                         }
@@ -201,8 +232,8 @@
                             "type": "string"
                         },
                         "examples": {
-                            "int": {
-                                "summary": "Union Id.",
+                            "unionId": {
+                                "summary": "微信 Union Id.",
                                 "value": "oic_x5YDSA3gzvOFmf5E76"
                             }
                         }

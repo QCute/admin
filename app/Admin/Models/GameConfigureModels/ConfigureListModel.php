@@ -108,8 +108,9 @@ class ConfigureListModel extends Model
     private function getData(): array
     {
         $path = request()->path();
-        $current = SwitchServerController::getCurrentServer();
-        $server = SwitchServerController::getServer($current);
+        $channel = SwitchServerController::getCurrentChannel();
+        $node = SwitchServerController::getCurrentServerNode();
+        $server = SwitchServerController::getServer($channel, $node);
         // list
         if (is_int(strpos($path, "erl"))) {
             $data = self::erl();
@@ -126,7 +127,7 @@ class ConfigureListModel extends Model
         // import log
         $sub = DB::table("table_import_log")
             ->select(Db::raw("MAX(id)"))
-            ->where("table_schema", $current)
+            ->where("table_schema", $server->db_name)
             ->groupBy("table_name");
         $log = DB::table("table_import_log")
             ->select(["user_name", "table_name", "table_comment", "time", "state"])

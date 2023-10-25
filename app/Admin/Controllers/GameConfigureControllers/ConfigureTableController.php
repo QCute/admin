@@ -201,8 +201,10 @@ class ConfigureTableController extends AdminController
             SwitchServerController::executeMakerScript(["xml", $table, "xml/"]);
             SwitchServerController::pullFile("xml/$filename", "$path/$filename");
             // export log
-            $server = SwitchServerController::getCurrentServer();
-            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $table, "table_comment" => $basename, "state" => "1"];
+            $channel = SwitchServerController::getCurrentChannel();
+            $node = SwitchServerController::getCurrentServerNode();
+            $server = SwitchServerController::getServer($channel, $node);
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server->db_name, "table_name" => $table, "table_comment" => $basename, "state" => "1"];
             DB::table("table_import_log")->insert($data);
             // download xml file
             // pjax use location.href redirection to download file or use ajax
@@ -227,10 +229,12 @@ class ConfigureTableController extends AdminController
                 return $this->displayIndex($content)->withError(trans("admin.upload") . trans("admin.error"));
             }
             // check state
-            $server = SwitchServerController::getCurrentServer();
+            $channel = SwitchServerController::getCurrentChannel();
+            $node = SwitchServerController::getCurrentServerNode();
+            $server = SwitchServerController::getServer($channel, $node);
             $sub = DB::table("table_import_log")
                 ->select(Db::raw("MAX(id)"))
-                ->where("table_schema", $server)
+                ->where("table_schema", $server->db_name)
                 ->where("table_comment", $basename)
                 ->groupBy("table_name");
             $log = DB::table("table_import_log")
@@ -252,7 +256,7 @@ class ConfigureTableController extends AdminController
                 ->where("TABLE_COMMENT", "=", $basename)
                 ->get()
                 ->toArray();
-            $data = ["user_name" => Auth::user()->name, "table_schema" => $server, "table_name" => $data[0]->TABLE_NAME, "table_comment" => $basename, "state" => "0"];
+            $data = ["user_name" => Auth::user()->name, "table_schema" => $server->db_name, "table_name" => $data[0]->TABLE_NAME, "table_comment" => $basename, "state" => "0"];
             DB::table("table_import_log")->insert($data);
             return $this->displayIndex($content)->withSuccess(trans("admin.import") . trans("admin.succeeded"), $result);
         } else {

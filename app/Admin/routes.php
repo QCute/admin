@@ -17,7 +17,9 @@ Route::group([
     $router->get('/', 'HomeController@index')->name('home');
 
     // Switch Server Database
-    $router->get('/switch-server', 'SwitchServerController@switch');
+    $router->get('/switch/channel', 'SwitchServerController@switchChannel');
+    $router->get('/switch/node', 'SwitchServerController@switchNode');
+    $router->get('/reload/server', 'SwitchServerController@reloadServer');
 
     // User Active Statistics
     $router->get('/active-statistics/user-online', 'ActiveStatisticsControllers\\UserOnlineController@index');

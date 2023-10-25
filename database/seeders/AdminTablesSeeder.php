@@ -118,7 +118,7 @@ class AdminTablesSeeder extends Seeder
                     "parent_id" => 8,
                     "order" => 13,
                     "title" => "每日充值统计",
-                    "icon" => "fa-bar-chart",
+                    "icon" => "fa-table",
                     "uri" => "/charge-statistics/daily-charge",
                     "permission" => NULL
                 ],
@@ -126,7 +126,7 @@ class AdminTablesSeeder extends Seeder
                     "parent_id" => 8,
                     "order" => 14,
                     "title" => "充值排行",
-                    "icon" => "fa-bar-chart",
+                    "icon" => "fa-table",
                     "uri" => "/charge-statistics/charge-rank",
                     "permission" => NULL
                 ],
@@ -450,7 +450,7 @@ class AdminTablesSeeder extends Seeder
                     "name" => "Dashboard",
                     "slug" => "dashboard",
                     "http_method" => "GET",
-                    "http_path" => "/\r\n/switch-server"
+                    "http_path" => "/\r\n/switch/*\r\n/reload/*"
                 ],
                 [
                     "name" => "Login",

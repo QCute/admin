@@ -37,12 +37,14 @@ class MergeServerForm extends Form {
             admin_error(trans("admin.merge_same_server"));
             return back();
         }
+        // merge two server, only support the same channel 
+        $channel = SwitchServerController::getCurrentChannel();
         // check server valid
-        if(empty($src) || !SwitchServerController::hasServer($src)) {
+        if(empty($src) || !SwitchServerController::getServer($channel, $src)) {
             admin_error(trans("admin.no_src_server"));
             return back();
         }
-        if(empty($dst) || !SwitchServerController::hasServer($dst)) {
+        if(empty($dst) || !SwitchServerController::getServer($channel, $dst)) {
             admin_error(trans("admin.no_dst_server"));
             return back();
         }
@@ -79,7 +81,10 @@ class MergeServerForm extends Form {
         $this->title = trans("admin.merge_server");
         // center
         $options = [];
+        $channel = SwitchServerController::getCurrentChannel();
+        // merge two server, only support the same channel 
         $list = DB::table("server_list")
+            ->where("channel", $channel)
             ->where("server_type", "local")
             ->get();
         foreach ($list as $item) {

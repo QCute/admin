@@ -75,7 +75,7 @@ class MaintainNoticeController extends AdminController
     protected function form(): Form
     {
         $form = new Form(new MaintainNoticeModel());
-        $form->text('platform', trans("admin.platform"))->required();
+        $form->text('channel', trans("admin.channel"))->required();
         $form->textarea('title', trans("admin.title"))->required();
         $form->textarea('content', trans("admin.content"))->required();
         $form->datetime('start_time', trans("admin.start_time"))->required();

@@ -86,7 +86,7 @@ class ServerListController extends AdminController
 
             switch ($row->COLUMN_NAME) {
                 case "server_id": {
-                    $server_id = SwitchServerController::nextServerId("local");
+                    $server_id = DB::table("server_list")->where("server_type", "local")->max("server_id") + 1;
                     $form
                         ->text($row->COLUMN_NAME, $row->COLUMN_COMMENT)
                         ->value($server_id)
