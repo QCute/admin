@@ -28,10 +28,10 @@ class UserManageForm extends Form {
     {
         // send command
         $server = $request->input("server", "");
-        $role_id = str_replace($request->input("role_id", ""), ",", "\n");
         $command = $request->input($request->input("command", ""), "");
+        $role_id = $request->input("role_id", "");
+        $role_id = array_map(function($row) { return (int)$row; }, explode(",", str_replace("\n", ",", $role_id)));
         // request
-        $role_id = json_decode("[" . $role_id . "]");
         $array = SwitchServerController::send($server, $command, ["role_id" => $role_id]);
         SwitchServerController::handleSendResult($array);
         // back
@@ -53,9 +53,11 @@ class UserManageForm extends Form {
             ->select("server", trans("admin.server"))
             ->options($options)
             ->required();
+        $help = trans("admin.one_per_line") . " " . trans("or") . " " . trans("admin.split_with_comma");
         $this
             ->textarea("role_id", trans("admin.role_id"))
             ->style("resize", "vertical")
+            ->help($help)
             ->required();
         $this
             ->radioButton("command", trans("admin.type"))

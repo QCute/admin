@@ -27,12 +27,14 @@ class GameMailForm extends Form {
     public function handle(Request $request): RedirectResponse
     {
         $server = $request->input("server", "");
+        $role_id = $request->input("role_id", "");
+        $role_id = array_map(function($row) { return (int)$row; }, explode(",", str_replace("\n", ",", $role_id)));
         // construct data
         $data = [
             "title" => $request->input("title", ""),
             "content" => $request->input("content", ""),
             "items" => $request->input("items", "") ?? "",
-            "role_id" => $request->input("role_id", ""),
+            "role_id" => $role_id,
         ];
         // request
         $array = SwitchServerController::send($server, "mail", $data);
@@ -62,16 +64,18 @@ class GameMailForm extends Form {
             ->textarea("content", trans("admin.content"))
             ->style("resize", "vertical")
             ->required();
-        $help = "<a href='configure-assistant' target='_blank'>" . trans("admin.configure_assistant") . "</a>";
+        $help = "<a href='/assistant/configure-assistant' target='_blank'>" . trans("admin.configure_assistant") . "</a>";
         $this
             ->textarea("items", trans("admin.items"))
             ->style("resize", "vertical")
             ->help($help)
             ->default("")
             ->value("");
+        $help = trans("admin.one_per_line") . " " . trans("or") . " " . trans("admin.split_with_comma");
         $this
             ->textarea("role_id", trans("admin.role_id"))
             ->style("resize", "vertical")
+            ->help($help)
             ->required();
         // scroll to top
         $this->html("<script>document.querySelector('#pjax-container').scroll(0, 0);</script>");

@@ -76,7 +76,7 @@ class GameNoticeForm extends Form {
             ->style("resize", "vertical")
             ->required();
 
-        $help = "<a href='configure-assistant' target='_blank'>" . trans("admin.configure_assistant") . "</a>";
+        $help = "<a href='/assistant/configure-assistant' target='_blank'>" . trans("admin.configure_assistant") . "</a>";
         $this
             ->textarea("items", trans("admin.items"))
             ->style("resize", "vertical")

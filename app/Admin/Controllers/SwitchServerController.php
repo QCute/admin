@@ -416,18 +416,18 @@ HTML;
     {
         // succeeded
         $succeeded = implode("", array_map(function ($k, $v) {
-            return "$k:<br/>→ $v<br/><br/>";
-        }, array_keys($array["succeeded"]), $array["succeeded"]));
+            return "$k:<br/>→ " . json_encode($v) . "<br/><br/>";
+        }, array_keys($array["succeeded"]), array_values($array["succeeded"])));
         
         // fail
         $failed = implode("", array_map(function ($k, $v) {
-            return "$k:<br/>→ $v<br/><br/>";
-        }, array_keys($array["failed"]), $array["failed"]));
+            return "$k:<br/>→ " . json_encode($v) . "<br/><br/>";
+        }, array_keys($array["failed"]), array_values($array["failed"])));
         
         // error
         $error = implode("", array_map(function ($k, $v) {
-            return "$k:<br/>→ $v<br/><br/>";
-        }, array_keys($array["error"]), $array["error"]));
+            return "$k:<br/>→ " . json_encode($v) . "<br/><br/>";
+        }, array_keys($array["error"]), array_values($array["error"])));
 
         // succeeded
         if (!empty($succeeded)) {
