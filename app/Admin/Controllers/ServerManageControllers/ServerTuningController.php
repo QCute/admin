@@ -36,22 +36,6 @@ class ServerTuningController extends AdminController
                 ->withWarning("Could not found current server");
         }
         // view
-        $action = request()->input("action", "");
-        if (!empty($action)) {
-            return $this->action($content, $action);
-        }
-        return $this->displayIndex($content);
-    }
-
-    /**
-     * Index.
-     *
-     * @param Content $content
-     * @return Content
-     * @throws Exception
-     */
-    public function displayIndex(Content $content): Content
-    {
         $server = SwitchServerController::getCurrentServerNode();
         $running = SwitchServerController::executeRunScript([$server, "state"]);
         $owner = $this->getServerLockOwner($server);
@@ -125,69 +109,4 @@ class ServerTuningController extends AdminController
         $data = json_encode($data);
         file_put_contents($file, $data);
     }
-
-    /**
-     * Action interface.
-     *
-     * @param Content $content
-     * @param string $action
-     * @return Content
-     * @throws Exception
-     */
-    public function action(Content $content, string $action): Content
-    {
-        switch ($action) {
-            case "set-server-time": {
-                $dateTime = request()->input("time");
-                // super user necessary
-                SwitchServerController::executeMakerScript(["date", "-s", $dateTime]);
-                return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
-            }
-            case "set-server-open-time": {
-                $server = SwitchServerController::getCurrentServerNode();
-                $openTime = request()->input("time");
-                SwitchServerController::executeMakerScript(["cfg", "set", $server, "main, open_time", strtotime($openTime)]);
-                return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
-            }
-            case "server-start": {
-                $server = SwitchServerController::getCurrentServerNode();
-                SwitchServerController::executeMakerScript([$server, "start"]);
-                return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
-            }
-            case "server-stop": {
-                $server = SwitchServerController::getCurrentServerNode();
-                SwitchServerController::executeMakerScript([$server, "stop"]);
-                return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
-            }
-            case "server-truncate": {
-                $db = SwitchServerController::getDB();
-                $data = $db
-                    ->table("information_schema.TABLES")
-                    ->select("TABLE_NAME")
-                    ->where("TABLE_SCHEMA", DB::raw("DATABASE()"))
-                    ->where("TABLE_NAME", "NOT LIKE", "%_data")
-                    ->get()
-                    ->toArray();
-                foreach ($data as $row) {
-                    $db->table($row->TABLE_NAME)->truncate();
-                }
-                return $this->displayIndex($content)->withSuccess(trans("admin.succeeded"));
-            }
-            case "server-lock": {
-                $server = SwitchServerController::getCurrentServerNode();
-                $name = $this->getServerLockOwner();
-                if(empty($name)) {
-                    $this->setServerLockOwner(Auth::user()->username, $server);
-                    return $this->displayIndex($content->withSuccess(trans("admin.succeeded")));
-                } else if ($name == Auth::user()->username) {
-                    $this->setServerLockOwner("", $server);
-                    return $this->displayIndex($content->withSuccess(trans("admin.succeeded")));
-                } else {
-                    return $this->displayIndex($content->withError("not owner"));
-                }
-            }
-            default: return $this->displayIndex($content)->withError("Unknown action: $action");
-        }
-    }
-
 }

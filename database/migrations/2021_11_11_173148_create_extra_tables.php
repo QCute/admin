@@ -13,6 +13,15 @@ class CreateExtraTables extends Migration
      */
     public function up()
     {
+        Schema::create('role_channels', function (Blueprint $table) {
+            $table->increments('id')->comment('ID');
+            $table->unsignedInteger('role_id')->default(0)->comment('角色ID');
+            $table->string('channel')->default('')->comment('渠道');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00')->comment('创建时间');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00')->comment('更新时间');
+            $table->unique(['role_id', 'channel'], 'role_channel');
+        });
+
         Schema::create('server_list', function (Blueprint $table) {
             $table->increments('id')->comment('ID');
             $table->string('channel')->default('')->comment('渠道');

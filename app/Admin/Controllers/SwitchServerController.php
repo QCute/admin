@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ServerListController;
+use Encore\Admin\Admin;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
@@ -15,16 +16,18 @@ use PDO;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class SwitchServerController extends Controller
+class SwitchServerController extends Admin
 {
     /**
      * Nav bar server list
      *
      * @return string
      */
-    public static function list(): string
+    public function list(): string
     {
-        $list = self::getServerList();
+        // collect server list from channels
+        $channels = $this->getRoleChannels();
+        $list = self::getServerList(function($table) use ($channels) { return $table->whereIn('channel', $channels); });
         $data = array_reduce($list, function($acc, $item) {
             $group = $acc[$item->channel] ?? (object)["channel" => $item->channel, "channel_name" => $item->channel_name, "server_list" => []];
             $group->server_list[$item->server_node] = $item;
@@ -220,7 +223,7 @@ HTML;
     /**
      * Switch channel
      *
-     * @return  RedirectResponse
+     * @return RedirectResponse
      */
     public function switchChannel(): RedirectResponse
     {
@@ -249,7 +252,7 @@ HTML;
     /**
      * Switch server
      *
-     * @return  RedirectResponse
+     * @return RedirectResponse
      */
     public function switchNode(): RedirectResponse
     {
@@ -265,17 +268,52 @@ HTML;
         return back();
     }
 
-        /**
+    /**
      * Switch server
      *
-     * @return  RedirectResponse
+     * @return RedirectResponse
      */
     public function reloadServer(): RedirectResponse
     {   
         ServerListController::reload();   
         return back();
     }
+
+    /**
+     * Get role channels
+     *
+     * @return array
+     */
+    public function getRoleChannels(): array {
+        $user = $this->user();
+        if(empty($user)) {
+            return [];
+        }
+
+        // collect role ids from current user
+        $ids = array_map(function($role) { return $role['id']; }, $user->roles->toArray());
+        
+        // collect channels from role ids
+        $channels = DB::table('admin_role_channels')->whereIn('role_id', $ids)->select('channel')->get()->toArray();
+        $channels = array_map(function($role) { return $role->channel; }, $channels);
+
+        return $channels;
+    }
     
+    /**
+     * Has channel
+     *
+     * @return bool
+     */
+    public function hasChannel(string $channel): bool {
+        // collect role ids from current user
+        $ids = array_map(function($role) { return $role['id']; }, $this->user()->roles->toArray());
+        
+        // collect channels from role ids
+        $channels = DB::table('admin_role_channels')->whereIn('role_id', $ids)->where('channel', $channel)->limit(1)->get();
+        return !empty($channels);
+    }
+
     /**
      * Get current cookie channel
      *
@@ -331,6 +369,7 @@ HTML;
      */
     public static function getServer(string $channel, string $node): object|null
     {
+        // todo check has channel
         return DB::table("server_list")
             ->where("channel", $channel)
             ->where("server_node", $node)
@@ -341,15 +380,19 @@ HTML;
     /**
      * Get server list from database
      *
-     * @param array $filter
+     * @param mixed $filter
      * @param array $columns
      * @return array
      */
-    public static function getServerList(array $filter = [], array $columns = ['*']): array
+    public static function getServerList(mixed $filter = [], array $columns = ['*']): array
     {
         $table = DB::table("server_list");
-        foreach($filter as $name => $value) {
-            $table->where($name, $value);
+        if(is_callable($filter)) {
+            $filter($table);
+        } else {
+            foreach($filter as $name => $value) {
+                $table->where($name, $value);
+            }
         }
         return $table->orderBy("id", "ASC")->get($columns)->toArray();
     }

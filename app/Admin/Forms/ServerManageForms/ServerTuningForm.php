@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ServerTuningForm extends Form
 {
@@ -56,7 +57,59 @@ class ServerTuningForm extends Form
      */
     public function handle(Request $request): RedirectResponse
     {
-        return back();
+        $action = request()->input("action", "");
+        switch ($action) {
+            case "set-server-time": {
+                $dateTime = request()->input("time");
+                // super user necessary
+                SwitchServerController::executeMakerScript(["date", "-s", $dateTime]);
+                return back()->withSuccess(trans("admin.succeeded"));
+            }
+            case "set-server-open-time": {
+                $server = SwitchServerController::getCurrentServerNode();
+                $openTime = request()->input("time");
+                SwitchServerController::executeMakerScript(["cfg", "set", $server, "main, open_time", strtotime($openTime)]);
+                return back()->withSuccess(trans("admin.succeeded"));
+            }
+            case "server-start": {
+                $server = SwitchServerController::getCurrentServerNode();
+                SwitchServerController::executeMakerScript([$server, "start"]);
+                return back()->withSuccess(trans("admin.succeeded"));
+            }
+            case "server-stop": {
+                $server = SwitchServerController::getCurrentServerNode();
+                SwitchServerController::executeMakerScript([$server, "stop"]);
+                return back()->withSuccess(trans("admin.succeeded"));
+            }
+            case "server-truncate": {
+                $db = SwitchServerController::getDB();
+                $data = $db
+                    ->table("information_schema.TABLES")
+                    ->select("TABLE_NAME")
+                    ->where("TABLE_SCHEMA", DB::raw("DATABASE()"))
+                    ->where("TABLE_NAME", "NOT LIKE", "%_data")
+                    ->get()
+                    ->toArray();
+                foreach ($data as $row) {
+                    $db->table($row->TABLE_NAME)->truncate();
+                }
+                return back()->withSuccess(trans("admin.succeeded"));
+            }
+            case "server-lock": {
+                $server = SwitchServerController::getCurrentServerNode();
+                $name = $this->getServerLockOwner();
+                if(empty($name)) {
+                    $this->setServerLockOwner(Auth::user()->username, $server);
+                    return back()->withSuccess(trans("admin.succeeded"));
+                } else if ($name == Auth::user()->username) {
+                    $this->setServerLockOwner("", $server);
+                    return back()->withSuccess(trans("admin.succeeded"));
+                } else {
+                    return back()->withError("not owner");
+                }
+            }
+            default: return back()->withError("Unknown action: $action");
+        }
     }
 
     /**

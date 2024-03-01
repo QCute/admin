@@ -27,5 +27,5 @@ Encore\Admin\Facades\Admin::js('vendor/cdn/axios/js/axios.min.js');
 Encore\Admin\Facades\Admin::js('vendor/cdn/echarts/js/echarts.min.js');
 // navigate bar
 Encore\Admin\Facades\Admin::navbar(function (Encore\Admin\Widgets\Navbar $navbar) {
-    $navbar->right(App\Admin\Controllers\SwitchServerController::list());
+    $navbar->right((new App\Admin\Controllers\SwitchServerController())->list());
 });
