@@ -1,0 +1,17 @@
+<?php
+
+namespace Database\Seeders;
+
+DummyImport
+use Illuminate\Database\Seeder;
+
+class DummyClass extends Seeder
+{
+    /**
+     * Seed the application's database.
+     */
+    public function run()
+    {
+DummyCode
+    }
+}
